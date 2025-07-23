@@ -1,0 +1,385 @@
+/**
+ * Twitter 超级复制插件 - 内容脚本样式
+ * 定义注入到 Twitter 页面的 UI 样式
+ */
+
+/* 复制按钮基础样式 */
+.super-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  color: rgb(83, 100, 113);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 按钮悬停效果 */
+.super-copy-btn:hover {
+  background-color: rgba(29, 155, 240, 0.1) !important;
+  color: rgb(29, 155, 240) !important;
+  transform: scale(1.05);
+}
+
+/* 按钮激活状态 */
+.super-copy-btn:active {
+  transform: scale(0.95);
+}
+
+/* 按钮聚焦样式 */
+.super-copy-btn:focus {
+  outline: 2px solid rgba(29, 155, 240, 0.3);
+  outline-offset: 2px;
+}
+
+/* 按钮图标容器 */
+.super-copy-btn .css-1dbjc4n {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SVG 图标样式 */
+.super-copy-btn svg {
+  transition: all 0.2s ease;
+}
+
+/* 成功状态样式 */
+.super-copy-btn.success {
+  color: #10b981 !important;
+}
+
+.super-copy-btn.success svg {
+  color: #10b981;
+}
+
+/* 错误状态样式 */
+.super-copy-btn.error {
+  color: #ef4444 !important;
+}
+
+.super-copy-btn.error svg {
+  color: #ef4444;
+}
+
+/* 加载状态样式 */
+.super-copy-btn.loading {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.super-copy-btn.loading svg {
+  animation: spin 1s linear infinite;
+}
+
+/* 通知样式 */
+.super-copy-notification {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  z-index: 10000 !important;
+  padding: 12px 16px !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(8px) !important;
+  transition: all 0.3s ease !important;
+  max-width: 300px !important;
+  word-wrap: break-word !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* 通知类型样式 */
+.super-copy-notification.success {
+  background-color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.super-copy-notification.error {
+  background-color: #ef4444 !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.super-copy-notification.info {
+  background-color: #3b82f6 !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .super-copy-notification {
+    top: 10px !important;
+    right: 10px !important;
+    left: 10px !important;
+    right: 10px !important;
+    max-width: none !important;
+    font-size: 13px !important;
+  }
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .super-copy-btn {
+    color: rgb(139, 152, 165);
+  }
+  
+  .super-copy-btn:hover {
+    background-color: rgba(29, 155, 240, 0.1) !important;
+    color: rgb(29, 155, 240) !important;
+  }
+}
+
+/* Twitter 特定样式适配 */
+[data-testid="tweet"] .super-copy-btn {
+  margin-left: 8px;
+}
+
+/* 确保在 Twitter 的高 z-index 环境中正常显示 */
+.super-copy-btn,
+.super-copy-notification {
+  z-index: 9999 !important;
+}
+
+/* 防止按钮被 Twitter 的样式覆盖 */
+.super-copy-btn {
+  box-sizing: border-box !important;
+  user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* 旋转动画 */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 渐入渐出动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* 通知进入动画 */
+.super-copy-notification.entering {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* 通知退出动画 */
+.super-copy-notification.exiting {
+  animation: fadeOut 0.3s ease forwards;
+}
+
+/* 高对比度模式适配 */
+@media (prefers-contrast: high) {
+  .super-copy-btn {
+    border: 1px solid currentColor;
+  }
+  
+  .super-copy-notification {
+    border-width: 2px !important;
+  }
+}
+
+/* 线程相关样式 */
+.super-copy-btn.thread-copy-btn {
+  position: relative;
+}
+
+.super-copy-btn.thread-copy-btn::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: #1DA1F2;
+  border-radius: 50%;
+  border: 1px solid white;
+  opacity: 0.8;
+}
+
+/* 线程指示器样式 */
+.thread-indicator {
+  pointer-events: none;
+  user-select: none;
+}
+
+.thread-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(29, 155, 240, 0.9);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.thread-emoji {
+  font-size: 8px;
+}
+
+.thread-position {
+  font-family: monospace;
+  letter-spacing: -0.5px;
+}
+
+/* 线程复制模态框样式（已在clipboard.js中定义，这里添加额外的深色模式支持） */
+@media (prefers-color-scheme: dark) {
+  .thread-copy-modal .modal-content {
+    background: #1f2937;
+    color: #e5e7eb;
+  }
+  
+  .thread-copy-modal .modal-content h3 {
+    color: #f3f4f6;
+  }
+  
+  .thread-copy-modal .modal-content p {
+    color: #d1d5db;
+  }
+  
+  .thread-copy-modal .btn-single {
+    background: #374151;
+    color: #d1d5db;
+  }
+  
+  .thread-copy-modal .btn-single:hover {
+    background: #4b5563;
+    color: #f3f4f6;
+  }
+  
+  .thread-copy-modal .btn-cancel {
+    background: #374151;
+    color: #9ca3af;
+  }
+  
+  .thread-copy-modal .btn-cancel:hover {
+    background: #4b5563;
+    color: #d1d5db;
+  }
+}
+
+/* 线程格式化内容样式 */
+.tweet-thread {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.thread-header {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  padding: 12px 16px;
+  margin: -8px -12px 12px -12px;
+}
+
+.thread-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.thread-number {
+  color: #3b82f6;
+  font-weight: 600;
+  font-size: 12px;
+  margin: 8px 0 4px 0;
+  padding: 2px 6px;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.thread-separator {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e2e8f0 20%, #e2e8f0 80%, transparent);
+  margin: 16px 0;
+}
+
+.thread-summary {
+  text-align: center;
+  color: #6b7280;
+  font-size: 12px;
+  font-style: italic;
+  padding: 12px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 16px;
+}
+
+.thread-note {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-top: 12px;
+  border-left: 3px solid #3b82f6;
+}
+
+/* 线程按钮特殊动画 */
+.super-copy-btn.thread-copy-btn:hover {
+  animation: threadPulse 1.5s infinite;
+}
+
+@keyframes threadPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(29, 155, 240, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(29, 155, 240, 0.1);
+  }
+}
+
+/* 减少动画模式适配 */
+@media (prefers-reduced-motion: reduce) {
+  .super-copy-btn,
+  .super-copy-notification {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .super-copy-btn.loading svg {
+    animation: none !important;
+  }
+  
+  .super-copy-btn.thread-copy-btn:hover {
+    animation: none !important;
+  }
+} 

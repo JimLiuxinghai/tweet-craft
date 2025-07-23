@@ -1,0 +1,650 @@
+/**
+ * Twitter 超级复制插件 - 弹窗样式
+ * 现代化的设计风格，适配深色和浅色主题
+ */
+
+/* 基础重置和根样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 360px;
+  min-height: 400px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  background-color: #ffffff;
+  color: #1f2937;
+  overflow-x: hidden;
+}
+
+/* 头部样式 */
+.popup-header {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.popup-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><defs><radialGradient id="a"><stop offset="0" stop-color="%23ffffff" stop-opacity="0.1"/><stop offset="1" stop-color="%23ffffff" stop-opacity="0"/></radialGradient></defs><circle cx="10" cy="10" r="10" fill="url(%23a)"/></svg>') repeat;
+  opacity: 0.3;
+}
+
+.header-content {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo svg {
+  opacity: 0.9;
+}
+
+.logo h1 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.version {
+  font-size: 12px;
+  opacity: 0.8;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+}
+
+/* 主要内容区域 */
+.popup-content {
+  padding: 0;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* 滚动条样式 */
+.popup-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.popup-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.popup-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.popup-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 快速操作按钮 */
+.quick-actions {
+  padding: 16px;
+  display: flex;
+  gap: 8px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.action-btn.primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.action-btn.primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.action-btn.secondary {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.action-btn.secondary:hover {
+  background: #cbd5e1;
+  color: #334155;
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+.action-btn.loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.action-btn svg {
+  opacity: 0.8;
+}
+
+/* 设置区域 */
+.settings-section {
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.settings-section:last-child {
+  border-bottom: none;
+}
+
+.settings-section h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.clear-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.clear-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* 格式选项 */
+.format-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.radio-option:hover {
+  background: #f1f5f9;
+}
+
+.radio-custom {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: all 0.2s ease;
+}
+
+.radio-option input[type="radio"] {
+  display: none;
+}
+
+.radio-option input[type="radio"]:checked + .radio-custom {
+  border-color: #3b82f6;
+  background: #3b82f6;
+}
+
+.radio-option input[type="radio"]:checked + .radio-custom::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+  transform: translate(-50%, -50%);
+}
+
+.option-content {
+  flex: 1;
+}
+
+.option-title {
+  font-weight: 500;
+  color: #374151;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.option-desc {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* 复选框选项 */
+.checkbox-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.checkbox-option:hover {
+  background: #f1f5f9;
+}
+
+.checkbox-custom {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #d1d5db;
+  border-radius: 3px;
+  position: relative;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.checkbox-option input[type="checkbox"] {
+  display: none;
+}
+
+.checkbox-option input[type="checkbox"]:checked + .checkbox-custom {
+  border-color: #3b82f6;
+  background: #3b82f6;
+}
+
+.checkbox-option input[type="checkbox"]:checked + .checkbox-custom::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 4px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.option-label {
+  font-size: 13px;
+  color: #374151;
+}
+
+/* 快捷键信息 */
+.shortcut-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.shortcut-key {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  background: #374151;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.shortcut-desc {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* 历史记录 */
+.history-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.empty-history {
+  text-align: center;
+  padding: 20px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.history-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.history-item:hover {
+  background: #f8fafc;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-preview {
+  flex: 1;
+  font-size: 12px;
+  color: #374151;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.history-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.history-date {
+  font-size: 11px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.history-format {
+  font-size: 10px;
+  background: #e2e8f0;
+  color: #475569;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.history-copy-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.history-copy-btn:hover {
+  background: #e2e8f0;
+  color: #374151;
+}
+
+/* 底部信息 */
+.popup-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.support-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.support-info span {
+  color: #6b7280;
+}
+
+.help-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.help-link:hover {
+  color: #2563eb;
+}
+
+/* 响应式调整 */
+@media (max-width: 320px) {
+  body {
+    width: 300px;
+  }
+  
+  .quick-actions {
+    flex-direction: column;
+  }
+  
+  .action-btn {
+    font-size: 12px;
+  }
+}
+
+/* 深色主题适配 */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #111827;
+    color: #e5e7eb;
+  }
+  
+  .popup-header {
+    background: linear-gradient(135deg, #1f2937, #111827);
+  }
+  
+  .quick-actions {
+    background: #1f2937;
+    border-bottom-color: #374151;
+  }
+  
+  .action-btn.secondary {
+    background: #374151;
+    color: #d1d5db;
+  }
+  
+  .action-btn.secondary:hover {
+    background: #4b5563;
+    color: #f3f4f6;
+  }
+  
+  .settings-section {
+    border-bottom-color: #374151;
+  }
+  
+  .settings-section h2 {
+    color: #f3f4f6;
+  }
+  
+  .radio-option:hover,
+  .checkbox-option:hover {
+    background: #1f2937;
+  }
+  
+  .option-title {
+    color: #f3f4f6;
+  }
+  
+  .option-desc,
+  .option-label {
+    color: #9ca3af;
+  }
+  
+  .radio-custom,
+  .checkbox-custom {
+    border-color: #6b7280;
+  }
+  
+  .shortcut-info {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .history-item {
+    border-bottom-color: #374151;
+  }
+  
+  .history-item:hover {
+    background: #1f2937;
+  }
+  
+  .history-preview {
+    color: #d1d5db;
+  }
+  
+  .history-format {
+    background: #374151;
+    color: #d1d5db;
+  }
+  
+  .history-copy-btn {
+    color: #9ca3af;
+  }
+  
+  .history-copy-btn:hover {
+    background: #374151;
+    color: #e5e7eb;
+  }
+  
+  .popup-footer {
+    background: #1f2937;
+    border-top-color: #374151;
+  }
+  
+  .popup-content::-webkit-scrollbar-track {
+    background: #1f2937;
+  }
+  
+  .popup-content::-webkit-scrollbar-thumb {
+    background: #4b5563;
+  }
+  
+  .popup-content::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-section {
+  animation: fadeIn 0.3s ease;
+}
+
+/* 焦点可访问性 */
+.action-btn:focus,
+.radio-option:focus-within,
+.checkbox-option:focus-within,
+.history-copy-btn:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 语言选择器样式 */
+.language-selector {
+  margin-top: 8px;
+}
+
+.language-dropdown {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.language-dropdown:hover {
+  border-color: #3b82f6;
+}
+
+.language-dropdown:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 深色模式的语言选择器 */
+@media (prefers-color-scheme: dark) {
+  .language-dropdown {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #e5e7eb;
+  }
+  
+  .language-dropdown:hover,
+  .language-dropdown:focus {
+    border-color: #60a5fa;
+  }
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+} 
