@@ -12,6 +12,10 @@
     "alarms"
   ],
   
+  "host_permissions": [
+    "https://cdnjs.cloudflare.com/*"
+  ],
+  
   "content_scripts": [{
     "matches": ["https://twitter.com/*", "https://x.com/*"],
     "js": [
@@ -19,6 +23,12 @@
       "utils/parser.js",
       "utils/formatter.js", 
       "utils/clipboard.js",
+      "screenshot/types.js",
+      "screenshot/interfaces.js",
+      "screenshot/html2canvas-wrapper.js",
+      "screenshot/screenshot-renderer.js",
+      "screenshot/screenshot-manager.js",
+      "screenshot/init-test.js",
       "content/content.js"
     ],
     "css": ["content/content.css"],
