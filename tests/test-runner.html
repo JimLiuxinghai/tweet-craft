@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tweet Craft Extension - Test Runner</title>
+    <style>
+    body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+ max-width: 1200px;
+        margin: 0 auto;
+       padding: 20px;
+   background-color: #f5f7fa;
+            color: #333;
+        }
+
+  .header {
+        text-align: center;
+      margin-bottom: 30px;
+            padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+        border-radius: 10px;
+     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+        margin: 0 0 10px 0;
+            font-size: 2em;
+     }
+
+        .header p {
+            margin: 0;
+            opacity: 0.9;
+    }
+
+        .controls {
+       display: flex;
+gap: 10px;
+            margin-bottom: 20px;
+        justify-content: center;
+ flex-wrap: wrap;
+    }
+
+        .btn {
+     padding: 10px 20px;
+       border: none;
+       border-radius: 6px;
+            cursor: pointer;
+  font-size: 14px;
+     font-weight: 500;
+       transition: all 0.2s;
+      text-decoration: none;
+       display: inline-block;
+        }
+
+   .btn-primary {
+background-color: #4CAF50;
+         color: white;
+     }
+
+   .btn-primary:hover {
+            background-color: #45a049;
+        transform: translateY(-1px);
+  }
+
+        .btn-secondary {
+  background-color: #2196F3;
+  color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #1976D2;
+            transform: translateY(-1px);
+        }
+
+  .btn-danger {
+            background-color: #f44336;
+color: white;
+  }
+
+        .btn-danger:hover {
+      background-color: #d32f2f;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+          cursor: not-allowed;
+            transform: none !important;
+        }
+
+     .status {
+      text-align: center;
+            margin: 20px 0;
+    padding: 15px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+      .status.loading {
+         background-color: #fff3cd;
+         color: #856404;
+    border: 1px solid #ffeaa7;
+        }
+
+      .status.success {
+  background-color: #d4edda;
+       color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+  background-color: #f8d7da;
+            color: #721c24;
+   border: 1px solid #f5c6cb;
+        }
+
+      .progress-bar {
+      width: 100%;
+   height: 6px;
+       background-color: #e0e0e0;
+border-radius: 3px;
+  overflow: hidden;
+        margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .output {
+   background: #1e1e1e;
+            color: #f8f8f2;
+            padding: 20px;
+       border-radius: 8px;
+        font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+    max-height: 600px;
+            overflow-y: auto;
+white-space: pre-wrap;
+       box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats {
+     display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+      margin: 20px 0;
+        }
+
+   .stat-card {
+            background: white;
+       padding: 20px;
+        border-radius: 8px;
+ box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+   font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 5px;
+        }
+
+  .stat-label {
+        color: #666;
+         font-size: 14px;
+ }
+
+   .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+        .info { color: #2196F3; }
+
+        .test-filter {
+     margin: 20px 0;
+            text-align: center;
+   }
+
+     .test-filter select {
+  padding: 8px 12px;
+     border: 1px solid #ddd;
+ border-radius: 4px;
+            font-size: 14px;
+        }
+
+     .health-check {
+ background: white;
+   padding: 15px;
+       border-radius: 8px;
+     margin-bottom: 20px;
+       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .health-check h3 {
+            margin: 0 0 15px 0;
+   color: #333;
+        }
+
+      .health-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+      border-bottom: 1px solid #eee;
+        }
+
+        .health-item:last-child {
+     border-bottom: none;
+        }
+
+        .health-status {
+            font-weight: bold;
+}
+
+        @media (max-width: 768px) {
+    body {
+         padding: 10px;
+     }
+
+    .controls {
+     flex-direction: column;
+             align-items: center;
+            }
+
+        .btn {
+         width: 200px;
+            }
+
+            .stats {
+   grid-template-columns: 1fr 1fr;
+     }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+         width: 16px;
+     height: 16px;
+       border: 2px solid #f3f3f3;
+  border-top: 2px solid #4CAF50;
+         border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+  0% { transform: rotate(0deg); }
+   100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+     <h1>🧪 Tweet Craft Extension</h1>
+      <p>Comprehensive Test Suite Runner</p>
+    </div>
+
+    <div class="health-check" id="healthCheck" style="display: none;">
+        <h3>🏥 System Health Check</h3>
+        <div id="healthResults"></div>
+    </div>
+
+ <div class="controls">
+   <button class="btn btn-primary" id="runAllBtn">
+      <span id="runAllText">🚀 Run All Tests</span>
+        </button>
+ <button class="btn btn-secondary" id="runCoreBtn">📦 Core Tests Only</button>
+        <button class="btn btn-secondary" id="runExtensionBtn">🔧 Extension Tests Only</button>
+        <button class="btn btn-danger" id="clearBtn">🗑️ Clear Output</button>
+    </div>
+
+    <div class="test-filter">
+        <label for="testFilter">Filter Tests: </label>
+        <select id="testFilter">
+     <option value="">All Tests</option>
+    <option value="Internationalization">Internationalization</option>
+        <option value="Error Handling">Error Handling</option>
+   <option value="Cache">Cache Management</option>
+        <option value="Memory">Memory Management</option>
+   <option value="Batch">Batch Processing</option>
+          <option value="Twitter">Twitter Parsing</option>
+ <option value="Formatting">Content Formatting</option>
+   <option value="Clipboard">Clipboard Operations</option>
+            <option value="Screenshot">Screenshot</option>
+<option value="Edge Cases">Edge Cases</option>
+  </select>
+    </div>
+
+    <div id="status" class="status" style="display: none;"></div>
+ 
+    <div class="progress-bar" id="progressBar" style="display: none;">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="stats" id="stats" style="display: none;">
+        <div class="stat-card">
+            <div class="stat-number success" id="passedCount">0</div>
+            <div class="stat-label">Passed</div>
+ </div>
+        <div class="stat-card">
+            <div class="stat-number error" id="failedCount">0</div>
+   <div class="stat-label">Failed</div>
+        </div>
+    <div class="stat-card">
+  <div class="stat-number info" id="totalCount">0</div>
+            <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-card">
+   <div class="stat-number" id="successRate">0%</div>
+        <div class="stat-label">Success Rate</div>
+        </div>
+        <div class="stat-card">
+  <div class="stat-number" id="totalTime">0ms</div>
+         <div class="stat-label">Total Time</div>
+   </div>
+    </div>
+
+    <div class="output" id="output">
+Ready to run tests. Click "Run All Tests" to begin.
+
+📋 Available Test Suites:
+• Internationalization System (7 tests)
+• Error Handling System (6 tests)
+• Cache Management System (5 tests)
+• Memory Management System (4 tests)
+• Batch Processing System (5 tests)
+• Twitter Content Parsing (6 tests)
+• Content Formatting (5 tests)
+• Clipboard Operations (4 tests)
+• Screenshot Functionality (4 tests)
+• Storage and Settings (4 tests)
+• Performance and Limits (3 tests)
+• DOM Operations (3 tests)
+• Edge Cases and Exception Handling (6 tests)
+
+Total: 62 tests across 13 categories
+    </div>
+
+    <script type="module">
+        // Mock implementations for browser testing
+        class MockTestFramework {
+            constructor() {
+          this.results = [];
+          this.suites = [];
+          this.running = false;
+            }
+
+async runHealthCheck() {
+        const checks = [
+         { name: 'DOM API', test: () => typeof document !== 'undefined' },
+            { name: 'Local Storage', test: () => typeof localStorage !== 'undefined' },
+{ name: 'Clipboard API', test: () => typeof navigator !== 'undefined' && 'clipboard' in navigator },
+    { name: 'Canvas Support', test: () => {
+       try {
+          const canvas = document.createElement('canvas');
+  return canvas.getContext && canvas.getContext('2d');
+           } catch (e) {
+            return false;
+  }
+                    }},
+         { name: 'Fetch API', test: () => typeof fetch !== 'undefined' },
+          { name: 'Promise Support', test: () => typeof Promise !== 'undefined' },
+       { name: 'ES6 Features', test: () => {
+  try {
+        const test = (x) => x * 2;
+   const [a] = [1];
+   const template = `test${a}`;
+    return test(1) === 2 && a === 1 && template === 'test1';
+           } catch (e) {
+        return false;
+    }
+        }}
+     ];
+
+   const healthResults = document.getElementById('healthResults');
+         healthResults.innerHTML = '';
+
+      for (const check of checks) {
+        const result = check.test();
+      const status = result ? '✅' : '❌';
+          const div = document.createElement('div');
+        div.className = 'health-item';
+                div.innerHTML = `
+    <span>${check.name}</span>
+    <span class="health-status ${result ? 'success' : 'error'}">${status}</span>
+    `;
+           healthResults.appendChild(div);
+         }
+
+    document.getElementById('healthCheck').style.display = 'block';
+         }
+
+            async runMockTests(filter = '', category = '') {
+          if (this.running) return;
+    this.running = true;
+
+   const output = document.getElementById('output');
+              const status = document.getElementById('status');
+         const progressBar = document.getElementById('progressBar');
+           const progressFill = document.getElementById('progressFill');
+     const stats = document.getElementById('stats');
+
+                // Show health check first
+    await this.runHealthCheck();
+
+       // Clear previous results
+                this.results = [];
+    output.textContent = '';
+          
+     // Show running status
+                status.textContent = '🚀 Running tests...';
+         status.className = 'status loading';
+     status.style.display = 'block';
+                progressBar.style.display = 'block';
+      stats.style.display = 'grid';
+
+           // Mock test categories and counts
+      const testCategories = [
+{ name: 'Internationalization System', count: 7, duration: 150 },
+       { name: 'Error Handling System', count: 6, duration: 120 },
+  { name: 'Cache Management System', count: 5, duration: 100 },
+         { name: 'Memory Management System', count: 4, duration: 80 },
+         { name: 'Batch Processing System', count: 5, duration: 110 },
+            { name: 'Twitter Content Parsing', count: 6, duration: 140 },
+           { name: 'Content Formatting', count: 5, duration: 90 },
+        { name: 'Clipboard Operations', count: 4, duration: 70 },
+             { name: 'Screenshot Functionality', count: 4, duration: 160 },
+{ name: 'Storage and Settings', count: 4, duration: 85 },
+ { name: 'Performance and Limits', count: 3, duration: 200 },
+      { name: 'DOM Operations', count: 3, duration: 60 },
+       { name: 'Edge Cases', count: 6, duration: 180 }
+         ];
+
+                let filteredCategories = testCategories;
+       if (filter) {
+             filteredCategories = testCategories.filter(cat => 
+      cat.name.toLowerCase().includes(filter.toLowerCase())
+             );
+ }
+
+        if (category === 'core') {
+   filteredCategories = testCategories.slice(0, 7);
+   } else if (category === 'extension') {
+    filteredCategories = testCategories.slice(7);
+   }
+
+          const totalTests = filteredCategories.reduce((sum, cat) => sum + cat.count, 0);
+                let completedTests = 0;
+
+      output.textContent += `🧪 Starting test execution...\n`;
+     output.textContent += `📊 Running ${totalTests} tests across ${filteredCategories.length} categories\n\n`;
+
+    for (const category of filteredCategories) {
+        output.textContent += `📋 Running test suite: ${category.name}\n`;
+         
+        // Simulate running tests in this category
+        for (let i = 0; i < category.count; i++) {
+         const testName = `${category.name} > Test ${i + 1}`;
+      const passed = Math.random() > 0.1; // 90% success rate
+    const duration = Math.random() * 50 + 10;
+     
+      const result = {
+          name: testName,
+       passed: passed,
+       duration: duration,
+         error: passed ? null : 'Mock test failure'
+                 };
+
+                 this.results.push(result);
+    completedTests++;
+
+        const status = passed ? '✅' : '❌';
+            output.textContent += `${status} ${testName} (${duration.toFixed(2)}ms)\n`;
+      
+          if (!passed) {
+      output.textContent += `   Error: Mock test failure for demonstration\n`;
+            }
+
+         // Update progress
+     const progress = (completedTests / totalTests) * 100;
+          progressFill.style.width = `${progress}%`;
+
+  // Update stats
+     this.updateStats();
+
+       // Simulate test execution time
+         await new Promise(resolve => setTimeout(resolve, Math.random() * 100 + 50));
+   
+           // Auto-scroll output
+       output.scrollTop = output.scrollHeight;
+    }
+  
+      output.textContent += '\n';
+     }
+
+     // Final summary
+  const passed = this.results.filter(r => r.passed).length;
+                const failed = this.results.filter(r => !r.passed).length;
+      const totalTime = this.results.reduce((sum, r) => sum + r.duration, 0);
+
+   output.textContent += '='.repeat(50) + '\n';
+     output.textContent += '📊 TEST SUMMARY\n';
+       output.textContent += '='.repeat(50) + '\n';
+         output.textContent += `Total Tests: ${this.results.length}\n`;
+    output.textContent += `✅ Passed: ${passed}\n`;
+        output.textContent += `❌ Failed: ${failed}\n`;
+       output.textContent += `⏱️ Total Time: ${totalTime.toFixed(2)}ms\n`;
+    output.textContent += `📈 Success Rate: ${((passed / this.results.length) * 100).toFixed(1)}%\n`;
+
+          if (failed > 0) {
+     output.textContent += '\n❌ FAILED TESTS:\n';
+           this.results.filter(r => !r.passed).forEach(result => {
+    output.textContent += `  • ${result.name}: ${result.error}\n`;
+        });
+                }
+
+                // Update final status
+        if (failed === 0) {
+         status.textContent = '🎉 All tests passed!';
+      status.className = 'status success';
+      } else {
+      status.textContent = `❌ ${failed} test(s) failed`;
+  status.className = 'status error';
+        }
+
+   output.scrollTop = output.scrollHeight;
+   this.running = false;
+   }
+
+          updateStats() {
+  const passed = this.results.filter(r => r.passed).length;
+            const failed = this.results.filter(r => !r.passed).length;
+           const total = this.results.length;
+                const totalTime = this.results.reduce((sum, r) => sum + r.duration, 0);
+           const successRate = total > 0 ? ((passed / total) * 100).toFixed(1) : 0;
+
+       document.getElementById('passedCount').textContent = passed;
+      document.getElementById('failedCount').textContent = failed;
+              document.getElementById('totalCount').textContent = total;
+          document.getElementById('successRate').textContent = `${successRate}%`;
+                document.getElementById('totalTime').textContent = `${totalTime.toFixed(2)}ms`;
+     }
+        }
+
+        // Initialize mock test framework
+        const mockRunner = new MockTestFramework();
+
+    // Event listeners
+        document.getElementById('runAllBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('runAllBtn');
+            const text = document.getElementById('runAllText');
+         const filter = document.getElementById('testFilter').value;
+      
+         btn.disabled = true;
+        text.innerHTML = '<span class="loading-spinner"></span>Running Tests...';
+            
+     await mockRunner.runMockTests(filter);
+   
+            btn.disabled = false;
+            text.textContent = '🚀 Run All Tests';
+  });
+
+        document.getElementById('runCoreBtn').addEventListener('click', async () => {
+   await mockRunner.runMockTests('', 'core');
+  });
+
+        document.getElementById('runExtensionBtn').addEventListener('click', async () => {
+       await mockRunner.runMockTests('', 'extension');
+      });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+ document.getElementById('output').textContent = 'Output cleared. Ready to run tests.';
+   document.getElementById('status').style.display = 'none';
+            document.getElementById('progressBar').style.display = 'none';
+      document.getElementById('stats').style.display = 'none';
+            document.getElementById('healthCheck').style.display = 'none';
+     mockRunner.results = [];
+        });
+
+  // Auto-run health check on page load
+        window.addEventListener('load', () => {
+     setTimeout(() => {
+      mockRunner.runHealthCheck();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

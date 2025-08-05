@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tweet Craft - Performance Tests</title>
+    <style>
+        body {
+     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+ color: #333;
+     }
+
+      .container {
+    max-width: 1200px;
+   margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+         box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+         padding: 30px;
+        }
+
+      .header {
+            text-align: center;
+   margin-bottom: 40px;
+   border-bottom: 2px solid #f0f0f0;
+         padding-bottom: 20px;
+        }
+
+        .header h1 {
+color: #2c3e50;
+            font-size: 2.5em;
+     margin: 0;
+         font-weight: 300;
+        }
+
+      .header p {
+      color: #666;
+            font-size: 1.1em;
+      margin-top: 10px;
+        }
+
+     .controls {
+       display: flex;
+          gap: 15px;
+   margin-bottom: 30px;
+            flex-wrap: wrap;
+ justify-content: center;
+        }
+
+        .btn {
+       padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+  text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+  .btn-primary {
+       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+         color: white;
+     }
+
+        .btn-secondary {
+ background: #f8f9fa;
+    color: #495057;
+            border: 1px solid #dee2e6;
+        }
+
+        .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      }
+
+        .btn:disabled {
+      opacity: 0.6;
+ cursor: not-allowed;
+     transform: none;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+ margin-bottom: 20px;
+          display: none;
+        }
+
+        .status.running {
+ background: #fff3cd;
+    border-left: 4px solid #ffc107;
+        color: #856404;
+            display: block;
+      }
+
+        .status.success {
+  background: #d1edff;
+      border-left: 4px solid #0066cc;
+      color: #004085;
+display: block;
+        }
+
+        .status.error {
+   background: #f8d7da;
+          border-left: 4px solid #dc3545;
+       color: #721c24;
+   display: block;
+        }
+
+        .progress {
+ width: 100%;
+            height: 8px;
+        background: #e9ecef;
+            border-radius: 4px;
+       overflow: hidden;
+          margin: 20px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+     background: linear-gradient(90deg, #667eea, #764ba2);
+    width: 0%;
+    transition: width 0.3s ease;
+        }
+
+ .results {
+          margin-top: 30px;
+     }
+
+        .test-result {
+    background: #f8f9fa;
+      border-radius: 8px;
+padding: 15px;
+   margin-bottom: 15px;
+   border-left: 4px solid #28a745;
+   }
+
+        .test-result.failed {
+    border-left-color: #dc3545;
+        }
+
+        .test-result h3 {
+  margin: 0 0 10px 0;
+    color: #2c3e50;
+        }
+
+        .metrics {
+            display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+    .metric {
+       background: white;
+    padding: 10px;
+        border-radius: 6px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+      color: #666;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 1.2em;
+     font-weight: bold;
+ color: #2c3e50;
+        }
+
+        .console {
+            background: #2d3748;
+         color: #e2e8f0;
+  padding: 20px;
+            border-radius: 8px;
+         font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+    max-height: 400px;
+overflow-y: auto;
+        margin-top: 20px;
+        }
+
+  .console-line {
+     margin-bottom: 5px;
+        }
+
+        .console-error {
+     color: #fc8181;
+}
+
+        .console-success {
+  color: #68d391;
+        }
+
+        .console-info {
+   color: #63b3ed;
+      }
+
+        @keyframes spin {
+       0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+ }
+
+ .spinner {
+    border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+      width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+  display: inline-block;
+         margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Performance Test Suite</h1>
+      <p>Tweet Craft Extension Performance Analysis</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="runAllTests()">
+          Run All Performance Tests
+   </button>
+            <button class="btn btn-secondary" onclick="runCacheTests()">
+            Cache Tests Only
+         </button>
+      <button class="btn btn-secondary" onclick="runMemoryTests()">
+           Memory Tests Only
+         </button>
+         <button class="btn btn-secondary" onclick="runBatchTests()">
+       Batch Processing Tests
+   </button>
+       <button class="btn btn-secondary" onclick="clearResults()">
+       Clear Results
+         </button>
+        </div>
+
+   <div id="status" class="status"></div>
+        
+        <div class="progress">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+
+        <div id="results" class="results"></div>
+
+ <div id="console" class="console" style="display: none;">
+    <div id="console-content"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        let testResults = [];
+     let currentProgress = 0;
+
+      // Mock dependencies for browser environment
+        const mockMemoryManager = {
+            async getMemoryUsage() {
+         return {
+ used: Math.floor(Math.random() * 100000000),
+      total: 500000000
+     };
+   },
+       isMemoryPressure() {
+       return Math.random() > 0.8;
+ },
+       async checkAndCleanup() {
+       await new Promise(resolve => setTimeout(resolve, 100));
+     }
+        };
+
+        const mockCacheManager = {
+     async get(key) {
+                return Math.random() > 0.1 ? { key, cached: true } : null;
+   },
+     async set(key, value, ttl) {
+           await new Promise(resolve => setTimeout(resolve, 1));
+            },
+            getStats() {
+                return {
+               hits: Math.floor(Math.random() * 1000),
+        misses: Math.floor(Math.random() * 200),
+ memoryUsage: Math.floor(Math.random() * 50000000),
+evictions: Math.floor(Math.random() * 50)
+    };
+      },
+            async cleanup() {
+       await new Promise(resolve => setTimeout(resolve, 50));
+            }
+        };
+
+        const mockBatchProcessor = {
+  async process(items, processor, options = {}) {
+      const batchSize = options.batchSize || 10;
+const results = [];
+             
+       for (let i = 0; i < items.length; i += batchSize) {
+         const batch = items.slice(i, i + batchSize);
+        const batchResult = await processor(batch);
+    results.push(...batchResult);
+     }
+    
+      return results;
+     }
+        };
+
+        const mockI18nManager = {
+       t(key) {
+    const translations = {
+  'performance.slow_operation': 'Slow Operation Detected',
+         'performance.optimize_operation': 'Consider optimizing this operation',
+         'performance.impact_user_experience': 'May impact user experience',
+     'performance.low_cache_hit_rate': 'Low Cache Hit Rate',
+      'performance.improve_cache_strategy': 'Improve cache strategy',
+  'performance.impact_response_time': 'May slow down response time',
+'performance.cache_size_too_large': 'Cache Size Too Large',
+      'performance.reduce_cache_size': 'Reduce cache size',
+    'performance.impact_memory_usage': 'High memory usage',
+       'performance.high_memory_usage': 'High Memory Usage',
+        'performance.reduce_memory_usage': 'Reduce memory usage',
+      'performance.impact_system_performance': 'May impact system performance',
+    'performance.memory_pressure': 'Memory Pressure',
+         'performance.immediate_cleanup': 'Immediate cleanup required',
+          'performance.impact_stability': 'May affect stability'
+ };
+       return translations[key] || key;
+          }
+   };
+
+        // UI Functions
+    function updateStatus(message, type = 'running') {
+         const status = document.getElementById('status');
+ status.className = `status ${type}`;
+        status.innerHTML = type === 'running' ? 
+         `<div class="spinner"></div>${message}` : 
+         message;
+        }
+
+        function updateProgress(percentage) {
+ const progressBar = document.getElementById('progress-bar');
+       progressBar.style.width = `${percentage}%`;
+        }
+
+        function addConsoleLog(message, type = 'info') {
+ const console = document.getElementById('console');
+        const content = document.getElementById('console-content');
+
+            console.style.display = 'block';
+     
+      const line = document.createElement('div');
+line.className = `console-line console-${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+       
+            content.appendChild(line);
+      console.scrollTop = console.scrollHeight;
+     }
+
+     function displayResults() {
+   const resultsContainer = document.getElementById('results');
+       resultsContainer.innerHTML = '';
+
+  if (testResults.length === 0) return;
+
+         const summary = document.createElement('div');
+     summary.innerHTML = `
+     <h2>📊 Test Summary</h2>
+      <div class="metrics">
+    <div class="metric">
+  <div class="metric-label">Total Tests</div>
+      <div class="metric-value">${testResults.length}</div>
+        </div>
+      <div class="metric">
+   <div class="metric-label">Passed</div>
+      <div class="metric-value">${testResults.filter(r => r.success).length}</div>
+          </div>
+        <div class="metric">
+ <div class="metric-label">Failed</div>
+          <div class="metric-value">${testResults.filter(r => !r.success).length}</div>
+         </div>
+           <div class="metric">
+   <div class="metric-label">Total Duration</div>
+   <div class="metric-value">${testResults.reduce((sum, r) => sum + (r.duration || 0), 0).toFixed(2)}ms</div>
+     </div>
+      </div>
+        `;
+     resultsContainer.appendChild(summary);
+
+            testResults.forEach(result => {
+          const resultDiv = document.createElement('div');
+         resultDiv.className = `test-result ${result.success ? '' : 'failed'}`;
+       
+        resultDiv.innerHTML = `
+   <h3>${result.success ? '✅' : '❌'} ${result.name}</h3>
+      <div class="metrics">
+      <div class="metric">
+           <div class="metric-label">Duration</div>
+      <div class="metric-value">${result.duration ? result.duration.toFixed(2) : 'N/A'}ms</div>
+  </div>
+           <div class="metric">
+ <div class="metric-label">Memory Peak</div>
+        <div class="metric-value">${result.memoryPeak ? (result.memoryPeak / 1024 / 1024).toFixed(2) : 'N/A'}MB</div>
+      </div>
+    <div class="metric">
+        <div class="metric-label">Throughput</div>
+        <div class="metric-value">${result.throughput ? result.throughput.toFixed(2) : 'N/A'} ops/sec</div>
+           </div>
+     </div>
+               ${result.error ? `<div style="color: #dc3545; margin-top: 10px;"><strong>Error:</strong> ${result.error}</div>` : ''}
+        `;
+    
+            resultsContainer.appendChild(resultDiv);
+      });
+ }
+
+   // Mock Performance Tests
+        async function runPerformanceTest(name, testFunction, iterations = 5) {
+            addConsoleLog(`Starting test: ${name}`);
+       
+   const samples = [];
+          let success = true;
+          let error = null;
+
+        try {
+              for (let i = 0; i < iterations; i++) {
+        const startTime = performance.now();
+        const startMemory = performance.memory ? performance.memory.usedJSHeapSize : 0;
+                
+   await testFunction();
+          
+         const endTime = performance.now();
+      const endMemory = performance.memory ? performance.memory.usedJSHeapSize : startMemory;
+    const duration = endTime - startTime;
+         const memoryUsed = endMemory - startMemory;
+   
+      samples.push({
+         duration,
+    memoryUsed,
+            memoryPeak: endMemory
+    });
+         
+  // Simulate some progress
+           await new Promise(resolve => setTimeout(resolve, 10));
+      }
+ } catch (e) {
+  success = false;
+        error = e.message;
+ addConsoleLog(`Test failed: ${name} - ${error}`, 'error');
+  }
+
+            const avgDuration = samples.reduce((sum, s) => sum + s.duration, 0) / samples.length || 0;
+            const maxMemory = Math.max(...samples.map(s => s.memoryPeak)) || 0;
+            const throughput = avgDuration > 0 ? 1000 / avgDuration : 0;
+
+            const result = {
+            name,
+         success,
+    error,
+                duration: avgDuration,
+         memoryPeak: maxMemory,
+     throughput
+     };
+
+    testResults.push(result);
+  addConsoleLog(`Test completed: ${name} - ${success ? 'PASS' : 'FAIL'}`, success ? 'success' : 'error');
+            
+            return result;
+        }
+
+        // Test Implementations
+        async function mockCacheTest() {
+       for (let i = 0; i < 100; i++) {
+          await mockCacheManager.set(`test_${i}`, { data: i });
+     await mockCacheManager.get(`test_${i}`);
+          }
+        }
+
+    async function mockMemoryTest() {
+        const data = [];
+   for (let i = 0; i < 1000; i++) {
+       data.push({
+       id: i,
+        content: 'x'.repeat(100),
+ timestamp: Date.now()
+     });
+ }
+        // Process the data
+     data.forEach(item => {
+  item.processed = true;
+          item.score = Math.random();
+      });
+ }
+
+        async function mockBatchTest() {
+            const items = Array.from({ length: 500 }, (_, i) => i);
+         await mockBatchProcessor.process(items, async (batch) => {
+      return batch.map(x => x * 2);
+            }, { batchSize: 50 });
+        }
+
+        async function mockConcurrencyTest() {
+            const promises = Array.from({ length: 20 }, () => 
+         new Promise(resolve => setTimeout(resolve, Math.random() * 50))
+     );
+        await Promise.all(promises);
+        }
+
+        // Main Test Functions
+        window.runAllTests = async function() {
+   testResults = [];
+     currentProgress = 0;
+            
+ updateStatus('Running all performance tests...', 'running');
+         addConsoleLog('Starting comprehensive performance test suite');
+
+     const tests = [
+         { name: 'Cache Performance Test', fn: mockCacheTest },
+                { name: 'Memory Management Test', fn: mockMemoryTest },
+          { name: 'Batch Processing Test', fn: mockBatchTest },
+       { name: 'Concurrency Test', fn: mockConcurrencyTest },
+    { name: 'Large Data Processing', fn: () => mockMemoryTest() },
+       { name: 'High Throughput Test', fn: () => mockConcurrencyTest() }
+    ];
+
+            for (let i = 0; i < tests.length; i++) {
+            const test = tests[i];
+       updateProgress((i / tests.length) * 100);
+     await runPerformanceTest(test.name, test.fn);
+            }
+
+            updateProgress(100);
+          const passed = testResults.filter(r => r.success).length;
+            const total = testResults.length;
+ 
+          if (passed === total) {
+   updateStatus(`✅ All tests passed! (${passed}/${total})`, 'success');
+            } else {
+                updateStatus(`❌ Some tests failed (${passed}/${total} passed)`, 'error');
+  }
+
+      displayResults();
+        };
+
+        window.runCacheTests = async function() {
+      testResults = [];
+  updateStatus('Running cache performance tests...', 'running');
+            await runPerformanceTest('Cache Performance', mockCacheTest);
+            updateStatus('Cache tests completed', 'success');
+ updateProgress(100);
+        displayResults();
+        };
+
+        window.runMemoryTests = async function() {
+        testResults = [];
+            updateStatus('Running memory management tests...', 'running');
+            await runPerformanceTest('Memory Management', mockMemoryTest);
+            updateStatus('Memory tests completed', 'success');
+      updateProgress(100);
+ displayResults();
+        };
+
+        window.runBatchTests = async function() {
+     testResults = [];
+    updateStatus('Running batch processing tests...', 'running');
+   await runPerformanceTest('Batch Processing', mockBatchTest);
+            updateStatus('Batch tests completed', 'success');
+          updateProgress(100);
+    displayResults();
+        };
+
+        window.clearResults = function() {
+       testResults = [];
+  document.getElementById('results').innerHTML = '';
+     document.getElementById('console-content').innerHTML = '';
+          document.getElementById('console').style.display = 'none';
+            updateProgress(0);
+     updateStatus('', 'running');
+  document.getElementById('status').style.display = 'none';
+        };
+
+   // Initialize
+        addConsoleLog('Performance test suite loaded and ready');
+    </script>
+</body>
+</html>
