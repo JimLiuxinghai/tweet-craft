@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tweet Craft - Twitter 超级复制插件</title>
+    <meta name="description" content="Enhanced Twitter/X browser extension with super copy functionality, thread support, multiple formats, and screenshot capabilities. | 增强 Twitter/X 浏览器插件，支持超级复制功能、推文线程、多种格式和截图功能。">
+    <meta name="keywords" content="Twitter, X, extension, copy, thread, screenshot, browser, Chrome, Firefox, 推特, 插件, 复制, 截图">
+    <meta name="author" content="Tweet Craft Team">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tweet-craft.vercel.app/">
+    <meta property="og:title" content="Tweet Craft - Twitter 超级复制插件">
+    <meta property="og:description" content="Enhanced Twitter/X browser extension with super copy functionality, thread support, multiple formats, and screenshot capabilities.">
+    <meta property="og:image" content="public/icon/icon.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://tweet-craft.vercel.app/">
+    <meta property="twitter:title" content="Tweet Craft - Twitter 超级复制插件">
+    <meta property="twitter:description" content="Enhanced Twitter/X browser extension with super copy functionality, thread support, multiple formats, and screenshot capabilities.">
+    <meta property="twitter:image" content="public/icon/icon.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="public/icon/icon.png">
+    <link rel="apple-touch-icon" href="public/icon/icon.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom styles -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .feature-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+        }
+        
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+        
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        
+        .scroll-smooth {
+            scroll-behavior: smooth;
+        }
+        
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .tech-badge {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="scroll-smooth">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 shadow-sm">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <img src="public/icon/icon.png" alt="Tweet Craft Logo" class="w-8 h-8 rounded">
+                    <span class="text-xl font-bold text-gray-800" data-i18n="nav.title">Tweet Craft</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#features" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.features">Features</a>
+                    <a href="#demo" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.demo">Demo</a>
+                    <a href="#tech" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.technology">Technology</a>
+                    <a href="#install" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.install">Install</a>
+                    <div class="flex items-center space-x-2">
+                        <button id="langToggle" class="flex items-center space-x-2 px-3 py-1 rounded-lg border border-gray-300 hover:border-gray-400 transition">
+                            <i class="fas fa-globe text-gray-600"></i>
+                            <span id="currentLang" class="text-gray-700">EN</span>
+                        </button>
+                    </div>
+                </div>
+                <button class="md:hidden text-gray-600">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-24 pb-12 px-6">
+        <div class="container mx-auto text-center">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+                    <span data-i18n="hero.title">Super Copy for</span>
+                    <span class="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+                        Twitter/X
+                    </span>
+                </h1>
+                <p class="text-xl text-gray-600 mb-8 leading-relaxed" data-i18n="hero.description">
+                    Enhanced browser extension that revolutionizes how you copy and save Twitter content. 
+                    Support for threads, multiple formats, beautiful screenshots, and 6 languages.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+                    <a href="https://chromewebstore.google.com/detail/twitter-%E8%B6%85%E7%BA%A7%E5%A2%9E%E5%BC%BA/pancaficlgkdicdeloffhlgdldfhcghf?authuser=0&hl=zh-CN" target="_blank" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover-scale">
+                        <i class="fas fa-download mr-2"></i>
+                        <span data-i18n="hero.install">Install Extension</span>
+                    </a>
+                    <a href="#demo" class="border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:border-gray-400 transition">
+                        <i class="fas fa-play mr-2"></i>
+                        <span data-i18n="hero.demo">Watch Demo</span>
+                    </a>
+                </div>
+                
+                <!-- Browser Support -->
+                <div class="flex justify-center items-center space-x-6 mb-8">
+                    <div class="flex items-center space-x-2">
+                        <i class="fab fa-chrome text-2xl text-gray-700"></i>
+                        <span class="text-gray-600">Chrome</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fab fa-firefox text-2xl text-gray-700"></i>
+                        <span class="text-gray-600">Firefox</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fab fa-edge text-2xl text-gray-700"></i>
+                        <span class="text-gray-600">Edge</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-16 px-6 bg-gray-50">
+        <div class="container mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4" data-i18n="features.title">Powerful Features</h2>
+                <p class="text-xl text-gray-600" data-i18n="features.subtitle">Everything you need to enhance your Twitter experience</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Smart Thread Detection -->
+                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-link text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.thread.title">Smart Thread Detection</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="features.thread.description">
+                        Automatically detect Twitter threads using advanced algorithms. Copy entire threads with perfect formatting.
+                    </p>
+                    <div class="flex items-center text-sm text-blue-600">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <span data-i18n="features.thread.detail">Number pattern, self-reply, visual continuity</span>
+                    </div>
+                </div>
+
+                <!-- Multiple Formats -->
+                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-file-code text-green-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.formats.title">Multiple Output Formats</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="features.formats.description">
+                        Copy tweets in your preferred format. Perfect for different use cases and platforms.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">HTML</span>
+                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">Markdown</span>
+                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">Plain Text</span>
+                    </div>
+                </div>
+
+                <!-- Beautiful Screenshots -->
+                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-camera text-purple-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.screenshot.title">Beautiful Screenshots</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="features.screenshot.description">
+                        Generate stunning tweet screenshots with customizable themes and styles.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">PNG</span>
+                        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">JPG</span>
+                        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">WebP</span>
+                    </div>
+                </div>
+
+                <!-- Multi-language Support -->
+                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-globe text-orange-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.language.title">Multi-language Support</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="features.language.description">
+                        Full internationalization support with automatic language detection.
+                    </p>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="flex items-center"><i class="fas fa-check text-orange-500 mr-2"></i>中文</div>
+                        <div class="flex items-center"><i class="fas fa-check text-orange-500 mr-2"></i>English</div>
+                        <div class="flex items-center"><i class="fas fa-check text-orange-500 mr-2"></i>日本語</div>
+                        <div class="flex items-center"><i class="fas fa-check text-orange-500 mr-2"></i>한국어</div>
+                    </div>
+                </div>
+
+                <!-- Performance Optimized -->
+                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-rocket text-red-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.performance.title">Performance Optimized</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="features.performance.description">
+                        Built with performance in mind. Batch processing, caching, and memory management.
+                    </p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-tachometer-alt text-red-500 mr-2"></i>
+                            <span data-i18n="features.performance.batch">Processes 10 tweets at once</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-memory text-red-500 mr-2"></i>
+                            <span data-i18n="features.performance.cache">LRU cache (200 items max)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy First -->
+                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-shield-alt text-indigo-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.privacy.title">Privacy First</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="features.privacy.description">
+                        All processing happens locally. No data is sent to external servers.
+                    </p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-lock text-indigo-500 mr-2"></i>
+                            <span data-i18n="features.privacy.local">Local processing only</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-user-secret text-indigo-500 mr-2"></i>
+                            <span data-i18n="features.privacy.notracking">No tracking or analytics</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="py-16 px-6">
+        <div class="container mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4" data-i18n="demo.title">See It In Action</h2>
+                <p class="text-xl text-gray-600" data-i18n="demo.subtitle">Watch how Tweet Craft transforms your Twitter experience</p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-gray-100 rounded-xl p-8 mb-8">
+                    <div class="aspect-video bg-gray-300 rounded-lg flex items-center justify-center">
+                        <div class="text-center">
+                            <i class="fas fa-play-circle text-6xl text-gray-500 mb-4"></i>
+                            <p class="text-gray-600" data-i18n="demo.coming">Demo Video Coming Soon</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sample Output -->
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4" data-i18n="demo.html">HTML Output Sample</h3>
+                        <div class="code-block">
+                            <pre>&lt;div class="tweet-copy"&gt;
+  &lt;div class="tweet-header"&gt;
+    &lt;strong&gt;John Doe&lt;/strong&gt;
+    &lt;span&gt;@johndoe&lt;/span&gt;
+    &lt;span&gt;2024/01/01 12:00&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div class="tweet-content"&gt;
+    This is amazing! 🚀
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4" data-i18n="demo.markdown">Markdown Output Sample</h3>
+                        <div class="code-block">
+                            <pre>**John Doe** (@johndoe)
+*2024/01/01 12:00*
+
+This is amazing! 🚀
+
+[View original tweet](https://twitter.com/...)</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Stack -->
+    <section id="tech" class="py-16 px-6 bg-gray-50">
+        <div class="container mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4" data-i18n="tech.title">Built with Modern Technology</h2>
+                <p class="text-xl text-gray-600" data-i18n="tech.subtitle">Powered by cutting-edge web technologies</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h3 class="text-2xl font-semibold text-gray-900 mb-6" data-i18n="tech.stack">Tech Stack</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fab fa-js text-blue-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">TypeScript</div>
+                                <div class="text-sm text-gray-600" data-i18n="tech.typescript">Type-safe development</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-cube text-purple-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">WXT</div>
+                                <div class="text-sm text-gray-600" data-i18n="tech.wxt">Modern extension framework</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-paint-brush text-green-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">Tailwind CSS</div>
+                                <div class="text-sm text-gray-600" data-i18n="tech.tailwind">Utility-first styling</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-image text-orange-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">HTML2Canvas</div>
+                                <div class="text-sm text-gray-600" data-i18n="tech.html2canvas">Screenshot generation</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-2xl font-semibold text-gray-900 mb-6" data-i18n="tech.architecture">Architecture</h3>
+                    <div class="space-y-4">
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold">8,000+ Lines of Code</span>
+                                <span class="text-sm text-gray-600" data-i18n="tech.lines">Production-ready</span>
+                            </div>
+                            <div class="text-sm text-gray-600" data-i18n="tech.linesdesc">Well-structured, maintainable codebase</div>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold">62 Test Suites</span>
+                                <span class="text-sm text-gray-600" data-i18n="tech.tests">Comprehensive coverage</span>
+                            </div>
+                            <div class="text-sm text-gray-600" data-i18n="tech.testsdesc">Unit tests, integration tests, performance tests</div>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold">Modular Design</span>
+                                <span class="text-sm text-gray-600" data-i18n="tech.modular">Clean architecture</span>
+                            </div>
+                            <div class="text-sm text-gray-600" data-i18n="tech.modulardesc">Separation of concerns, dependency injection</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Installation Section -->
+    <section id="install" class="py-16 px-6">
+        <div class="container mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4" data-i18n="install.title">Get Started Today</h2>
+                <p class="text-xl text-gray-600" data-i18n="install.subtitle">Install Tweet Craft and enhance your Twitter experience</p>
+            </div>
+            
+            <div class="max-w-2xl mx-auto">
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <h3 class="text-2xl font-semibold text-gray-900 mb-6" data-i18n="install.guide">Installation Guide</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">1</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-2" data-i18n="install.step1.title">Download the Extension</h4>
+                                <p class="text-gray-600" data-i18n="install.step1.desc">Download the latest version from the Chrome Web Store or build from source.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">2</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-2" data-i18n="install.step2.title">Enable Developer Mode</h4>
+                                <p class="text-gray-600" data-i18n="install.step2.desc">In your browser, go to extensions page and enable "Developer mode".</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">3</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-2" data-i18n="install.step3.title">Load Extension</h4>
+                                <p class="text-gray-600" data-i18n="install.step3.desc">Click "Load unpacked" and select the extension directory.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">4</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-2" data-i18n="install.step4.title">Enjoy!</h4>
+                                <p class="text-gray-600" data-i18n="install.step4.desc">Visit Twitter/X.com and start using Tweet Craft features.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 pt-8 border-t border-gray-200">
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <a href="https://chromewebstore.google.com/detail/twitter-%E8%B6%85%E7%BA%A7%E5%A2%9E%E5%BC%BA/pancaficlgkdicdeloffhlgdldfhcghf?authuser=0&hl=zh-CN" target="_blank" class="flex-1 bg-gray-900 text-white text-center py-3 rounded-lg font-semibold hover:bg-gray-800 transition">
+                                <i class="fas fa-download mr-2"></i>
+                                <span data-i18n="install.download">Install from Chrome Store</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 px-6">
+        <div class="container mx-auto">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <img src="public/icon/icon.png" alt="Tweet Craft Logo" class="w-8 h-8 rounded">
+                        </div>
+                        <span class="text-xl font-bold">Tweet Craft</span>
+                    </div>
+                    <p class="text-gray-400" data-i18n="footer.tagline">
+                        Super copy functionality for Twitter/X.com with advanced features and beautiful design.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4" data-i18n="footer.features">Features</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.thread">Thread Copy</a></li>
+                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.formats">Multiple Formats</a></li>
+                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.screenshots">Screenshots</a></li>
+                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.multilang">Multi-language</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4" data-i18n="footer.resources">Resources</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#install" class="hover:text-white transition" data-i18n="footer.installation">Installation</a></li>
+                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.features">Features</a></li>
+                        <li><a href="#demo" class="hover:text-white transition" data-i18n="footer.demo">Demo</a></li>
+                        <li><a href="mailto:support@concitech.org" class="hover:text-white transition" data-i18n="footer.support">Support</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4" data-i18n="footer.connect">Connect</h4>
+                    <div class="flex space-x-4">
+                        <a href="mailto:support@concitech.org" class="text-gray-400 hover:text-white transition">
+                            <i class="fas fa-envelope text-xl"></i>
+                        </a>
+                        <a href="https://x.com/liu7193" target="_blank" class="text-gray-400 hover:text-white transition">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 Tweet Craft. <span data-i18n="footer.copyright">Built with ❤️ for the Twitter community.</span></p>
+                <p class="mt-2 text-sm">
+                    <span data-i18n="footer.rights">All rights reserved.</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Multilingual support
+        const translations = {
+            en: {
+                'nav.title': 'Tweet Craft',
+                'nav.features': 'Features',
+                'nav.demo': 'Demo',
+                'nav.technology': 'Technology',
+                'nav.install': 'Install',
+                'hero.title': 'Super Copy for',
+                'hero.description': 'Enhanced browser extension that revolutionizes how you copy and save Twitter content. Support for threads, multiple formats, beautiful screenshots, and 6 languages.',
+                'hero.install': 'Install Extension',
+                'hero.demo': 'Watch Demo',
+                'features.title': 'Powerful Features',
+                'features.subtitle': 'Everything you need to enhance your Twitter experience',
+                'features.thread.title': 'Smart Thread Detection',
+                'features.thread.description': 'Automatically detect Twitter threads using advanced algorithms. Copy entire threads with perfect formatting.',
+                'features.thread.detail': 'Number pattern, self-reply, visual continuity',
+                'features.formats.title': 'Multiple Output Formats',
+                'features.formats.description': 'Copy tweets in your preferred format. Perfect for different use cases and platforms.',
+                'features.screenshot.title': 'Beautiful Screenshots',
+                'features.screenshot.description': 'Generate stunning tweet screenshots with customizable themes and styles.',
+                'features.language.title': 'Multi-language Support',
+                'features.language.description': 'Full internationalization support with automatic language detection.',
+                'features.performance.title': 'Performance Optimized',
+                'features.performance.description': 'Built with performance in mind. Batch processing, caching, and memory management.',
+                'features.performance.batch': 'Processes 10 tweets at once',
+                'features.performance.cache': 'LRU cache (200 items max)',
+                'features.privacy.title': 'Privacy First',
+                'features.privacy.description': 'All processing happens locally. No data is sent to external servers.',
+                'features.privacy.local': 'Local processing only',
+                'features.privacy.notracking': 'No tracking or analytics',
+                'demo.title': 'See It In Action',
+                'demo.subtitle': 'Watch how Tweet Craft transforms your Twitter experience',
+                'demo.coming': 'Demo Video Coming Soon',
+                'demo.html': 'HTML Output Sample',
+                'demo.markdown': 'Markdown Output Sample',
+                'tech.title': 'Built with Modern Technology',
+                'tech.subtitle': 'Powered by cutting-edge web technologies',
+                'tech.stack': 'Tech Stack',
+                'tech.typescript': 'Type-safe development',
+                'tech.wxt': 'Modern extension framework',
+                'tech.tailwind': 'Utility-first styling',
+                'tech.html2canvas': 'Screenshot generation',
+                'tech.architecture': 'Architecture',
+                'tech.lines': 'Production-ready',
+                'tech.linesdesc': 'Well-structured, maintainable codebase',
+                'tech.tests': 'Comprehensive coverage',
+                'tech.testsdesc': 'Unit tests, integration tests, performance tests',
+                'tech.modular': 'Clean architecture',
+                'tech.modulardesc': 'Separation of concerns, dependency injection',
+                'install.title': 'Get Started Today',
+                'install.subtitle': 'Install Tweet Craft and enhance your Twitter experience',
+                'install.guide': 'Installation Guide',
+                'install.step1.title': 'Download the Extension',
+                'install.step1.desc': 'Download the latest version from the Chrome Web Store or build from source.',
+                'install.step2.title': 'Enable Developer Mode',
+                'install.step2.desc': 'In your browser, go to extensions page and enable "Developer mode".',
+                'install.step3.title': 'Load Extension',
+                'install.step3.desc': 'Click "Load unpacked" and select the extension directory.',
+                'install.step4.title': 'Enjoy!',
+                'install.step4.desc': 'Visit Twitter/X.com and start using Tweet Craft features.',
+                'install.download': 'Install from Chrome Store',
+                'footer.tagline': 'Super copy functionality for Twitter/X.com with advanced features and beautiful design.',
+                'footer.features': 'Features',
+                'footer.thread': 'Thread Copy',
+                'footer.formats': 'Multiple Formats',
+                'footer.screenshots': 'Screenshots',
+                'footer.multilang': 'Multi-language',
+                'footer.resources': 'Resources',
+                'footer.installation': 'Installation',
+                'footer.support': 'Support',
+                'footer.connect': 'Connect',
+                'footer.copyright': 'Built with ❤️ for the Twitter community.',
+                'footer.rights': 'All rights reserved.'
+            },
+            zh: {
+                'nav.title': 'Tweet Craft',
+                'nav.features': '功能特性',
+                'nav.demo': '演示',
+                'nav.technology': '技术栈',
+                'nav.install': '安装',
+                'hero.title': 'Twitter/X',
+                'hero.description': '增强型浏览器插件，彻底改变您复制和保存推特内容的方式。支持推文线程、多种格式、精美截图和6种语言。',
+                'hero.install': '安装插件',
+                'hero.demo': '观看演示',
+                'features.title': '强大功能',
+                'features.subtitle': '提升您推特体验所需的一切功能',
+                'features.thread.title': '智能线程检测',
+                'features.thread.description': '使用高级算法自动检测推特线程。完美格式化复制整个线程。',
+                'features.thread.detail': '数字模式、自回复、视觉连续性',
+                'features.formats.title': '多种输出格式',
+                'features.formats.description': '以您偏好的格式复制推文。完美适应不同用例和平台。',
+                'features.screenshot.title': '精美截图',
+                'features.screenshot.description': '生成具有可定制主题和样式的精美推文截图。',
+                'features.language.title': '多语言支持',
+                'features.language.description': '完整的国际化支持，具有自动语言检测功能。',
+                'features.performance.title': '性能优化',
+                'features.performance.description': '专为性能而设计。批量处理、缓存和内存管理。',
+                'features.performance.batch': '一次处理10条推文',
+                'features.performance.cache': 'LRU缓存（最多200个项目）',
+                'features.privacy.title': '隐私优先',
+                'features.privacy.description': '所有处理都在本地进行。不会向外部服务器发送数据。',
+                'features.privacy.local': '仅本地处理',
+                'features.privacy.notracking': '无跟踪或分析',
+                'demo.title': '实际效果',
+                'demo.subtitle': '观看 Tweet Craft 如何改变您的推特体验',
+                'demo.coming': '演示视频即将推出',
+                'demo.html': 'HTML 输出示例',
+                'demo.markdown': 'Markdown 输出示例',
+                'tech.title': '现代技术构建',
+                'tech.subtitle': '由尖端网络技术驱动',
+                'tech.stack': '技术栈',
+                'tech.typescript': '类型安全开发',
+                'tech.wxt': '现代扩展框架',
+                'tech.tailwind': '实用优先样式',
+                'tech.html2canvas': '截图生成',
+                'tech.architecture': '架构',
+                'tech.lines': '生产就绪',
+                'tech.linesdesc': '结构良好、可维护的代码库',
+                'tech.tests': '全面覆盖',
+                'tech.testsdesc': '单元测试、集成测试、性能测试',
+                'tech.modular': '清洁架构',
+                'tech.modulardesc': '关注点分离、依赖注入',
+                'install.title': '立即开始',
+                'install.subtitle': '安装 Tweet Craft，提升您的推特体验',
+                'install.guide': '安装指南',
+                'install.step1.title': '下载插件',
+                'install.step1.desc': '从 Chrome 网上应用店下载最新版本或从源代码构建。',
+                'install.step2.title': '启用开发者模式',
+                'install.step2.desc': '在浏览器中，转到扩展页面并启用"开发者模式"。',
+                'install.step3.title': '加载扩展',
+                'install.step3.desc': '点击"加载已解压的扩展程序"并选择扩展目录。',
+                'install.step4.title': '开始使用！',
+                'install.step4.desc': '访问 Twitter/X.com 并开始使用 Tweet Craft 功能。',
+                'install.download': '从 Chrome 商店安装',
+                'footer.tagline': 'Twitter/X.com 超级复制功能，具有高级功能和精美设计。',
+                'footer.features': '功能',
+                'footer.thread': '线程复制',
+                'footer.formats': '多种格式',
+                'footer.screenshots': '截图',
+                'footer.multilang': '多语言',
+                'footer.resources': '资源',
+                'footer.installation': '安装',
+                'footer.support': '支持',
+                'footer.connect': '联系',
+                'footer.copyright': '为推特社区用心打造。',
+                'footer.rights': '保留所有权利。'
+            }
+        };
+
+        let currentLang = 'en';
+
+        function updateLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('currentLang').textContent = lang.toUpperCase();
+            document.documentElement.lang = lang;
+            
+            // Update all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+        }
+
+        // Language toggle functionality
+        document.getElementById('langToggle').addEventListener('click', function() {
+            const newLang = currentLang === 'en' ? 'zh' : 'en';
+            updateLanguage(newLang);
+        });
+
+        // Detect browser language
+        function detectBrowserLanguage() {
+            const browserLang = navigator.language || navigator.userLanguage;
+            if (browserLang.startsWith('zh')) {
+                return 'zh';
+            }
+            return 'en';
+        }
+
+        // Initialize language
+        updateLanguage(detectBrowserLanguage());
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll effect to navigation
+        window.addEventListener('scroll', function() {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow-lg');
+            } else {
+                nav.classList.remove('shadow-lg');
+            }
+        });
+
+        // Mobile menu toggle
+        document.querySelector('.fa-bars').parentElement.addEventListener('click', function() {
+            // Implementation for mobile menu
+            alert('Mobile menu implementation needed');
+        });
+    </script>
+</body>
+</html>
