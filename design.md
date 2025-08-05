@@ -1,344 +1,325 @@
-# Twitter增强插件技术方案 - 超级复制功能
+# Twitter 超级复制插件 - 设计方案
 
-## 1. 项目概述
+## 1. 项目目标
 
-### 1.1 项目目标
-开发一个 Chrome/Edge 浏览器插件，为 Twitter 提供增强功能，首期实现"超级复制"功能，支持一键复制带格式的 Twitter 内容。
+基于 WXT 框架开发一个功能强大的 Twitter/X.com 浏览器扩展，提供增强的推文复制功能，包括：
+- 一键复制推文内容（多种格式）
+- 智能线程检测与复制
+- 推文截图功能
+- 多语言支持
+- 丰富的配置选项
 
-### 1.2 核心功能
-- 一键复制 Twitter 推文（包含文本、图片、链接等格式）
-- 支持多种复制格式（HTML、Markdown、纯文本）
-- 保持原始格式和样式
-- 支持复制推文线程
-- 复制历史管理
+## 2. 技术架构设计
 
-## 2. 技术架构
+### 2.1 WXT 框架适配
 
-### 2.1 插件结构
+将 `system.md` 中描述的传统扩展架构适配到 WXT 框架：
+
 ```
-twitter-enhancer/
-├── manifest.json          # 插件配置文件
-├── popup/                 # 弹窗页面
-│   ├── popup.html
-│   ├── popup.js
-│   └── popup.css
-├── content/               # 内容脚本
-│   ├── content.js
-│   └── content.css
-├── background/            # 后台脚本
-│   └── background.js
-├── assets/               # 资源文件
-│   ├── icons/
-│   └── images/
-└── utils/                # 工具模块
-    ├── parser.js         # 推文解析器
-    ├── formatter.js      # 格式化工具
-    └── clipboard.js      # 剪贴板操作
-```
+entrypoints/
+├── background.ts       # 后台服务层
+├── content.ts          # 内容脚本入口
+└── popup/            # 用户界面层
+    ├── index.html
+    ├── main.ts
+    └── style.css
 
-### 2.2 技术栈
-- **前端**: Vanilla JavaScript / TypeScript
-- **样式**: CSS3 + PostCSS
-- **构建工具**: Webpack 5
-- **包管理**: npm/yarn
-- **开发工具**: ESLint + Prettier
+lib/          # 核心功能库
+├── i18n/              # 国际化层
+├── utils/       # 工具函数层
+├── screenshot/      # 截图功能层
+└── types/             # TypeScript 类型定义
 
-## 3. 核心功能实现
-
-### 3.1 推文内容解析
-
-#### 3.1.1 DOM 结构识别
-```javascript
-// 推文选择器映射
-const SELECTORS = {
-  tweet: '[data-testid="tweet"]',
-  tweetText: '[data-testid="tweetText"]',
-  author: '[data-testid="User-Name"]',
-  timestamp: 'time',
-  images: '[data-testid="tweetPhoto"] img',
-  videos: 'video',
-  links: 'a[href*="t.co"]',
-  metrics: '[data-testid="like"], [data-testid="retweet"]'
-};
+components/            # UI 组件
+├── popup/# 弹窗组件
+└── content/           # 内容脚本组件
 ```
 
-#### 3.1.2 内容提取算法
-```javascript
-class TweetParser {
-  extractTweetData(tweetElement) {
-    return {
-      id: this.getTweetId(tweetElement),
-      author: this.extractAuthor(tweetElement),
-      content: this.extractContent(tweetElement),
-      timestamp: this.extractTimestamp(tweetElement),
-      media: this.extractMedia(tweetElement),
-      metrics: this.extractMetrics(tweetElement),
-      thread: this.extractThreadInfo(tweetElement)
-    };
-  }
+### 2.2 核心模块设计
+
+#### 2.2.1 推文解析器 (TweetParser)
+```typescript
+interface TweetData {
+  id: string;
+  author: {
+    username: string;
+    displayName: string;
+    avatar?: string;
+  };
+  content: string;
+  timestamp: Date;
+  metrics: {
+    likes: number;
+    retweets: number;
+    replies: number;
+  };
+  media: MediaItem[];
+  isThread: boolean;
+  threadPosition?: number;
+  url: string;
 }
 ```
 
-### 3.2 格式化输出
+#### 2.2.2 内容格式化器 (ContentFormatter)
+```typescript
+interface FormatOptions {
+  format: 'html' | 'markdown' | 'text';
+  includeAuthor: boolean;
+  includeTimestamp: boolean;
+  includeMetrics: boolean;
+  includeMedia: boolean;
+  includeLink: boolean;
+}
 
-#### 3.2.1 多格式支持
-```javascript
 class ContentFormatter {
-  // HTML 格式
-  toHTML(tweetData) {
-    return `
-      <div class="tweet-copy">
-        <div class="tweet-header">
-          <strong>${tweetData.author.name}</strong>
-          <span class="username">@${tweetData.author.username}</span>
-          <time>${tweetData.timestamp}</time>
-        </div>
-        <div class="tweet-content">${this.processContent(tweetData.content)}</div>
-        ${this.renderMedia(tweetData.media)}
-        <div class="tweet-link">
-          <a href="${tweetData.url}">${tweetData.url}</a>
-        </div>
-      </div>
-    `;
-  }
-
-  // Markdown 格式
-  toMarkdown(tweetData) {
-    return `
-**${tweetData.author.name}** (@${tweetData.author.username})
-${tweetData.timestamp}
-
-${this.processContentForMarkdown(tweetData.content)}
-
-${this.renderMediaForMarkdown(tweetData.media)}
-
-[查看原推文](${tweetData.url})
-    `;
-  }
+  formatTweet(tweet: TweetData, options: FormatOptions): string;
+  formatThread(tweets: TweetData[], options: FormatOptions): string;
 }
 ```
 
-### 3.3 剪贴板操作
-
-#### 3.3.1 现代剪贴板 API
-```javascript
+#### 2.2.3 剪贴板管理器 (ClipboardManager)
+```typescript
 class ClipboardManager {
-  async copyToClipboard(content, format = 'html') {
-    try {
-      const clipboardItem = new ClipboardItem({
-        'text/html': new Blob([content.html], { type: 'text/html' }),
-        'text/plain': new Blob([content.text], { type: 'text/plain' })
-      });
-      
-      await navigator.clipboard.write([clipboardItem]);
-      return { success: true };
-    } catch (error) {
-      // 降级到传统方法
-      return this.fallbackCopy(content);
-    }
-  }
+  async copyToClipboard(content: string, format: 'html' | 'text'): Promise<void>;
+  async copyAsHTML(htmlContent: string, textFallback: string): Promise<void>;
+  saveToHistory(content: string, format: string): void;
+  getHistory(): CopyHistoryItem[];
 }
 ```
 
-### 3.4 UI 增强
+#### 2.2.4 截图管理器 (ScreenshotManager)
+```typescript
+interface ScreenshotOptions {
+  format: 'png' | 'jpg' | 'webp';
+  quality: number;
+  theme: 'light' | 'dark' | 'auto';
+  includeMetrics: boolean;
+  customWidth?: number;
+}
 
-#### 3.4.1 复制按钮注入
-```javascript
-class UIEnhancer {
-  injectCopyButtons() {
-    const tweets = document.querySelectorAll(SELECTORS.tweet);
-    tweets.forEach(tweet => {
-      if (!tweet.querySelector('.super-copy-btn')) {
-        const copyBtn = this.createCopyButton();
-        this.insertCopyButton(tweet, copyBtn);
-      }
-    });
-  }
-
-  createCopyButton() {
-    const button = document.createElement('button');
-    button.className = 'super-copy-btn';
-    button.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24">
-        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-      </svg>
-    `;
-    return button;
-  }
+class ScreenshotManager {
+  async captureTweet(tweetElement: HTMLElement, options: ScreenshotOptions): Promise<Blob>;
+  async captureThread(threadElements: HTMLElement[], options: ScreenshotOptions): Promise<Blob>;
 }
 ```
 
-## 4. 插件配置
+## 3. 功能模块详细设计
 
-### 4.1 Manifest V3 配置
-```json
-{
-  "manifest_version": 3,
-  "name": "Twitter 超级增强",
-  "version": "1.0.0",
-  "description": "Twitter 增强插件 - 超级复制功能",
+### 3.1 用户界面 (Popup)
+
+#### 3.1.1 界面布局
+```
+┌─────────────────────────────────────┐
+│      Twitter 超级复制           │
+├─────────────────────────────────────┤
+│  [复制当前推文] [查看复制历史]        │
+├─────────────────────────────────────┤
+│ 格式设置:        │
+│  ○ HTML  ○ Markdown  ○ 纯文本      │
+├─────────────────────────────────────┤
+│ 内容选项:  │
+│  ☑ 包含作者信息  ☑ 包含时间戳       │
+│  ☑ 包含互动数据  ☑ 包含媒体信息  │
+├─────────────────────────────────────┤
+│ 快捷键: Ctrl+Shift+C        │
+├─────────────────────────────────────┤
+│ 语言: [中文 ▼]           │
+└─────────────────────────────────────┘
+```
+
+#### 3.1.2 核心组件
+- **QuickActions**: 快速操作按钮组
+- **FormatSelector**: 格式选择器
+- **ContentOptions**: 内容选项配置
+- **CopyHistory**: 复制历史记录
+- **LanguageSelector**: 语言选择器
+
+### 3.2 内容脚本 (Content Script)
+
+#### 3.2.1 功能模块
+```typescript
+class TwitterContentScript {
+  private tweetParser: TweetParser;
+  private uiManager: UIManager;
+  private performanceManager: PerformanceManager;
+  private errorManager: ErrorManager;
+
+  initialize(): void;
+  injectCopyButtons(): void;
+  handleCopyClick(tweetElement: HTMLElement): void;
+  detectAndHandleThread(tweetElement: HTMLElement): void;
+  setupKeyboardShortcuts(): void;
+}
+```
+
+#### 3.2.2 UI 注入策略
+1. **推文检测**: 使用 MutationObserver 监听推文加载
+2. **按钮注入**: 在推文操作栏添加复制按钮
+3. **线程标识**: 为线程推文添加特殊标识
+4. **性能优化**: 批量处理、防抖、虚拟滚动
+
+### 3.3 后台脚本 (Background)
+
+#### 3.3.1 核心功能
+```typescript
+class BackgroundService {
+  setupContextMenus(): void;
+  handleMessage(message: any, sender: any): Promise<any>;
+  manageSettings(): void;
+  scheduleCleanup(): void;
+}
+```
+
+#### 3.3.2 右键菜单
+```
+复制推文 ├── 复制为 HTML 格式
+        ├── 复制为 Markdown 格式
+        └── 复制为纯文本格式
+```
+
+## 4. 国际化设计
+
+### 4.1 支持语言
+- 中文 (zh-CN)
+- English (en)
+- 日本語 (ja)
+- 한국어 (ko)
+- Español (es)
+- Français (fr)
+
+### 4.2 国际化实现
+```typescript
+interface LocaleData {
+  [key: string]: string;
+}
+
+class I18nManager {
+  private currentLocale: string;
+  private localeData: Record<string, LocaleData>;
   
-  "permissions": [
-    "activeTab",
-    "clipboardWrite",
-    "storage"
-  ],
-  
-  "content_scripts": [{
-    "matches": ["https://twitter.com/*", "https://x.com/*"],
-    "js": ["content/content.js"],
-    "css": ["content/content.css"],
-    "run_at": "document_idle"
-  }],
-  
-  "background": {
-    "service_worker": "background/background.js"
-  },
-  
-  "action": {
-    "default_popup": "popup/popup.html",
-    "default_icon": {
-      "16": "assets/icons/icon16.png",
-      "48": "assets/icons/icon48.png",
-      "128": "assets/icons/icon128.png"
-    }
-  }
+  t(key: string, params?: Record<string, any>): string;
+  setLocale(locale: string): void;
+  detectLocale(): string;
 }
 ```
 
-## 5. 用户体验设计
+## 5. 性能优化策略
 
-### 5.1 交互方式
-1. **悬浮按钮**: 鼠标悬停推文时显示复制按钮
-2. **快捷键**: 支持 Ctrl+Shift+C 快速复制
-3. **右键菜单**: 集成到浏览器右键菜单
-4. **批量操作**: 支持选择多条推文批量复制
+### 5.1 DOM 操作优化
+- **批量处理**: 每次处理 10 个推文
+- **IntersectionObserver**: 只处理可见推文
+- **RequestAnimationFrame**: 优化动画性能
+- **防抖处理**: 延迟 200ms 处理新推文
 
-### 5.2 视觉反馈
-- 复制成功后显示绿色勾选动画
-- 复制进度条（处理大量内容时）
-- 格式预览窗口
-- 错误提示和重试机制
+### 5.2 内存管理
+- **LRU 缓存**: 最多缓存 200 个推文数据
+- **定时清理**: 每 5 分钟清理过期缓存
+- **弱引用**: 避免内存泄漏
 
-### 5.3 设置面板
-```javascript
-// 用户可配置选项
-const DEFAULT_SETTINGS = {
-  copyFormat: 'html',           // 默认复制格式
-  includeMedia: true,           // 是否包含媒体
-  includeMetrics: false,        // 是否包含点赞转发数
-  autoDetectThread: true,       // 自动检测推文线程
-  shortcutKey: 'Ctrl+Shift+C',  // 快捷键
-  buttonPosition: 'bottom-right' // 按钮位置
-};
-```
+### 5.3 错误处理
+- **多级降级**: 剪贴板 API 降级策略
+- **错误冷却**: 避免重复错误报告
+- **用户反馈**: 提供友好的错误提示
 
-## 6. 性能优化
+## 6. 截图功能设计
 
-### 6.1 内容解析优化
-- 使用 MutationObserver 监听 DOM 变化
-- 防抖处理频繁的 DOM 更新
-- 缓存已解析的推文数据
-- 懒加载媒体内容处理
+### 6.1 技术方案
+- **HTML2Canvas**: 核心截图库
+- **Canvas 优化**: 高质量渲染
+- **主题适配**: 支持浅色/深色主题
+- **自定义样式**: 可配置的截图样式
 
-### 6.2 内存管理
-```javascript
-class MemoryManager {
-  constructor() {
-    this.cache = new Map();
-    this.maxCacheSize = 100;
-  }
+### 6.2 截图模式
+- **单推文截图**: 生成单条推文的精美截图
+- **线程截图**: 生成完整线程的长截图
+- **批量截图**: 支持多条推文批量截图
 
-  cleanupCache() {
-    if (this.cache.size > this.maxCacheSize) {
-      const entries = Array.from(this.cache.entries());
-      entries.slice(0, this.cache.size - this.maxCacheSize)
-        .forEach(([key]) => this.cache.delete(key));
-    }
-  }
+## 7. 数据存储设计
+
+### 7.1 存储结构
+```typescript
+interface ExtensionSettings {
+  format: 'html' | 'markdown' | 'text';
+  includeAuthor: boolean;
+  includeTimestamp: boolean;
+  includeMetrics: boolean;
+  includeMedia: boolean;
+  language: string;
+  theme: 'light' | 'dark' | 'auto';
+}
+
+interface CopyHistoryItem {
+  id: string;
+  content: string;
+  format: string;
+  timestamp: Date;
+  tweetUrl: string;
+  preview: string;
 }
 ```
 
-## 7. 错误处理与兼容性
+### 7.2 存储管理
+- **Chrome Storage API**: 设置同步存储
+- **本地存储**: 复制历史记录
+- **容量控制**: 最多保存 50 条历史记录
+- **数据压缩**: 优化存储空间
 
-### 7.1 错误处理策略
-```javascript
-class ErrorHandler {
-  handleParseError(error, tweetElement) {
-    console.warn('推文解析失败:', error);
-    
-    // 降级到简单文本复制
-    const fallbackText = tweetElement.textContent;
-    return { success: true, content: fallbackText, format: 'text' };
-  }
+## 8. 安全性考虑
 
-  handleClipboardError(error) {
-    // 显示用户友好的错误信息
-    this.showNotification('复制失败，请检查浏览器权限设置');
-  }
-}
-```
+### 8.1 权限最小化
+- 仅申请必要的浏览器权限
+- 限制在 Twitter/X.com 域名运行
+- 本地处理所有敏感数据
 
-### 7.2 浏览器兼容性
-- Chrome 88+
-- Edge 88+
-- Firefox 扩展版本（后期支持）
+### 8.2 内容安全
+- **XSS 防护**: HTML 内容转义
+- **CORS 处理**: 安全的外部资源加载
+- **CSP 兼容**: 符合内容安全策略
 
-## 8. 开发计划
+## 9. 开发计划
 
-### 8.1 Phase 1 (MVP - 2周)
-- [x] 基础插件架构搭建
-- [x] 推文内容解析器
-- [x] HTML 格式复制功能
-- [x] UI 按钮注入
+### Phase 1: 基础架构 (MVP)
+1. 项目结构搭建
+2. 基础推文解析
+3. 简单复制功能
+4. 基本 UI 界面
 
-### 8.2 Phase 2 (增强功能 - 1周)
-- [ ] Markdown 格式支持
-- [ ] 图片媒体处理
-- [ ] 设置面板开发
-- [ ] 快捷键支持
+### Phase 2: 核心功能
+1. 多格式输出
+2. 线程检测与复制
+3. 配置管理
+4. 国际化支持
 
-### 8.3 Phase 3 (完善优化 - 1周)
-- [ ] 推文线程复制
-- [ ] 性能优化
-- [ ] 错误处理完善
-- [ ] 用户体验优化
+### Phase 3: 高级功能
+1. 截图功能
+2. 性能优化
+3. 错误处理
+4. 用户体验优化
 
-## 9. 测试策略
+### Phase 4: 完善与优化
+1. 全面测试
+2. 性能调优
+3. 用户反馈处理
+4. 发布准备
 
-### 9.1 功能测试
-- 不同类型推文的解析准确性
-- 各种格式输出的正确性
-- 媒体内容处理测试
-- 特殊字符和 emoji 处理
+## 10. 质量保证
 
-### 9.2 兼容性测试
-- Twitter 界面更新适配
-- 不同浏览器版本测试
-- 移动端响应式测试
+### 10.1 代码质量
+- TypeScript 严格模式
+- ESLint + Prettier 规范
+- 详细的代码注释
+- 模块化设计
 
-### 9.3 性能测试
-- 大量推文页面的性能表现
-- 内存使用情况监控
-- 复制操作响应时间测试
+### 10.2 测试策略
+- 单元测试覆盖核心功能
+- 集成测试验证用户流程
+- 手动测试确保用户体验
+- 跨浏览器兼容性测试
 
-## 10. 部署与发布
+### 10.3 性能监控
+- 内存使用监控
+- 响应时间统计
+- 错误率追踪
+- 用户反馈收集
 
-### 10.1 打包构建
-```bash
-# 开发环境
-npm run dev
-
-# 生产构建
-npm run build
-
-# 打包插件
-npm run package
-```
-
-### 10.2 商店发布
-1. Chrome Web Store 提交
-2. Edge Add-ons 提交
-3. 版本管理和更新策略
-
-这个技术方案涵盖了 Twitter 增强插件"超级复制"功能的完整实现路径，从基础架构到具体实现，再到优化和测试，为开发提供了清晰的指导方向。
+这个设计方案基于 WXT 框架的特点，将 system.md 中描述的复杂功能进行了现代化改造，确保代码的可维护性和扩展性。

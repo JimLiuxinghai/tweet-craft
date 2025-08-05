@@ -1,0 +1,28 @@
+{
+  "name": "twitter-super-copy",
+  "description": "Enhanced copy functionality for Twitter/X.com with thread support and multiple formats",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "compile": "tsc --noEmit",
+    "postinstall": "wxt prepare",
+    "test": "echo 'Open tests/performance-runner.html in your browser to run performance tests'",
+    "test:validate": "echo 'Open tests/validate-runner.html in your browser to validate test framework'",
+    "test:performance": "echo 'Performance tests available in browser at tests/performance-runner.html'"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "wxt": "^0.20.6"
+  },
+  "dependencies": {
+    "html2canvas-pro": "^1.5.11",
+    "lucide": "^0.517.0"
+  }
+}
