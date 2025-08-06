@@ -167,7 +167,7 @@ This is a **production-ready extension** with ~8,000+ lines of well-structured c
 - Multi-language support
 
 ### Critical Dependencies
-- **html2canvas** (`^1.4.1`) - Screenshot functionality (dynamically loaded)
+- **html2canvas** (`^1.5.11`) - Screenshot functionality (dynamically loaded)
 - **WXT** (`^0.20.6`) - Build framework
 - **TypeScript** (`^5.8.3`) - Type checking
 

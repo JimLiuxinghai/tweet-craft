@@ -3,17 +3,62 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
- <title>Tweet Craft</title>
+    <title>Tweet Craft</title>
     <meta name="manifest.type" content="browser_action" />
+    <meta name="description" content="Tweet Craft - Enhanced Twitter/X copying extension with thread support, multiple formats, and screenshot capabilities" />
+    <meta name="author" content="JimLiuxinghai" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   </head>
   <body>
-       <div id="app">
-  <!-- Loading state -->
+    <div id="app">
+      <!-- Loading state -->
       <div class="loading" id="loading">
         <div class="loading-spinner"></div>
-<p>Loading...</p>
+        <p>Loading...</p>
         <div class="loading-progress">
-        <div class="loading-progress-bar"></div>
+          <div class="loading-progress-bar"></div>
+        </div>
+      </div>
+      
+      <!-- Open Source Project Info -->
+      <div class="project-info">
+        <div class="project-header">
+          <h3><i class="fab fa-github"></i> Open Source Project</h3>
+        </div>
+        <div class="project-content">
+          <p><strong>Tweet Craft</strong> is now open source! 🎉</p>
+          <p class="project-description">
+            Enhanced Twitter/X copying extension with thread support, multiple formats (HTML/Markdown/Text), 
+            screenshot capabilities, and multi-language support.
+          </p>
+          <div class="project-features">
+            <div class="feature-item">
+              <i class="fas fa-copy"></i>
+              <span>Multi-format copying</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-comments"></i>
+              <span>Thread detection</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-camera"></i>
+              <span>Screenshot capabilities</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-globe"></i>
+              <span>6-language support</span>
+            </div>
+          </div>
+          <div class="project-links">
+            <a href="https://github.com/JimLiuxinghai/tweet-craft" target="_blank" rel="noopener noreferrer" class="github-link">
+              <i class="fab fa-github"></i>
+              View on GitHub
+            </a>
+            <a href="https://github.com/JimLiuxinghai/tweet-craft/issues" target="_blank" rel="noopener noreferrer" class="issues-link">
+              <i class="fas fa-bug"></i>
+              Report Issues
+            </a>
+          </div>
         </div>
       </div>
     </div>

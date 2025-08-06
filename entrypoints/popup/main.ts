@@ -485,7 +485,7 @@ browser.tabs.create({ url: 'https://x.com' });
     const reportIssueButton = document.getElementById('report-issue');
     if (reportIssueButton) {
       reportIssueButton.addEventListener('click', () => {
-     browser.tabs.create({ url: 'https://github.com/your-repo/issues' });
+     browser.tabs.create({ url: 'https://github.com/JimLiuxinghai/tweet-craft/issues' });
         window.close();
     });
     }
