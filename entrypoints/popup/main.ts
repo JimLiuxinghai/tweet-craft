@@ -1,6 +1,7 @@
 // Tweet Craft Popup 主界面
 import './style.css';
 import './screenshot-settings.css';
+import './video-settings.css';
 import { browser } from 'wxt/browser';
 import { getSettings, saveSettings } from '@/lib/utils/storage';
 import { clipboardManager } from '@/lib/clipboard';
@@ -8,6 +9,7 @@ import { initializeI18n, i18nManager } from '@/lib/i18n';
 import type { ExtensionSettings } from '@/lib/types';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 import { ScreenshotSettingsPanel, type ScreenshotSettingsOptions } from './screenshot-settings';
+import { VideoSettingsPanel, type VideoDownloadSettings } from './video-settings';
 
 /**
  * 通知管理器 - 智能通知系统
@@ -211,6 +213,7 @@ class PopupApp {
   private notifications: NotificationManager;
   private loading: LoadingManager;
   private screenshotSettingsPanel: ScreenshotSettingsPanel | null = null;
+  private videoSettingsPanel: VideoSettingsPanel | null = null;
 
   constructor() {
     this.notifications = new NotificationManager();
@@ -295,6 +298,10 @@ this.settings = await getSettings();
    <span class="tab-icon">⚙️</span>
      ${i18nManager.t('settings')}
        </button>
+          <button class="tab-button" data-tab="video">
+            <span class="tab-icon">📥</span>
+            ${i18nManager.t('download_video')}
+          </button>
                 <button class="tab-button" data-tab="screenshot">
          <span class="tab-icon">📷</span>
      截图设置
@@ -384,6 +391,60 @@ this.settings = await getSettings();
      ${i18nManager.t('reset_default')}
    </button>
    </div>
+        </div>
+
+        <!-- Video Download Settings Tab -->
+        <div class="tab-content" id="video-tab">
+          <section class="settings-section">
+            <h3>${i18nManager.t('download_settings')}</h3>
+            <div class="video-settings">
+              <label class="option-item">
+                <input type="checkbox" id="auto-download-video" ${this.settings?.videoDownloadSettings?.autoDownload ? 'checked' : ''}>
+                <span class="checkmark"></span>
+                ${i18nManager.t('download_auto_detect')}
+              </label>
+              
+              <div class="quality-setting">
+                <label for="default-quality">${i18nManager.t('download_quality')}:</label>
+                <select id="default-quality" class="quality-selector">
+                  <option value="highest" ${this.settings?.videoDownloadSettings?.defaultQuality === 'highest' ? 'selected' : ''}>${i18nManager.t('download_highest_quality')}</option>
+                  <option value="medium" ${this.settings?.videoDownloadSettings?.defaultQuality === 'medium' ? 'selected' : ''}>${i18nManager.t('download_medium_quality')}</option>
+                  <option value="lowest" ${this.settings?.videoDownloadSettings?.defaultQuality === 'lowest' ? 'selected' : ''}>${i18nManager.t('download_lowest_quality')}</option>
+                  <option value="ask" ${this.settings?.videoDownloadSettings?.defaultQuality === 'ask' ? 'selected' : ''}>总是询问</option>
+                </select>
+              </div>
+
+              <label class="option-item">
+                <input type="checkbox" id="show-download-progress" ${this.settings?.videoDownloadSettings?.showProgress !== false ? 'checked' : ''}>
+                <span class="checkmark"></span>
+                ${i18nManager.t('download_progress')}
+              </label>
+
+              <label class="option-item">
+                <input type="checkbox" id="download-notifications" ${this.settings?.videoDownloadSettings?.notifications !== false ? 'checked' : ''}>
+                <span class="checkmark"></span>
+                ${i18nManager.t('download_notification')}
+              </label>
+            </div>
+          </section>
+          
+          <section class="settings-section">
+            <h3>${i18nManager.t('download_history')}</h3>
+            <div id="download-history-list" class="history-list">
+              <div class="loading-placeholder">
+                <div class="loading-spinner"></div>
+                <p>加载下载历史中...</p>
+              </div>
+            </div>
+            <div class="history-actions">
+              <button id="refresh-download-history" class="secondary-button">
+                刷新历史
+              </button>
+              <button id="clear-download-history" class="secondary-button">
+                ${i18nManager.t('download_clear_history')}
+              </button>
+            </div>
+          </section>
         </div>
 
                <!-- Screenshot Settings Tab -->
@@ -521,6 +582,8 @@ browser.tabs.create({ url: 'https://x.com' });
       // 根据 Tab 加载相应内容
     if (tabId === 'screenshot') {
     this.loadScreenshotSettings();
+    } else if (tabId === 'video') {
+      this.loadVideoSettings();
     }
   }
 
@@ -679,6 +742,80 @@ const screenshotOptions: ScreenshotSettingsOptions = {
         </div>
    `;
   }
+  }
+
+  /**
+   * 加载视频下载设置
+   */
+  private async loadVideoSettings(): Promise<void> {
+    const videoTab = document.getElementById('video-tab');
+    if (!videoTab) return;
+
+    try {
+      // 获取当前的视频下载设置
+      const videoSettings: VideoDownloadSettings = {
+        autoDownload: this.settings?.videoDownloadSettings?.autoDownload ?? false,
+        defaultQuality: this.settings?.videoDownloadSettings?.defaultQuality ?? 'ask',
+        showProgress: this.settings?.videoDownloadSettings?.showProgress ?? true,
+        notifications: this.settings?.videoDownloadSettings?.notifications ?? true
+      };
+
+      // 创建视频设置面板
+      this.videoSettingsPanel = new VideoSettingsPanel(videoTab, videoSettings);
+
+      // 监听设置变化
+      videoTab.addEventListener('video-settings-changed', async (e: Event) => {
+        const customEvent = e as CustomEvent<VideoDownloadSettings>;
+        await this.handleVideoSettingsChange(customEvent.detail);
+      });
+
+    } catch (error) {
+      console.error('Failed to load video settings:', error);
+      const historyContainer = videoTab.querySelector('#download-history-list');
+      if (historyContainer) {
+        historyContainer.innerHTML = `
+          <div class="error-state">
+            <div class="error-icon">⚠️</div>
+            <p>加载视频设置失败</p>
+          </div>
+        `;
+      }
+    }
+  }
+
+  /**
+   * 处理视频设置变化
+   */
+  private async handleVideoSettingsChange(newSettings: VideoDownloadSettings): Promise<void> {
+    try {
+      if (!this.settings) return;
+
+      // 更新视频下载设置
+      this.settings.videoDownloadSettings = newSettings;
+
+      // 保存设置
+      await saveSettings(this.settings);
+
+      // 通知内容脚本设置已更新
+      try {
+        const tabs = await browser.tabs.query({ url: ['*://twitter.com/*', '*://x.com/*'] });
+        for (const tab of tabs) {
+          if (tab.id) {
+            browser.tabs.sendMessage(tab.id, { 
+              type: 'VIDEO_SETTINGS_UPDATED', 
+              settings: newSettings 
+            }).catch(() => {
+              // 忽略错误，可能页面未加载内容脚本
+            });
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to notify content scripts:', error);
+      }
+
+    } catch (error) {
+      console.error('Failed to save video settings:', error);
+    }
   }
 
   /**

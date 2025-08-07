@@ -1,0 +1,262 @@
+/* 视频下载设置样式 */
+
+.video-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.quality-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quality-setting label {
+  font-weight: 600;
+  color: #1d1f23;
+  font-size: 14px;
+}
+
+.quality-selector {
+  padding: 10px 12px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  color: #1d1f23;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quality-selector:hover {
+  border-color: #1d9bf0;
+}
+
+.quality-selector:focus {
+  outline: none;
+  border-color: #1d9bf0;
+  box-shadow: 0 0 0 3px rgba(29, 155, 240, 0.1);
+}
+
+/* 下载历史样式 */
+.history-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e1e8ed;
+  border-radius: 12px;
+  background: #f8f9fa;
+}
+
+.empty-history {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #536471;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-history p {
+  margin: 0 0 8px 0;
+  font-weight: 600;
+  color: #1d1f23;
+}
+
+.empty-history small {
+  font-size: 12px;
+  color: #536471;
+}
+
+.history-item {
+  border-bottom: 1px solid #e1e8ed;
+  transition: background-color 0.2s ease;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-item:hover {
+  background-color: #f0f8ff;
+}
+
+.history-item-content {
+  padding: 16px;
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.history-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-filename {
+  font-weight: 600;
+  color: #1d1f23;
+  font-size: 14px;
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.history-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #536471;
+  flex-wrap: wrap;
+}
+
+.history-user {
+  color: #1d9bf0;
+  font-weight: 500;
+}
+
+.history-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 12px;
+}
+
+.history-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #536471;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.history-action-btn:hover {
+  background-color: rgba(29, 155, 240, 0.1);
+  color: #1d9bf0;
+}
+
+.history-action-btn.delete-btn:hover {
+  background-color: rgba(249, 24, 128, 0.1);
+  color: #f91880;
+}
+
+.history-item-status {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.history-item-status.completed {
+  background-color: rgba(0, 186, 124, 0.1);
+  color: #00ba7c;
+}
+
+.history-item-status.failed {
+  background-color: rgba(249, 24, 128, 0.1);
+  color: #f91880;
+}
+
+.history-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.history-actions .secondary-button {
+  flex: 1;
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+/* 加载状态 */
+.loading-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #536471;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e1e8ed;
+  border-top: 2px solid #1d9bf0;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 响应式设计 */
+@media (max-width: 400px) {
+  .history-item-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .history-actions {
+    align-self: flex-end;
+  }
+  
+  .history-meta {
+    gap: 8px;
+  }
+}
+
+/* 滚动条样式 */
+.history-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.history-list::-webkit-scrollbar-track {
+  background: #f1f3f4;
+  border-radius: 3px;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+  background: #c1c8cd;
+  border-radius: 3px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: #a8b2ba;
+}
+
+/* 通知样式 */
+.video-settings-notification {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
