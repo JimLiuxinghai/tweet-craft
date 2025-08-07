@@ -40,7 +40,7 @@ This is a sophisticated, **layered modular architecture** with clear separation 
 │   ├── parsers/       # Tweet parsing and thread detection
 │   ├── formatters/        # Multi-format output (HTML/Markdown/Text)
 │ ├── clipboard/         # Multi-tier clipboard API with fallbacks
-│   ├── screenshot/        # HTML2Canvas-based screenshot system
+│ ├── screenshot/     # snapdom-based screenshot system
 │   ├── i18n/     # 6-language internationalization system
 │   ├── utils/     # Performance, memory, error management
 │   └── types/       # TypeScript type definitions
@@ -87,7 +87,7 @@ This is a sophisticated, **layered modular architecture** with clear separation 
 - **Batch Operations**: Support for thread copying and bulk operations
 
 #### 5. Screenshot System (`lib/screenshot/`)
-- **HTML2Canvas Integration**: Dynamic library loading for performance
+- **snapdom Integration**: Dynamic library loading for performance
 - **Multi-format Export**: PNG, JPG, WebP with quality controls
 - **Theme Support**: Light/dark/high-contrast theme adaptation
 - **Custom Rendering**: Template-based HTML generation with caching
@@ -167,7 +167,7 @@ This is a **production-ready extension** with ~8,000+ lines of well-structured c
 - Multi-language support
 
 ### Critical Dependencies
-- **html2canvas** (`^1.5.11`) - Screenshot functionality (dynamically loaded)
+- **@zumer/snapdom** (`^1.9.6`) - Screenshot functionality (dynamically loaded)
 - **WXT** (`^0.20.6`) - Build framework
 - **TypeScript** (`^5.8.3`) - Type checking
 

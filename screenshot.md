@@ -1,5 +1,7 @@
 ## 技术方案：集成 `snapdom` 实现一键截图功能
 
+> **✅ 状态**: 该功能已完成实现，html2canvas 已完全替换为 snapdom
+
 ### 1\. 高层概述 (High-Level Overview)
 
 本方案旨在为 "Twitter Super Copy" 扩展添加一个“一键截图”功能。我们将使用 `snapdom` 库替代现有的 `html2canvas`，以期获得更快的速度和更高的保真度。该功能将允许用户对单个推文或整个推文串进行截图，并提供下载或复制到剪贴板的选项。
@@ -24,9 +26,9 @@
 
 #### 第 1 步：依赖管理 (Dependency Management)
 
-1.  **移除旧依赖**: 如果 `html2canvas` 不再用于任何其他功能，可以从 `package.json` 中移除。
+1.  **移除旧依赖**: ✅ **已完成** - `html2canvas` 已从 `package.json` 中移除。
     ```bash
-    pnpm remove html2canvas
+    # pnpm remove html2canvas  # 已完成
     ```
 2.  **添加新依赖**:
     ```bash

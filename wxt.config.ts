@@ -5,7 +5,7 @@ export default defineConfig({
   manifest: {
     name: 'Twitter Super Copy',
     description: 'Enhanced copy functionality for Twitter/X.com with thread support and multiple formats',
-    version: '1.0.0',
+    version: '1.0.1',
     permissions: [
     'activeTab',
       'clipboardWrite',

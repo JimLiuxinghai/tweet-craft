@@ -1,8 +1,7 @@
 // 高性能截图服务 - 使用snapdom实现一键截图功能
-import { toSvg } from '@zumer/snapdom';
 import { TweetData, ThreadData } from '../types';
 import { i18nManager } from '../i18n';
-import { createError, ErrorCategory } from '../utils/errorManager';
+// import { createError, ErrorCategory } from '../utils/errorManager';
 
 /**
  * 截图选项接口
@@ -16,7 +15,7 @@ export interface ScreenshotOptions {
   allowTaint?: boolean;
   removeContainer?: boolean;
   format?: 'png' | 'jpeg' | 'webp';
-quality?: number;
+  quality?: number;
   theme?: 'light' | 'dark' | 'auto';
   fileName?: string;
 }
@@ -41,7 +40,7 @@ export class ScreenshotManager {
   private static instance: ScreenshotManager;
 
   public static getInstance(): ScreenshotManager {
-  if (!ScreenshotManager.instance) {
+    if (!ScreenshotManager.instance) {
       ScreenshotManager.instance = new ScreenshotManager();
     }
     return ScreenshotManager.instance;
@@ -59,6 +58,25 @@ export class ScreenshotManager {
   };
 
   /**
+   * 动态加载 snapdom
+   */
+  private async loadSnapdom(): Promise<any> {
+    // 如果已经加载，直接返回
+    if (typeof window !== 'undefined' && (window as any).snapdom) {
+      return (window as any).snapdom;
+    }
+
+// 动态导入 snapdom
+    try {
+      const snapdomModule = await import('@zumer/snapdom');
+ return snapdomModule.snapdom;
+    } catch (error) {
+      console.error('Failed to load snapdom:', error);
+      throw new Error('Failed to load screenshot library');
+    }
+  }
+
+  /**
    * 截图单个推文
    * @param tweetElement 推文DOM元素
    * @param options 截图选项
@@ -68,40 +86,44 @@ export class ScreenshotManager {
     tweetElement: HTMLElement,
     options: ScreenshotOptions = {}
   ): Promise<ScreenshotResult> {
- const mergedOptions = { ...this.defaultOptions, ...options };
+    const mergedOptions = { ...this.defaultOptions, ...options };
     
     try {
       // 预处理推文元素
       const processedElement = await this.preprocessTweetElement(tweetElement);
-      
-    // 生成截图
-      const canvas = await html2canvas(processedElement, {
-      backgroundColor: mergedOptions.backgroundColor,
-        scale: mergedOptions.scale,
-        useCORS: mergedOptions.useCORS,
-        allowTaint: mergedOptions.allowTaint,
-   width: mergedOptions.width,
+  
+      // 动态加载并生成截图
+      const snapdom = await this.loadSnapdom();
+  const snap = await snapdom(processedElement, {
+        scale: mergedOptions.scale || 2,
+        width: mergedOptions.width,
         height: mergedOptions.height,
-        onclone: (clonedDoc) => {
-     // 清理克隆文档中的不必要元素
-          this.cleanupClonedDocument(clonedDoc);
-     }
+        backgroundColor: mergedOptions.backgroundColor || '#ffffff',
+     compress: true, // 移除冗余样式以优化性能
+   fast: true, // 跳过空闲延迟以加快结果
+        embedFonts: false, // 不内联字体（图标字体始终内嵌）
+        dpr: window.devicePixelRatio || 1, // 设备像素比
+        quality: mergedOptions.quality || 0.9, // 图片质量
+        useProxy: mergedOptions.useCORS ? '' : undefined // CORS 处理
       });
+      
+      // 转换为Canvas
+      const canvas = await snap.toCanvas();
 
       // 转换为所需格式
       const result = await this.processCanvas(canvas, mergedOptions);
-      
-      // 清理临时元素
+
+ // 清理临时元素
       if (mergedOptions.removeContainer && processedElement !== tweetElement) {
         processedElement.remove();
-      }
+    }
       
       return result;
 
     } catch (error) {
-    console.error('Failed to capture tweet:', error);
+      console.error('Failed to capture tweet:', error);
       const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Screenshot failed: ${errorMessage}`);
+    throw new Error(`Screenshot failed: ${errorMessage}`);
     }
   }
 
@@ -113,40 +135,45 @@ export class ScreenshotManager {
    */
   async captureThread(
     threadTweets: HTMLElement[],
-options: ScreenshotOptions = {}
+    options: ScreenshotOptions = {}
   ): Promise<ScreenshotResult> {
-    const mergedOptions = { ...this.defaultOptions, ...options };
+  const mergedOptions = { ...this.defaultOptions, ...options };
     
     try {
       // 创建线程容器
       const threadContainer = await this.createThreadContainer(threadTweets);
  
-      // 生成截图
-      const canvas = await html2canvas(threadContainer, {
-        backgroundColor: mergedOptions.backgroundColor,
-        scale: mergedOptions.scale,
-        useCORS: mergedOptions.useCORS,
-        allowTaint: mergedOptions.allowTaint,
- width: mergedOptions.width,
-        onclone: (clonedDoc) => {
-          this.cleanupClonedDocument(clonedDoc);
-        }
-      });
+   // 动态加载并生成截图
+      const snapdom = await this.loadSnapdom();
+      const snap = await snapdom(threadContainer, {
+        scale: mergedOptions.scale || 2,
+     width: mergedOptions.width,
+        backgroundColor: mergedOptions.backgroundColor || '#ffffff',
+        compress: true,
+      fast: true,
+      embedFonts: false,
+        dpr: window.devicePixelRatio || 1,
+    quality: mergedOptions.quality || 0.9,
+        useProxy: mergedOptions.useCORS ? '' : undefined
+ });
+  
+      // 转换为Canvas
+ const canvas = await snap.toCanvas();
 
       // 转换为所需格式
       const result = await this.processCanvas(canvas, mergedOptions);
-      
- // 清理临时容器
-      if (mergedOptions.removeContainer) {
-   threadContainer.remove();
-   }
+ 
+      // 清理临时容器
+ if (mergedOptions.removeContainer) {
+        threadContainer.remove();
+      }
       
       return result;
       
-    } catch (error) {
-    console.error('Failed to capture thread:', error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-   throw new Error(`Thread screenshot failed: ${errorMessage}`);
+ } catch (error) {
+      console.error('Failed to capture thread:', error);
+ const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Thread screenshot failed: ${errorMessage}`);
     }
   }
 
@@ -160,49 +187,57 @@ options: ScreenshotOptions = {}
     htmlContent: string,
     options: ScreenshotOptions = {}
   ): Promise<ScreenshotResult> {
- const mergedOptions = { ...this.defaultOptions, ...options };
+    const mergedOptions = { ...this.defaultOptions, ...options };
     
     try {
-      // 创建临时容器
-      const tempContainer = document.createElement('div');
+   // 创建临时容器
+    const tempContainer = document.createElement('div');
       tempContainer.innerHTML = htmlContent;
       tempContainer.style.cssText = `
-   position: absolute;
+        position: absolute;
         left: -9999px;
- top: -9999px;
+        top: -9999px;
       width: 580px;
-        padding: 20px;
+   padding: 20px;
         background: #ffffff;
-      border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+     border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         color: #0f1419;
         line-height: 1.4;
-      `;
-      
+ `;
+   
       document.body.appendChild(tempContainer);
     
-      // 生成截图
-      const canvas = await html2canvas(tempContainer, {
-        backgroundColor: mergedOptions.backgroundColor,
-        scale: mergedOptions.scale,
-     useCORS: mergedOptions.useCORS,
-        allowTaint: mergedOptions.allowTaint,
+// 动态加载并生成截图
+      const snapdom = await this.loadSnapdom();
+      const snap = await snapdom(tempContainer, {
+        scale: mergedOptions.scale || 2,
         width: mergedOptions.width,
-        height: mergedOptions.height
-      });
-
-      // 转换为所需格式
-   const result = await this.processCanvas(canvas, mergedOptions);
+        height: mergedOptions.height,
+   backgroundColor: mergedOptions.backgroundColor || '#ffffff',
+        compress: true,
+   fast: true,
+        embedFonts: false,
+   dpr: window.devicePixelRatio || 1,
+        quality: mergedOptions.quality || 0.9,
+        useProxy: mergedOptions.useCORS ? '' : undefined
+    });
       
-    // 清理临时容器
+      // 转换为Canvas
+      const canvas = await snap.toCanvas();
+
+   // 转换为所需格式
+      const result = await this.processCanvas(canvas, mergedOptions);
+      
+      // 清理临时容器
       if (mergedOptions.removeContainer) {
-   tempContainer.remove();
+    tempContainer.remove();
       }
    
       return result;
-      
-    } catch (error) {
+    
+ } catch (error) {
       console.error('Failed to capture HTML:', error);
       const errorMessage = error instanceof Error ? error.message : String(error);
       throw new Error(`HTML screenshot failed: ${errorMessage}`);
@@ -221,17 +256,17 @@ options: ScreenshotOptions = {}
     // 设置样式以确保正确渲染
     clonedElement.style.cssText = `
       position: absolute;
-    left: -9999px;
+      left: -9999px;
       top: -9999px;
       width: 580px;
       background: #ffffff;
       border-radius: 12px;
-   border: 1px solid #e1e8ed;
+      border: 1px solid #e1e8ed;
       overflow: hidden;
     `;
     
     // 添加到文档中进行渲染
-  document.body.appendChild(clonedElement);
+    document.body.appendChild(clonedElement);
     
     // 等待图片加载
     await this.waitForImages(clonedElement);
@@ -248,13 +283,13 @@ options: ScreenshotOptions = {}
    * @returns 线程容器元素
    */
   private async createThreadContainer(threadTweets: HTMLElement[]): Promise<HTMLElement> {
-    const container = document.createElement('div');
+  const container = document.createElement('div');
     container.style.cssText = `
       position: absolute;
-      left: -9999px;
+    left: -9999px;
       top: -9999px;
       width: 580px;
-      background: #ffffff;
+  background: #ffffff;
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -262,12 +297,12 @@ options: ScreenshotOptions = {}
     
     // 添加线程标题
     const threadHeader = document.createElement('div');
-  threadHeader.style.cssText = `
+    threadHeader.style.cssText = `
       font-size: 18px;
       font-weight: 600;
       color: #0f1419;
       margin-bottom: 20px;
-      text-align: center;
+    text-align: center;
       border-bottom: 2px solid #1d9bf0;
       padding-bottom: 10px;
     `;
@@ -282,19 +317,19 @@ options: ScreenshotOptions = {}
       tweetClone.style.cssText = `
         margin-bottom: 20px;
         padding: 15px;
-   border: 1px solid #e1e8ed;
+      border: 1px solid #e1e8ed;
         border-radius: 8px;
-      background: #ffffff;
-  position: relative;
+        background: #ffffff;
+        position: relative;
       `;
-      
+ 
       // 添加线程序号
       const threadNumber = document.createElement('div');
       threadNumber.style.cssText = `
         position: absolute;
-  top: -10px;
+ top: -10px;
         left: 10px;
-     background: #1d9bf0;
+        background: #1d9bf0;
         color: white;
         padding: 2px 8px;
         border-radius: 12px;
@@ -305,13 +340,13 @@ options: ScreenshotOptions = {}
       tweetClone.appendChild(threadNumber);
       
       // 移除不必要的元素
-    this.removeUnwantedElements(tweetClone);
+      this.removeUnwantedElements(tweetClone);
     
-   container.appendChild(tweetClone);
+      container.appendChild(tweetClone);
     }
     
     document.body.appendChild(container);
-    
+
     // 等待所有图片加载
     await this.waitForImages(container);
     
@@ -324,7 +359,7 @@ options: ScreenshotOptions = {}
    * @param options 截图选项
    * @returns 截图结果
    */
-private async processCanvas(canvas: HTMLCanvasElement, options: ScreenshotOptions): Promise<ScreenshotResult> {
+  private async processCanvas(canvas: HTMLCanvasElement, options: ScreenshotOptions): Promise<ScreenshotResult> {
     const format = options.format || 'png';
     const quality = options.quality || 0.9;
     
@@ -334,15 +369,15 @@ private async processCanvas(canvas: HTMLCanvasElement, options: ScreenshotOption
     // 转换为Blob
     const blob = await new Promise<Blob>((resolve) => {
       canvas.toBlob((blob) => {
-      resolve(blob!);
-  }, `image/${format}`, quality);
+        resolve(blob!);
+      }, `image/${format}`, quality);
     });
     
     return {
-   canvas,
-   dataUrl,
+      canvas,
+      dataUrl,
       blob,
-      width: canvas.width,
+  width: canvas.width,
       height: canvas.height,
       format,
       quality
@@ -350,9 +385,9 @@ private async processCanvas(canvas: HTMLCanvasElement, options: ScreenshotOption
   }
 
   /**
-* 清理克隆文档中的不必要元素
+   * 清理克隆文档中的不必要元素
    * @param clonedDoc 克隆的文档
- */
+   */
   private cleanupClonedDocument(clonedDoc: Document): void {
     // 移除脚本标签
     const scripts = clonedDoc.querySelectorAll('script');
@@ -374,15 +409,15 @@ private async processCanvas(canvas: HTMLCanvasElement, options: ScreenshotOption
    * @param element 要清理的元素
    */
   private removeUnwantedElements(element: HTMLElement): void {
-  // 移除按钮和交互元素
+    // 移除按钮和交互元素
     const buttons = element.querySelectorAll('button, [role="button"]');
-  buttons.forEach(btn => btn.remove());
+ buttons.forEach(btn => btn.remove());
     
     // 移除菜单和下拉列表
     const menus = element.querySelectorAll('[role="menu"], [aria-haspopup="true"]');
     menus.forEach(menu => menu.remove());
     
-  // 移除广告
+    // 移除广告
     const ads = element.querySelectorAll('[data-testid*="ad"], [class*="promoted"]');
     ads.forEach(ad => ad.remove());
     
@@ -397,20 +432,20 @@ private async processCanvas(canvas: HTMLCanvasElement, options: ScreenshotOption
    */
   private async waitForImages(element: HTMLElement): Promise<void> {
     const images = element.querySelectorAll('img');
-    const promises = Array.from(images).map(img => {
-   return new Promise<void>((resolve) => {
-        if (img.complete) {
-   resolve();
-      } else {
-     img.onload = () => resolve();
-      img.onerror = () => resolve(); // 即使加载失败也继续
+  const promises = Array.from(images).map(img => {
+      return new Promise<void>((resolve) => {
+  if (img.complete) {
+ resolve();
+     } else {
+          img.onload = () => resolve();
+    img.onerror = () => resolve(); // 即使加载失败也继续
           // 设置超时避免无限等待
-       setTimeout(() => resolve(), 3000);
-     }
+          setTimeout(() => resolve(), 3000);
+  }
       });
     });
     
- await Promise.all(promises);
+    await Promise.all(promises);
   }
 
   /**
@@ -420,19 +455,19 @@ private async processCanvas(canvas: HTMLCanvasElement, options: ScreenshotOption
    */
   async downloadScreenshot(result: ScreenshotResult, filename: string): Promise<void> {
     try {
-      // 创建下载链接
-  const link = document.createElement('a');
+      // snapdom 也支持直接下载，但我们使用传统方式保持兼容
+      const link = document.createElement('a');
       link.download = filename;
- link.href = result.dataUrl;
+      link.href = result.dataUrl;
       
       // 触发下载
-      document.body.appendChild(link);
+  document.body.appendChild(link);
       link.click();
-  document.body.removeChild(link);
+      document.body.removeChild(link);
       
-  } catch (error) {
+    } catch (error) {
       console.error('Failed to download screenshot:', error);
-   const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorMessage = error instanceof Error ? error.message : String(error);
       throw new Error(`Download failed: ${errorMessage}`);
     }
   }
@@ -442,27 +477,27 @@ private async processCanvas(canvas: HTMLCanvasElement, options: ScreenshotOption
    * @param result 截图结果
    */
   async copyScreenshotToClipboard(result: ScreenshotResult): Promise<void> {
-    try {
+  try {
       if (navigator.clipboard && navigator.clipboard.write) {
  // 使用现代 Clipboard API
         const clipboardItem = new ClipboardItem({
           [`image/${result.format}`]: result.blob
-     });
-     
+        });
+ 
         await navigator.clipboard.write([clipboardItem]);
-   } else {
-      // 降级方案：复制DataURL
-const textArea = document.createElement('textarea');
-     textArea.value = result.dataUrl;
-        document.body.appendChild(textArea);
-      textArea.select();
-  document.execCommand('copy');
-    document.body.removeChild(textArea);
-   }
-      
-    } catch (error) {
+      } else {
+        // 降级方案：复制DataURL
+        const textArea = document.createElement('textarea');
+   textArea.value = result.dataUrl;
+   document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+ 
+} catch (error) {
       console.error('Failed to copy screenshot:', error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorMessage = error instanceof Error ? error.message : String(error);
       throw new Error(`Copy failed: ${errorMessage}`);
     }
   }
@@ -471,16 +506,16 @@ const textArea = document.createElement('textarea');
    * 获取截图能力信息
    */
   getCapabilities(): {
-    html2canvas: boolean;
+    snapdom: boolean;
     clipboard: boolean;
     download: boolean;
     formats: string[];
   } {
     return {
-      html2canvas: typeof html2canvas === 'function',
-  clipboard: !!(navigator.clipboard && navigator.clipboard.write),
+      snapdom: typeof snapdom === 'function',
+      clipboard: !!(navigator.clipboard && navigator.clipboard.write),
       download: true,
- formats: ['png', 'jpeg', 'webp']
+      formats: ['png', 'jpeg', 'webp']
     };
   }
 }

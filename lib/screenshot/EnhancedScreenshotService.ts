@@ -43,26 +43,26 @@ export class EnhancedScreenshotService extends ScreenshotService {
     // 1. 应用格式选项到截图选项
     const finalOptions = await this.mergeWithContentOptions(options);
 
-    // 2. 创建包装容器以应用渐变背景
+// 2. 创建包装容器以应用渐变背景
     const wrappedElement = await this.wrapElementWithGradientBackground(element, finalOptions);
     
     // 3. 预处理：应用主题（如果需要）
     const originalClasses = element.className;
     if (finalOptions.theme && finalOptions.theme !== 'auto') {
-      element.classList.add(`theme-${finalOptions.theme}`);
+    element.classList.add(`theme-${finalOptions.theme}`);
     }
 
-    try {
-      // 4. 使用 html2canvas-pro 生成截图
+  try {
+      // 4. 使用 snapdom 生成截图
       const canvas = await this.performScreenshot(wrappedElement, finalOptions);
 
-      // 5. 恢复元素的原始状态
-      if (finalOptions.theme && finalOptions.theme !== 'auto') {
+    // 5. 恢复元素的原始状态
+   if (finalOptions.theme && finalOptions.theme !== 'auto') {
    element.className = originalClasses;
-      }
+   }
 
    // 6. 清理临时容器
-      if (wrappedElement !== element) {
+   if (wrappedElement !== element) {
   wrappedElement.remove();
       }
 
@@ -121,7 +121,7 @@ top: -9999px;
     // 设置背景
     if (options.backgroundGradient) {
  const { type, direction, colors } = options.backgroundGradient;
-      const gradientDirection = direction || (type === 'linear' ? 'to right' : 'circle');
+    const gradientDirection = direction || (type === 'linear' ? 'to right' : 'circle');
       const colorStops = colors.join(', ');
       wrapper.style.background = `${type}-gradient(${gradientDirection}, ${colorStops})`;
     } else if (options.backgroundColor) {
@@ -135,7 +135,7 @@ top: -9999px;
       border-radius: 12px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
    overflow: hidden;
-      width: ${elementWidth}px;
+ width: ${elementWidth}px;
       max-width: ${elementWidth}px;
       box-sizing: border-box;
     `;
@@ -165,7 +165,7 @@ top: -9999px;
  // 从设置中获取格式选项，或使用提供的格式选项
     const formatOptions = options.formatOptions || {
         format: settings.format,
-        includeAuthor: settings.includeAuthor,
+includeAuthor: settings.includeAuthor,
         includeTimestamp: settings.includeTimestamp,
         includeMetrics: settings.includeMetrics,
         includeMedia: settings.includeMedia,
@@ -176,9 +176,9 @@ top: -9999px;
       const mergedOptions: EnhancedScreenshotOptions = {
         ...options,
         // 如果内容选项包含metrics，则显示metrics
-        includeMetrics: formatOptions.includeMetrics,
-        // 根据设置主题
-        theme: settings.theme || options.theme,
+   includeMetrics: formatOptions.includeMetrics,
+// 根据设置主题
+   theme: settings.theme || options.theme,
         // 如果使用截图背景设置
 backgroundColor: options.backgroundColor || settings.screenshotOptions?.backgroundColor,
         backgroundGradient: options.backgroundGradient || settings.screenshotOptions?.backgroundGradient
@@ -195,33 +195,39 @@ backgroundColor: options.backgroundColor || settings.screenshotOptions?.backgrou
    * 执行截图操作
    */
   private async performScreenshot(element: HTMLElement, options: EnhancedScreenshotOptions): Promise<HTMLCanvasElement> {
-    const html2canvas = await this.loadHtml2Canvas();
+    const snapdom = await this.loadSnapdom();
     
-    return html2canvas(element, {
+    const snap = await snapdom(element, {
       width: options.width,
-      height: options.height,
-      scale: options.scale,
+    height: options.height,
+      scale: options.scale || 2,
       backgroundColor: 'transparent', // 使用透明背景让包装容器背景显示
-      useCORS: options.useCORS,
-      allowTaint: options.allowTaint
-  });
+ compress: true, // 移除冗余样式以优化性能
+      fast: true, // 跳过空闲延迟以加快结果
+      embedFonts: false, // 不内联字体（图标字体始终内嵌）
+      dpr: window.devicePixelRatio || 1, // 设备像素比
+      quality: options.quality || 0.9, // 图片质量
+      useProxy: options.useCORS ? '' : undefined // CORS 处理
+    });
+    
+    return snap.toCanvas();
   }
 
   /**
-   * 动态加载 html2canvas
+   * 动态加载 snapdom
    */
-  private async loadHtml2Canvas(): Promise<any> {
+private async loadSnapdom(): Promise<any> {
     // 如果已经加载，直接返回
-    if (typeof window !== 'undefined' && (window as any).html2canvas) {
-      return (window as any).html2canvas;
+  if (typeof window !== 'undefined' && (window as any).snapdom) {
+      return (window as any).snapdom;
     }
 
-    // 动态导入 html2canvas
-    try {
-      const html2canvasModule = await import('html2canvas-pro');
-      return html2canvasModule.default || html2canvasModule;
-    } catch (error) {
-      console.error('Failed to load html2canvas:', error);
+    // 动态导入 snapdom
+ try {
+const snapdomModule = await import('@zumer/snapdom');
+return snapdomModule.snapdom;
+ } catch (error) {
+      console.error('Failed to load snapdom:', error);
     throw new Error('Failed to load screenshot library');
     }
   }
@@ -234,13 +240,13 @@ backgroundColor: options.backgroundColor || settings.screenshotOptions?.backgrou
     const promises = Array.from(images).map(img => {
       return new Promise<void>((resolve) => {
         if (img.complete) {
-          resolve();
-        } else {
-          img.onload = () => resolve();
+        resolve();
+   } else {
+img.onload = () => resolve();
 img.onerror = () => resolve(); // 即使加载失败也继续
         // 设置超时避免无限等待
-     setTimeout(() => resolve(), 3000);
-        }
+ setTimeout(() => resolve(), 3000);
+     }
       });
     });
 
@@ -255,11 +261,11 @@ img.onerror = () => resolve(); // 即使加载失败也继续
   // 并行展开所有推文内容
     const expandPromises = threadTweets.map(async (tweetElement, index) => {
    try {
-          await this.expandTweetContentForScreenshot(tweetElement);
+ await this.expandTweetContentForScreenshot(tweetElement);
   console.log(`Expanded tweet ${index + 1}/${threadTweets.length}`);
       } catch (error) {
      console.warn(`Failed to expand tweet ${index + 1}:`, error);
-   // 即使单个推文展开失败，也继续处理其他推文
+ // 即使单个推文展开失败，也继续处理其他推文
         }
   });
       
@@ -269,7 +275,7 @@ img.onerror = () => resolve(); // 即使加载失败也继续
       await new Promise(resolve => setTimeout(resolve, 500));
   
   } catch (error) {
-      console.warn('Failed to expand tweets in thread:', error);
+   console.warn('Failed to expand tweets in thread:', error);
       // 即使展开失败也继续截图
  }
   }
@@ -280,7 +286,7 @@ img.onerror = () => resolve(); // 即使加载失败也继续
   private findMainTweetShowMoreButtonForScreenshot(tweetElement: HTMLElement): HTMLElement | null {
     // 查找所有的Show more按钮
     const allShowMoreButtons = tweetElement.querySelectorAll('[data-testid="tweet-text-show-more-link"], a[data-testid="tweet-text-show-more-link"], button[data-testid="tweet-text-show-more-link"]');
-    
+
     if (allShowMoreButtons.length === 0) {
       return null;
  }
@@ -306,14 +312,14 @@ for (const button of allShowMoreButtons) {
  const hasQuoteIndicator = this.findAncestor(buttonElement, '[aria-labelledby*="Quote"]');
       if (!hasQuoteIndicator) {
     return buttonElement;
-      }
+   }
     }
     
     // 如果都无法确定，返回第一个（通常是主推文的）
  return allShowMoreButtons[0] as HTMLElement;
   }
 
-  /**
+/**
    * 查找主推文的Show less按钮，排除引用推文内的按钮（用于截图）
    */
   private findMainTweetShowLessButtonForScreenshot(tweetElement: HTMLElement): HTMLElement | null {
@@ -333,14 +339,14 @@ return allShowLessButtons[0] as HTMLElement;
     for (const button of allShowLessButtons) {
       const buttonElement = button as HTMLElement;
       
-      // 检查按钮是否在引用推文容器内
+  // 检查按钮是否在引用推文容器内
       const quoteTweetContainer = this.findAncestor(buttonElement, '[role="link"][tabindex="0"]');
       
       // 如果按钮不在引用推文容器内，则认为是主推文的按钮
       if (!quoteTweetContainer) {
    return buttonElement;
       }
-      
+ 
 // 额外检查：如果按钮的父级链中没有引用推文的特征元素，则是主推文按钮
       const hasQuoteIndicator = this.findAncestor(buttonElement, '[aria-labelledby*="Quote"]');
   if (!hasQuoteIndicator) {
@@ -358,7 +364,7 @@ return allShowLessButtons[0] as HTMLElement;
   private findAncestor(element: HTMLElement, selector: string): HTMLElement | null {
     let current = element.parentElement;
     while (current) {
-      if (current.matches && current.matches(selector)) {
+    if (current.matches && current.matches(selector)) {
      return current;
       }
   current = current.parentElement;
@@ -400,7 +406,7 @@ return;
    showMoreButton.dispatchEvent(clickEvent);
   
    // 清理事件监听器（防止意外情况）
-      setTimeout(() => {
+  setTimeout(() => {
  showMoreButton.removeEventListener('click', preventNavigation);
       }, 100);
       
@@ -413,7 +419,7 @@ return;
   
         // 检查Show more按钮是否已消失或变成Show less
       const currentButton = this.findMainTweetShowMoreButtonForScreenshot(tweetElement);
-        const showLessButton = this.findMainTweetShowLessButtonForScreenshot(tweetElement);
+  const showLessButton = this.findMainTweetShowLessButtonForScreenshot(tweetElement);
    
         if (!currentButton || showLessButton) {
       console.log('Long tweet content expanded successfully for screenshot');
@@ -423,7 +429,7 @@ return;
         attempts++;
       }
       
-      console.warn('Tweet expansion for screenshot may not have completed, but continuing...');
+    console.warn('Tweet expansion for screenshot may not have completed, but continuing...');
       
    } catch (error) {
  console.warn('Failed to expand tweet content for screenshot:', error);
@@ -467,7 +473,7 @@ return;
     options: EnhancedScreenshotOptions = {}
   ): Promise<ScreenshotResult> {
     return this.enhancedCapture(tweetElement, {
-      ...options,
+ ...options,
       useContentOptions: options.useContentOptions ?? true
     });
   }
@@ -481,8 +487,8 @@ return;
   ): Promise<ScreenshotResult> {
     const mergedOptions = { 
       ...options, 
-      useContentOptions: options.useContentOptions ?? true 
-    };
+  useContentOptions: options.useContentOptions ?? true 
+  };
     
     try {
  // 首先展开所有线程中的长推文内容
@@ -494,13 +500,13 @@ const threadContainer = await this.createEnhancedThreadContainer(threadTweets, m
  // 生成截图
       const result = await this.enhancedCapture(threadContainer, mergedOptions);
    
-      // 清理临时容器
+  // 清理临时容器
       if (mergedOptions.removeContainer !== false) {
    threadContainer.remove();
  }
       
-      return result;
-    } catch (error) {
+  return result;
+ } catch (error) {
       console.error('Failed to capture thread:', error);
   throw new Error(
       (i18nManager.t('thread_screenshot_failed') || 'Thread screenshot failed') + ': ' + error
@@ -523,19 +529,19 @@ const threadContainer = await this.createEnhancedThreadContainer(threadTweets, m
       border-radius: 16px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     `;
-    
+ 
     // 添加线程标题（如果需要显示metrics等信息）
     if (options.includeMetrics) {
-      const threadHeader = document.createElement('div');
-      threadHeader.style.cssText = `
-        font-size: 20px;
+  const threadHeader = document.createElement('div');
+    threadHeader.style.cssText = `
+   font-size: 20px;
 font-weight: 700;
-        color: #0f1419;
+      color: #0f1419;
       margin-bottom: 24px;
      text-align: center;
-        padding-bottom: 16px;
+   padding-bottom: 16px;
         border-bottom: 2px solid #1d9bf0;
-      `;
+    `;
       threadHeader.textContent = `🧵 Thread (${threadTweets.length} tweets)`;
       container.appendChild(threadHeader);
     }
@@ -547,27 +553,27 @@ font-weight: 700;
    // 设置推文样式
       tweetClone.style.cssText = `
         margin-bottom: 20px;
-        padding: 20px;
+      padding: 20px;
   border: 1px solid #e1e8ed;
         border-radius: 12px;
         background: white;
-        position: relative;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     `;
-      
+   
       // 添加线程序号
       const threadNumber = document.createElement('div');
       threadNumber.style.cssText = `
         position: absolute;
-        top: -12px;
+     top: -12px;
         left: 16px;
-        background: linear-gradient(45deg, #1d9bf0, #0d8bd9);
-        color: white;
+     background: linear-gradient(45deg, #1d9bf0, #0d8bd9);
+ color: white;
       padding: 4px 12px;
-      border-radius: 16px;
+    border-radius: 16px;
         font-size: 12px;
         font-weight: 600;
-        box-shadow: 0 2px 8px rgba(29, 155, 240, 0.3);
+box-shadow: 0 2px 8px rgba(29, 155, 240, 0.3);
 `;
       threadNumber.textContent = `${i + 1}`;
       tweetClone.appendChild(threadNumber);
@@ -595,30 +601,30 @@ font-weight: 700;
     };
   }> {
     return [
-      {
+  {
         name: 'Twitter Blue',
       gradient: {
           type: 'linear',
       direction: 'to right',
           colors: ['#1DA1F2', '#0d8bd9']
     }
-      },
+ },
       {
-        name: 'Sunset',
-        gradient: {
+      name: 'Sunset',
+     gradient: {
      type: 'linear',
       direction: 'to right',
           colors: ['#FF6B6B', '#FFE66D', '#FF8E53']
         }
       },
-      {
+    {
  name: 'Ocean',
-        gradient: {
+    gradient: {
           type: 'linear',
       direction: 'to bottom right',
-          colors: ['#667eea', '#764ba2']
+    colors: ['#667eea', '#764ba2']
      }
-      },
+    },
       {
    name: 'Purple Dream',
         gradient: {
@@ -627,9 +633,9 @@ font-weight: 700;
           colors: ['#a8edea', '#fed6e3']
         }
       },
-      {
+   {
     name: 'Nature',
-        gradient: {
+ gradient: {
   type: 'linear',
     direction: 'to bottom',
    colors: ['#56ab2f', '#a8e6cf']
@@ -637,26 +643,26 @@ font-weight: 700;
       },
    {
         name: 'Night Sky',
-     gradient: {
+ gradient: {
        type: 'radial',
-    direction: 'circle',
+  direction: 'circle',
           colors: ['#2c3e50', '#4a6741', '#34495e']
      }
-      },
-      {
+ },
+    {
   name: 'Warm Gradient',
         gradient: {
           type: 'linear',
           direction: 'to bottom right',
-     colors: ['#f093fb', '#f5576c']
+colors: ['#f093fb', '#f5576c']
         }
       },
       {
-        name: 'Cool Blue',
+    name: 'Cool Blue',
         gradient: {
-          type: 'linear',
+       type: 'linear',
           direction: 'to right',
-          colors: ['#4facfe', '#00f2fe']
+     colors: ['#4facfe', '#00f2fe']
         }
       }
   ];
