@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tweet Craft - Twitter 超级复制插件</title>
-    <meta name="description" content="Enhanced Twitter/X browser extension with super copy functionality, thread support, multiple formats, and screenshot capabilities. | 增强 Twitter/X 浏览器插件，支持超级复制功能、推文线程、多种格式和截图功能。">
-    <meta name="keywords" content="Twitter, X, extension, copy, thread, screenshot, browser, Chrome, Firefox, 推特, 插件, 复制, 截图">
+    <title>Tweet Craft - Twitter 超级增强插件</title>
+    <meta name="description" content="Enhanced Twitter/X browser extension with super copy functionality, video download, thread support, multiple formats, and screenshot capabilities. | 增强 Twitter/X 浏览器插件，支持超级复制功能、视频下载、推文线程、多种格式和截图功能。">
+    <meta name="keywords" content="Twitter, X, extension, copy, video download, thread, screenshot, browser, Chrome, Firefox, 推特, 插件, 复制, 视频下载, 截图">
     <meta name="author" content="Tweet Craft Team">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://tweet-craft.vercel.app/">
-    <meta property="og:title" content="Tweet Craft - Twitter 超级复制插件">
-    <meta property="og:description" content="Enhanced Twitter/X browser extension with super copy functionality, thread support, multiple formats, and screenshot capabilities.">
+    <meta property="og:title" content="Tweet Craft - Twitter 超级增强插件">
+    <meta property="og:description" content="Enhanced Twitter/X browser extension with super copy functionality, video download, thread support, multiple formats, and screenshot capabilities.">
     <meta property="og:image" content="public/icon/icon.png">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://tweet-craft.vercel.app/">
-    <meta property="twitter:title" content="Tweet Craft - Twitter 超级复制插件">
-    <meta property="twitter:description" content="Enhanced Twitter/X browser extension with super copy functionality, thread support, multiple formats, and screenshot capabilities.">
+    <meta property="twitter:title" content="Tweet Craft - Twitter 超级增强插件">
+    <meta property="twitter:description" content="Enhanced Twitter/X browser extension with super copy functionality, video download, thread support, multiple formats, and screenshot capabilities.">
     <meta property="twitter:image" content="public/icon/icon.png">
     
     <!-- Favicon -->
@@ -31,6 +31,9 @@
     
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- I18n Updates -->
+    <script src="public/js/i18n-updates.js"></script>
     
     <!-- Custom styles -->
     <style>
@@ -128,7 +131,7 @@
                 </h1>
                 <p class="text-xl text-gray-600 mb-8 leading-relaxed" data-i18n="hero.description">
                     Enhanced browser extension that revolutionizes how you copy and save Twitter content. 
-                    Support for threads, multiple formats, beautiful screenshots, and 6 languages.
+                    Support for video downloads, threads, multiple formats, beautiful screenshots, and 6 languages.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                     <a href="https://chromewebstore.google.com/detail/twitter-%E8%B6%85%E7%BA%A7%E5%A2%9E%E5%BC%BA/pancaficlgkdicdeloffhlgdldfhcghf?authuser=0&hl=zh-CN" target="_blank" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover-scale">
@@ -169,6 +172,30 @@
             </div>
             
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Video Download Feature -->
+                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-video text-red-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.video.title">Smart Video Download</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="features.video.description">
+                        Automatically detect and download Twitter videos with one click. Support multiple quality options and external services.
+                    </p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-download text-red-500 mr-2"></i>
+                            <span data-i18n="features.video.oneclick">One-click download</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-hd-video text-red-500 mr-2"></i>
+                            <span data-i18n="features.video.quality">Multiple quality options</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-cloud text-red-500 mr-2"></i>
+                            <span data-i18n="features.video.services">External service integration</span>
+                        </div>
+                    </div>
+                </div>
                 <!-- Smart Thread Detection -->
                 <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
@@ -178,9 +205,19 @@
                     <p class="text-gray-600 mb-4" data-i18n="features.thread.description">
                         Automatically detect Twitter threads using advanced algorithms. Copy entire threads with perfect formatting.
                     </p>
-                    <div class="flex items-center text-sm text-blue-600">
-                        <i class="fas fa-check-circle mr-2"></i>
-                        <span data-i18n="features.thread.detail">Number pattern, self-reply, visual continuity</span>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-search text-blue-500 mr-2"></i>
+                            <span data-i18n="features.thread.pattern">Number pattern detection</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-reply text-blue-500 mr-2"></i>
+                            <span data-i18n="features.thread.selfreply">Self-reply analysis</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-eye text-blue-500 mr-2"></i>
+                            <span data-i18n="features.thread.visual">Visual continuity check</span>
+                        </div>
                     </div>
                 </div>
 
@@ -207,12 +244,21 @@
                     </div>
                     <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.screenshot.title">Beautiful Screenshots</h3>
                     <p class="text-gray-600 mb-4" data-i18n="features.screenshot.description">
-                        Generate stunning tweet screenshots with customizable themes and styles.
+                        Generate stunning tweet screenshots with customizable themes, backgrounds, and export formats.
                     </p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">PNG</span>
-                        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">JPG</span>
-                        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">WebP</span>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-palette text-purple-500 mr-2"></i>
+                            <span data-i18n="features.screenshot.themes">Custom themes & backgrounds</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-file-image text-purple-500 mr-2"></i>
+                            <span data-i18n="features.screenshot.formats">PNG, JPG, WebP formats</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-magic text-purple-500 mr-2"></i>
+                            <span data-i18n="features.screenshot.quality">High-quality rendering</span>
+                        </div>
                     </div>
                 </div>
 
@@ -235,21 +281,25 @@
 
                 <!-- Performance Optimized -->
                 <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
-                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-rocket text-red-600 text-xl"></i>
+                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-rocket text-yellow-600 text-xl"></i>
                     </div>
                     <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.performance.title">Performance Optimized</h3>
                     <p class="text-gray-600 mb-4" data-i18n="features.performance.description">
-                        Built with performance in mind. Batch processing, caching, and memory management.
+                        Built with performance in mind. Smart detection, batch processing, and efficient memory management.
                     </p>
                     <div class="space-y-2 text-sm">
                         <div class="flex items-center text-gray-600">
-                            <i class="fas fa-tachometer-alt text-red-500 mr-2"></i>
-                            <span data-i18n="features.performance.batch">Processes 10 tweets at once</span>
+                            <i class="fas fa-tachometer-alt text-yellow-500 mr-2"></i>
+                            <span data-i18n="features.performance.detection">Real-time video detection</span>
                         </div>
                         <div class="flex items-center text-gray-600">
-                            <i class="fas fa-memory text-red-500 mr-2"></i>
-                            <span data-i18n="features.performance.cache">LRU cache (200 items max)</span>
+                            <i class="fas fa-memory text-yellow-500 mr-2"></i>
+                            <span data-i18n="features.performance.cache">LRU cache optimization</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-sync text-yellow-500 mr-2"></i>
+                            <span data-i18n="features.performance.debounce">Debounced processing</span>
                         </div>
                     </div>
                 </div>
@@ -296,7 +346,82 @@
                     </div>
                 </div>
                 
-                <!-- Sample Output -->
+                <!-- Feature Demos -->
+                <div class="grid md:grid-cols-3 gap-8 mb-8">
+                    <!-- Video Download Demo -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <div class="flex items-center mb-4">
+                            <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-video text-red-600"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900" data-i18n="demo.video.title">Video Download</h3>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-search text-red-500 mr-2"></i>
+                                <span data-i18n="demo.video.detect">Auto-detect videos</span>
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-mouse-pointer text-red-500 mr-2"></i>
+                                <span data-i18n="demo.video.button">Add download button</span>
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-download text-red-500 mr-2"></i>
+                                <span data-i18n="demo.video.download">One-click download</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Copy Features Demo -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <div class="flex items-center mb-4">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-copy text-blue-600"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900" data-i18n="demo.copy.title">Smart Copy</h3>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-link text-blue-500 mr-2"></i>
+                                <span data-i18n="demo.copy.thread">Thread detection</span>
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-file-code text-blue-500 mr-2"></i>
+                                <span data-i18n="demo.copy.formats">Multiple formats</span>
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-clipboard text-blue-500 mr-2"></i>
+                                <span data-i18n="demo.copy.clipboard">Auto clipboard</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Screenshot Demo -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <div class="flex items-center mb-4">
+                            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-camera text-purple-600"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900" data-i18n="demo.screenshot.title">Screenshot</h3>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-palette text-purple-500 mr-2"></i>
+                                <span data-i18n="demo.screenshot.themes">Custom themes</span>
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-image text-purple-500 mr-2"></i>
+                                <span data-i18n="demo.screenshot.quality">High quality</span>
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-download text-purple-500 mr-2"></i>
+                                <span data-i18n="demo.screenshot.export">Export options</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Samples -->
                 <div class="grid md:grid-cols-2 gap-8">
                     <div>
                         <h3 class="text-xl font-semibold text-gray-900 mb-4" data-i18n="demo.html">HTML Output Sample</h3>
@@ -309,6 +434,9 @@
   &lt;/div&gt;
   &lt;div class="tweet-content"&gt;
     This is amazing! 🚀
+    &lt;div class="tweet-media"&gt;
+      &lt;video src="video.mp4"&gt;&lt;/video&gt;
+    &lt;/div&gt;
   &lt;/div&gt;
 &lt;/div&gt;</pre>
                         </div>
@@ -321,6 +449,8 @@
 *2024/01/01 12:00*
 
 This is amazing! 🚀
+
+📹 [Download Video](video.mp4)
 
 [View original tweet](https://twitter.com/...)</pre>
                         </div>
@@ -381,6 +511,26 @@ This is amazing! 🚀
                                 <div class="text-sm text-gray-600" data-i18n="tech.snapdom">Screenshot generation</div>
                             </div>
                         </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-video text-red-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">Video API</div>
+                                <div class="text-sm text-gray-600" data-i18n="tech.video">Video download services</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-cogs text-indigo-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">Chrome APIs</div>
+                                <div class="text-sm text-gray-600" data-i18n="tech.chrome">Extension platform</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -389,26 +539,34 @@ This is amazing! 🚀
                     <div class="space-y-4">
                         <div class="bg-white p-4 rounded-lg shadow">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="font-semibold">8,000+ Lines of Code</span>
+                                <span class="font-semibold">10,000+ Lines of Code</span>
                                 <span class="text-sm text-gray-600" data-i18n="tech.lines">Production-ready</span>
                             </div>
-                            <div class="text-sm text-gray-600" data-i18n="tech.linesdesc">Well-structured, maintainable codebase</div>
+                            <div class="text-sm text-gray-600" data-i18n="tech.linesdesc">TypeScript, content scripts, background workers</div>
                         </div>
                         
                         <div class="bg-white p-4 rounded-lg shadow">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="font-semibold">62 Test Suites</span>
-                                <span class="text-sm text-gray-600" data-i18n="tech.tests">Comprehensive coverage</span>
+                                <span class="font-semibold">Smart Detection Engine</span>
+                                <span class="text-sm text-gray-600" data-i18n="tech.detection">AI-powered</span>
                             </div>
-                            <div class="text-sm text-gray-600" data-i18n="tech.testsdesc">Unit tests, integration tests, performance tests</div>
+                            <div class="text-sm text-gray-600" data-i18n="tech.detectiondesc">Video detection, thread analysis, DOM monitoring</div>
                         </div>
                         
                         <div class="bg-white p-4 rounded-lg shadow">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="font-semibold">Modular Design</span>
-                                <span class="text-sm text-gray-600" data-i18n="tech.modular">Clean architecture</span>
+                                <span class="font-semibold">Multi-Service Integration</span>
+                                <span class="text-sm text-gray-600" data-i18n="tech.services">Reliable downloads</span>
                             </div>
-                            <div class="text-sm text-gray-600" data-i18n="tech.modulardesc">Separation of concerns, dependency injection</div>
+                            <div class="text-sm text-gray-600" data-i18n="tech.servicesdesc">TweetDown, SaveTweet, fallback services</div>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold">Modular Architecture</span>
+                                <span class="text-sm text-gray-600" data-i18n="tech.modular">Clean design</span>
+                            </div>
+                            <div class="text-sm text-gray-600" data-i18n="tech.modulardesc">Content scripts, background workers, popup UI</div>
                         </div>
                     </div>
                 </div>
@@ -487,13 +645,14 @@ This is amazing! 🚀
                         <span class="text-xl font-bold">Tweet Craft</span>
                     </div>
                     <p class="text-gray-400" data-i18n="footer.tagline">
-                        Super copy functionality for Twitter/X.com with advanced features and beautiful design.
+                        Enhanced Twitter/X.com extension with video download, super copy functionality, and beautiful design.
                     </p>
                 </div>
                 
                 <div>
                     <h4 class="font-semibold mb-4" data-i18n="footer.features">Features</h4>
                     <ul class="space-y-2 text-gray-400">
+                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.video">Video Download</a></li>
                         <li><a href="#features" class="hover:text-white transition" data-i18n="footer.thread">Thread Copy</a></li>
                         <li><a href="#features" class="hover:text-white transition" data-i18n="footer.formats">Multiple Formats</a></li>
                         <li><a href="#features" class="hover:text-white transition" data-i18n="footer.screenshots">Screenshots</a></li>
