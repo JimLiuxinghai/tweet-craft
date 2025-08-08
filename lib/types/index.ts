@@ -74,6 +74,14 @@ export interface ExtensionSettings {
     };
     useContentOptions: boolean;
   };
+  videoDownloadSettings?: {
+    autoDownload: boolean;
+    defaultQuality: 'highest' | 'medium' | 'lowest' | 'ask';
+    showProgress: boolean;
+    notifications: boolean;
+    customPath?: string;
+    filenameTemplate?: string;
+  };
 }
 
 
@@ -212,6 +220,12 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
       colors: ['#667eea', '#764ba2']
     },
     useContentOptions: true
+  },
+  videoDownloadSettings: {
+    autoDownload: false,
+    defaultQuality: 'ask',
+    showProgress: true,
+    notifications: true
   }
 };
 

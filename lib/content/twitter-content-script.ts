@@ -12,6 +12,8 @@ import { TwitterActionsBarFixEnhanced } from './twitter-actions-bar-fix-enhanced
 import { TwitterDebugHelper } from './debug-helper';
 import { SettingsDebugFix } from './settings-debug-fix';
 import { TwitterActionButtons } from './action-buttons';
+import TwitterVideoDetector from './twitter-video-detector';
+import { SimpleVideoDownloader } from './simple-video-downloader';
 
 export class TwitterContentScript {
   private isInitialized: boolean = false;
@@ -20,6 +22,8 @@ export class TwitterContentScript {
   private processedTweets: Set<string> = new Set();
   private currentSettings: ExtensionSettings | null = null;
   private styleSheetId = 'twitter-super-copy-styles';
+  private videoDetector?: TwitterVideoDetector;
+  private simpleVideoDownloader?: SimpleVideoDownloader;
 
   constructor() {
     console.log('TwitterContentScript instance created');
@@ -55,6 +59,9 @@ export class TwitterContentScript {
       this.setupObservers();
       this.setupEventListeners();
       this.setupMessageListeners();
+      
+      // 初始化视频下载检测器
+      this.initializeVideoDetector();
       
     // 立即处理已存在的推文，参考tweet-craft的实现
       await this.processExistingTweetsImmediate();
@@ -1689,6 +1696,74 @@ margin-right: 12px;
 font-weight: 600;
      color: #536471;
       }
+      
+      /* 视频下载按钮样式 */
+      .tweet-craft-video-download-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34.75px;
+        height: 34.75px;
+        border-radius: 9999px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        color: rgb(83, 100, 113);
+        transition: all 0.2s ease;
+        margin-left: 12px;
+        position: relative;
+      }
+      
+      .tweet-craft-video-download-btn:hover {
+        background-color: rgba(34, 197, 94, 0.1);
+        color: rgb(34, 197, 94);
+        transform: scale(1.05);
+      }
+      
+      .tweet-craft-video-download-btn:active {
+        transform: scale(0.95);
+      }
+      
+      .tweet-craft-video-download-btn:focus {
+        outline: 2px solid rgb(34, 197, 94);
+        outline-offset: 2px;
+      }
+      
+      /* 视频下载按钮中的图标 */
+      .tweet-craft-video-download-btn svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+      }
+      
+      /* 通知样式 */
+      .tweet-craft-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 999999;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease;
+      }
+      
+      .tweet-craft-notification-info {
+        background-color: rgb(59, 130, 246);
+        color: white;
+      }
+      
+      .tweet-craft-notification-error {
+        background-color: rgb(239, 68, 68);
+        color: white;
+      }
+      
+      .tweet-craft-notification-success {
+        background-color: rgb(34, 197, 94);
+        color: white;
+      }
     `;
 
     addStyleSheet(css, this.styleSheetId);
@@ -1978,6 +2053,34 @@ const errorMessage = error instanceof Error ? error.message : String(error);
     sendResponse({ success: false, error: errorMessage });
       }
     });
+  }
+
+  /**
+   * 初始化视频下载检测器
+   */
+  private initializeVideoDetector(): void {
+    try {
+      // 使用简化的视频下载器（更可靠）
+      this.simpleVideoDownloader = new SimpleVideoDownloader();
+      console.log('✅ Simple video downloader initialized successfully');
+      
+      // 在开发环境中暴露调试接口
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+        (window as any).simpleVideoDownloader = this.simpleVideoDownloader;
+        console.log('🔧 Simple video downloader exposed as window.simpleVideoDownloader');
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to initialize video detector:', error);
+      
+      // 降级到原有的检测器
+      try {
+        this.videoDetector = new TwitterVideoDetector();
+        console.log('⚠️ Fallback to original video detector');
+      } catch (fallbackError) {
+        console.error('❌ Failed to initialize fallback video detector:', fallbackError);
+      }
+    }
   }
 
   /**

@@ -7,16 +7,20 @@ export default defineConfig({
     description: 'Enhanced copy functionality for Twitter/X.com with thread support and multiple formats',
     version: '1.0.1',
     permissions: [
-    'activeTab',
+      'activeTab',
       'clipboardWrite',
-  'storage',
+      'storage',
       'contextMenus',
-      'scripting'
- ],
+      'scripting',
+      'downloads',
+      'notifications'
+    ],
     host_permissions: [
       'https://twitter.com/*',
-      'https://x.com/*'
- ],
+      'https://x.com/*',
+      'https://*.twimg.com/*',
+      'https://*.video.twimg.com/*'
+    ],
     content_security_policy: {
       extension_pages: "script-src 'self'; object-src 'self';"
     },

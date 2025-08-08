@@ -1,5 +1,10 @@
+import VideoDownloadManager from '../lib/background/video-download-manager';
+
 export default defineBackground(() => {
   console.log('Twitter Super Copy background script loaded', { id: browser.runtime.id });
+
+  // 初始化视频下载管理器
+  const videoDownloadManager = new VideoDownloadManager();
 
   // 设置右键菜单
   setupContextMenus();
