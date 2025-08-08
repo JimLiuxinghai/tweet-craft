@@ -11,7 +11,6 @@ export default defineConfig({
       'clipboardWrite',
       'storage',
       'contextMenus',
-      'scripting',
       'downloads',
       'notifications'
     ],

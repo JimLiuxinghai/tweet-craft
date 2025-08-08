@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tweet Craft - 智能Twitter扩展</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .glass-card {
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 0.65rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), inset 0 0 8px -2px rgba(255,255,255,0.2);
+            background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 100%);
+        }
+
+        .glass-background {
+            background: radial-gradient(ellipse at center,
+                hsl(210, 100%, 90%) 0%,
+                hsl(220, 80%, 85%) 30%,
+                hsl(230, 60%, 80%) 70%,
+                hsl(240, 70%, 75%) 100%);
+            min-height: 100vh;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #6366f1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .feature-icon {
+            background: linear-gradient(135deg, rgba(59,130,246,0.8) 0%, rgba(99,102,241,0.8) 100%);
+            backdrop-filter: blur(12px);
+        }
+
+        .noto-serif {
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        .poppins {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        @media (max-width: 768px) {
+            .glass-card {
+                margin: 0.5rem;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="glass-background">
+
+    <!-- Main Content Container -->
+    <div class="max-w-7xl mx-auto px-4 grid grid-cols-12 gap-6">
+
+        <!-- Sidebar -->
+        <aside class="col-span-12 lg:col-span-3">
+            <div class="glass-card p-6 mb-6">
+                <h3 class="text-lg font-bold noto-serif mb-4 text-gray-800">项目信息</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <i class="fab fa-chrome text-blue-500 w-6"></i>
+                        <span class="text-sm text-gray-700">浏览器扩展</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fab fa-js-square text-yellow-500 w-6"></i>
+                        <span class="text-sm text-gray-700">TypeScript + WXT</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-code text-green-500 w-6"></i>
+                        <span class="text-sm text-gray-700">10,000+ 行代码</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-globe text-purple-500 w-6"></i>
+                        <span class="text-sm text-gray-700">6种语言支持</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold noto-serif mb-4 text-gray-800">技术亮点</h3>
+                <div class="space-y-2">
+                    <div class="text-xs bg-blue-100 px-2 py-1 rounded text-blue-800">分层架构</div>
+                    <div class="text-xs bg-green-100 px-2 py-1 rounded text-green-800">性能优化</div>
+                    <div class="text-xs bg-purple-100 px-2 py-1 rounded text-purple-800">错误恢复</div>
+                    <div class="text-xs bg-orange-100 px-2 py-1 rounded text-orange-800">多服务集成</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="col-span-12 lg:col-span-9">
+
+            <!-- Hero Section -->
+            <div class="glass-card p-8 mb-6">
+                <div class="flex items-center mb-4">
+                    <div class="feature-icon w-16 h-16 rounded-2xl flex items-center justify-center mr-6">
+                        <i class="fab fa-twitter text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold noto-serif text-gradient mb-2">Tweet Craft</h1>
+                        <p class="text-lg poppins text-gray-600">智能Twitter体验增强扩展</p>
+                    </div>
+                </div>
+
+                <p class="text-gray-700 leading-relaxed mb-6">
+                    Tweet Craft 是一个功能强大的 Twitter/X 浏览器扩展，专为提升用户的社交媒体体验而设计。
+                    集成了智能复制、线程检测、截图工具和视频下载等核心功能，采用先进的分层架构和性能优化策略，
+                    为用户提供流畅、智能的 Twitter 使用体验。
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                        <div class="text-2xl font-bold text-blue-600">10K+</div>
+                        <div class="text-sm text-blue-800">代码行数</div>
+                    </div>
+                    <div class="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                        <div class="text-2xl font-bold text-green-600">95%+</div>
+                        <div class="text-sm text-green-800">TypeScript覆盖率</div>
+                    </div>
+                    <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                        <div class="text-2xl font-bold text-purple-600">6种</div>
+                        <div class="text-sm text-purple-800">语言支持</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+                <!-- Smart Copy Feature -->
+                <div class="glass-card p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-copy text-white text-lg"></i>
+                        </div>
+                        <h3 class="text-xl font-bold noto-serif text-gray-800">智能复制系统</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">支持 HTML、Markdown、纯文本三种格式的智能复制，配备多层次剪贴板API回退策略。</p>
+                    <div class="space-y-2">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check text-green-500 w-4 mr-2"></i>
+                            <span>线程智能检测</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check text-green-500 w-4 mr-2"></i>
+                            <span>多格式输出</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check text-green-500 w-4 mr-2"></i>
+                            <span>批量操作支持</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Download Feature -->
+                <div class="glass-card p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-download text-white text-lg"></i>
+                        </div>
+                        <h3 class="text-xl font-bold noto-serif text-gray-800">视频下载功能</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">新增的智能视频下载功能，支持多服务集成和质量选择，提供完整的下载体验。</p>
+                    <div class="space-y-2">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check text-green-500 w-4 mr-2"></i>
+                            <span>自动视频检测</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check text-green-500 w-4 mr-2"></i>
+                            <span>多服务备用</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check text-green-500 w-4 mr-2"></i>
+                            <span>质量选择</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Screenshot Feature -->
+                <div class="glass-card p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-camera text-white text-lg"></i>
+                        </div>
+                        <h3 class="text-xl font-bold noto-serif text-gray-800">截图系统</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">基于 snapdom 的高质量截图系统，支持多格式导出和主题适配。</p>
+                    <div class="space-y-2">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check text-green-500 w-4 mr-2"></i>
+                            <span>PNG/JPG/WebP 格式</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check text-green-500 w-4 mr-2"></i>
+                            <span>主题自适应</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Architecture Feature -->
+                <div class="glass-card p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="feature-icon w-12 h-12 rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-layer-group text-white text-lg"></i>
+                        </div>
+                        <h3 class="text-xl font-bold noto-serif text-gray-800">分层架构</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">采用现代化的分层模块化架构，确保代码的可维护性和扩展性。</p>
+                    <div class="space-y-2">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check text-green-500 w-4 mr-2"></i>
+                            <span>依赖注入</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check text-green-500 w-4 mr-2"></i>
+                            <span>错误边界</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Separator Section -->
+    <div class="mt-12 mb-8">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="glass-card p-8 text-center">
+                <h2 class="text-2xl font-bold noto-serif text-gradient mb-4">性能与优化</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div>
+                        <i class="fas fa-tachometer-alt text-blue-500 text-2xl mb-2"></i>
+                        <h4 class="font-semibold text-gray-800">批量处理</h4>
+                        <p class="text-sm text-gray-600">防止DOM阻塞的智能批量处理</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-memory text-green-500 text-2xl mb-2"></i>
+                        <h4 class="font-semibold text-gray-800">内存管理</h4>
+                        <p class="text-sm text-gray-600">LRU缓存和自动垃圾回收</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-shield-alt text-purple-500 text-2xl mb-2"></i>
+                        <h4 class="font-semibold text-gray-800">错误处理</h4>
+                        <p class="text-sm text-gray-600">多级错误恢复机制</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-globe text-orange-500 text-2xl mb-2"></i>
+                        <h4 class="font-semibold text-gray-800">跨浏览器</h4>
+                        <p class="text-sm text-gray-600">Chrome/Firefox/Edge 完整支持</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="poppins">&copy; 2024 Tweet Craft - 让Twitter体验更加完美 🐦✨</p>
+            <p class="text-sm text-gray-400 mt-2">Built with TypeScript + WXT Framework</p>
+        </div>
+    </footer>
+</body>
+</html>
