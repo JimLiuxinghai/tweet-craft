@@ -1,7 +1,6 @@
 // Tweet Craft Popup 主界面
 import './style.css';
 import './screenshot-settings.css';
-import './video-settings.css';
 import { browser } from 'wxt/browser';
 import { getSettings, saveSettings } from '@/lib/utils/storage';
 import { clipboardManager } from '@/lib/clipboard';
@@ -9,7 +8,6 @@ import { initializeI18n, i18nManager } from '@/lib/i18n';
 import type { ExtensionSettings } from '@/lib/types';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 import { ScreenshotSettingsPanel, type ScreenshotSettingsOptions } from './screenshot-settings';
-import { VideoSettingsPanel, type VideoDownloadSettings } from './video-settings';
 
 /**
  * 通知管理器 - 智能通知系统
@@ -213,7 +211,6 @@ class PopupApp {
   private notifications: NotificationManager;
   private loading: LoadingManager;
   private screenshotSettingsPanel: ScreenshotSettingsPanel | null = null;
-  private videoSettingsPanel: VideoSettingsPanel | null = null;
 
   constructor() {
     this.notifications = new NotificationManager();
@@ -298,13 +295,13 @@ this.settings = await getSettings();
    <span class="tab-icon">⚙️</span>
      ${i18nManager.t('settings')}
        </button>
-          <button class="tab-button" data-tab="video">
-            <span class="tab-icon">📥</span>
-            ${i18nManager.t('download_video')}
+          <button class="tab-button" data-tab="screenshot">
+            <span class="tab-icon">📷</span>
+            截图设置
           </button>
-                <button class="tab-button" data-tab="screenshot">
-         <span class="tab-icon">📷</span>
-     截图设置
+          <button class="tab-button" data-tab="notion">
+            <span class="tab-icon">📝</span>
+            Notion 设置
           </button>
             </nav>
 
@@ -393,59 +390,6 @@ this.settings = await getSettings();
    </div>
         </div>
 
-        <!-- Video Download Settings Tab -->
-        <div class="tab-content" id="video-tab">
-          <section class="settings-section">
-            <h3>${i18nManager.t('download_settings')}</h3>
-            <div class="video-settings">
-              <label class="option-item">
-                <input type="checkbox" id="auto-download-video" ${this.settings?.videoDownloadSettings?.autoDownload ? 'checked' : ''}>
-                <span class="checkmark"></span>
-                ${i18nManager.t('download_auto_detect')}
-              </label>
-              
-              <div class="quality-setting">
-                <label for="default-quality">${i18nManager.t('download_quality')}:</label>
-                <select id="default-quality" class="quality-selector">
-                  <option value="highest" ${this.settings?.videoDownloadSettings?.defaultQuality === 'highest' ? 'selected' : ''}>${i18nManager.t('download_highest_quality')}</option>
-                  <option value="medium" ${this.settings?.videoDownloadSettings?.defaultQuality === 'medium' ? 'selected' : ''}>${i18nManager.t('download_medium_quality')}</option>
-                  <option value="lowest" ${this.settings?.videoDownloadSettings?.defaultQuality === 'lowest' ? 'selected' : ''}>${i18nManager.t('download_lowest_quality')}</option>
-                  <option value="ask" ${this.settings?.videoDownloadSettings?.defaultQuality === 'ask' ? 'selected' : ''}>总是询问</option>
-                </select>
-              </div>
-
-              <label class="option-item">
-                <input type="checkbox" id="show-download-progress" ${this.settings?.videoDownloadSettings?.showProgress !== false ? 'checked' : ''}>
-                <span class="checkmark"></span>
-                ${i18nManager.t('download_progress')}
-              </label>
-
-              <label class="option-item">
-                <input type="checkbox" id="download-notifications" ${this.settings?.videoDownloadSettings?.notifications !== false ? 'checked' : ''}>
-                <span class="checkmark"></span>
-                ${i18nManager.t('download_notification')}
-              </label>
-            </div>
-          </section>
-          
-          <section class="settings-section">
-            <h3>${i18nManager.t('download_history')}</h3>
-            <div id="download-history-list" class="history-list">
-              <div class="loading-placeholder">
-                <div class="loading-spinner"></div>
-                <p>加载下载历史中...</p>
-              </div>
-            </div>
-            <div class="history-actions">
-              <button id="refresh-download-history" class="secondary-button">
-                刷新历史
-              </button>
-              <button id="clear-download-history" class="secondary-button">
-                ${i18nManager.t('download_clear_history')}
-              </button>
-            </div>
-          </section>
-        </div>
 
                <!-- Screenshot Settings Tab -->
 <div class="tab-content" id="screenshot-tab">
@@ -456,6 +400,16 @@ this.settings = await getSettings();
          </div>
    </div>
   </div>
+
+        <!-- Notion Settings Tab -->
+        <div class="tab-content" id="notion-tab">
+          <div id="notion-settings-container">
+            <div class="loading-placeholder">
+              <div class="loading-spinner"></div>
+              <p>加载 Notion 设置中...</p>
+            </div>
+          </div>
+        </div>
 
         </main>
 
@@ -468,6 +422,9 @@ this.settings = await getSettings();
       <button id="report-issue" class="footer-button">
  ${i18nManager.t('report_issue')}
 </button>
+          </div>
+          <div class="project-info">
+            <div class="version-info">v1.0.0</div>
           </div>
         </footer>
       </div>
@@ -581,9 +538,9 @@ browser.tabs.create({ url: 'https://x.com' });
 
       // 根据 Tab 加载相应内容
     if (tabId === 'screenshot') {
-    this.loadScreenshotSettings();
-    } else if (tabId === 'video') {
-      this.loadVideoSettings();
+      this.loadScreenshotSettings();
+    } else if (tabId === 'notion') {
+      this.loadNotionSettings();
     }
   }
 
@@ -705,6 +662,271 @@ browser.tabs.create({ url: 'https://x.com' });
 
 
   /**
+   * 加载 Notion 设置
+   */
+  private async loadNotionSettings(): Promise<void> {
+    const settingsContainer = document.getElementById('notion-settings-container');
+    if (!settingsContainer) return;
+
+    try {
+      // 检查 Notion 连接状态
+      const response = await browser.runtime.sendMessage({
+        type: 'NOTION_IS_CONNECTED'
+      });
+
+      if (response.success && response.connected) {
+        this.showConnectedNotionSettings(settingsContainer);
+      } else {
+        this.showDisconnectedNotionSettings(settingsContainer);
+      }
+    } catch (error) {
+      console.error('Failed to load Notion settings:', error);
+      settingsContainer.innerHTML = `
+        <div class="error-state">
+          <div class="error-icon">⚠️</div>
+          <p>加载 Notion 设置失败</p>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * 显示已连接的 Notion 设置
+   */
+  private showConnectedNotionSettings(container: HTMLElement): void {
+    container.innerHTML = `
+      <div class="notion-settings-content">
+        <div class="connection-status connected">
+          <div class="status-icon">✓</div>
+          <div class="status-text">
+            <h4>Notion 已连接</h4>
+            <p>您的 Notion 账户已成功连接</p>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <h3>数据库设置</h3>
+          <div class="database-info">
+            <p>您可以将推文保存到 Notion 数据库中</p>
+            <div class="action-buttons">
+              <button id="configure-database" class="primary-button">配置数据库</button>
+              <button id="disconnect-notion" class="secondary-button">断开连接</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>保存选项</h3>
+          <div class="save-options">
+            <label class="option-item">
+              <input type="checkbox" id="auto-tags" checked>
+              <span class="checkmark"></span>
+              自动添加标签
+            </label>
+            <label class="option-item">
+              <input type="checkbox" id="save-media" checked>
+              <span class="checkmark"></span>
+              保存媒体文件
+            </label>
+            <label class="option-item">
+              <input type="checkbox" id="check-duplicates" checked>
+              <span class="checkmark"></span>
+              检查重复推文
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>操作</h3>
+          <div class="action-buttons">
+            <button id="test-connection" class="secondary-button">测试连接</button>
+            <button id="view-stats" class="secondary-button">查看统计</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 设置事件监听器
+    this.setupNotionSettingsEvents();
+  }
+
+  /**
+   * 显示未连接的 Notion 设置
+   */
+  private showDisconnectedNotionSettings(container: HTMLElement): void {
+    container.innerHTML = `
+      <div class="notion-settings-content">
+        <div class="connection-status disconnected">
+          <div class="status-icon">!</div>
+          <div class="status-text">
+            <h4>Notion 未连接</h4>
+            <p>连接 Notion 以保存推文到数据库</p>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <h3>连接步骤</h3>
+          <div class="connection-steps">
+            <ol>
+              <li>访问 <a href="https://www.notion.so/my-integrations" target="_blank">Notion 集成页面</a></li>
+              <li>点击 "+ New integration"</li>
+              <li>填写集成信息：名称 "Tweet Craft"</li>
+              <li>启用 "Read content" 和 "Insert content" 权限</li>
+              <li>复制 "Internal Integration Token"</li>
+              <li>在下方填入相关信息</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>连接信息</h3>
+          <div class="connection-form">
+            <div class="form-group">
+              <label>Integration Token:</label>
+              <input type="password" id="notion-token" placeholder="secret_...">
+            </div>
+            <div class="form-group">
+              <label>数据库 ID (可选):</label>
+              <input type="text" id="notion-database-id" placeholder="留空以创建新数据库">
+            </div>
+            <button id="connect-notion" class="primary-button">连接 Notion</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 设置事件监听器
+    this.setupNotionSettingsEvents();
+  }
+
+  /**
+   * 设置 Notion 设置事件监听器
+   */
+  private setupNotionSettingsEvents(): void {
+    // 连接按钮
+    const connectBtn = document.getElementById('connect-notion');
+    if (connectBtn) {
+      connectBtn.addEventListener('click', () => this.connectNotion());
+    }
+
+    // 断开连接按钮
+    const disconnectBtn = document.getElementById('disconnect-notion');
+    if (disconnectBtn) {
+      disconnectBtn.addEventListener('click', () => this.disconnectNotion());
+    }
+
+    // 配置数据库按钮
+    const configureBtn = document.getElementById('configure-database');
+    if (configureBtn) {
+      configureBtn.addEventListener('click', () => this.configureDatabase());
+    }
+
+    // 测试连接按钮
+    const testBtn = document.getElementById('test-connection');
+    if (testBtn) {
+      testBtn.addEventListener('click', () => this.testNotionConnection());
+    }
+  }
+
+  /**
+   * 连接 Notion
+   */
+  private async connectNotion(): Promise<void> {
+    const tokenInput = document.getElementById('notion-token') as HTMLInputElement;
+    const databaseIdInput = document.getElementById('notion-database-id') as HTMLInputElement;
+    
+    if (!tokenInput?.value) {
+      this.showError('请输入 Integration Token');
+      return;
+    }
+
+    try {
+      const response = await browser.runtime.sendMessage({
+        type: 'NOTION_AUTHENTICATE',
+        token: tokenInput.value,
+        databaseId: databaseIdInput?.value || undefined
+      });
+
+      if (response.success) {
+        this.showSuccess('Notion 连接成功！');
+        // 重新加载设置
+        this.loadNotionSettings();
+      } else {
+        this.showError('连接失败: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Failed to connect Notion:', error);
+      this.showError('连接失败: ' + error);
+    }
+  }
+
+  /**
+   * 断开 Notion 连接
+   */
+  private async disconnectNotion(): Promise<void> {
+    if (!confirm('确定要断开 Notion 连接吗？')) {
+      return;
+    }
+
+    try {
+      const response = await browser.runtime.sendMessage({
+        type: 'NOTION_DISCONNECT'
+      });
+
+      if (response.success) {
+        this.showSuccess('Notion 已断开连接');
+        // 重新加载设置
+        this.loadNotionSettings();
+      } else {
+        this.showError('断开连接失败: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Failed to disconnect Notion:', error);
+      this.showError('断开连接失败: ' + error);
+    }
+  }
+
+  /**
+   * 配置数据库
+   */
+  private async configureDatabase(): Promise<void> {
+    try {
+      const response = await browser.runtime.sendMessage({
+        type: 'NOTION_CONFIGURE_DATABASE'
+      });
+
+      if (response.success) {
+        this.showSuccess('数据库配置成功！');
+      } else {
+        this.showError('配置失败: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Failed to configure database:', error);
+      this.showError('配置失败: ' + error);
+    }
+  }
+
+  /**
+   * 测试 Notion 连接
+   */
+  private async testNotionConnection(): Promise<void> {
+    try {
+      const response = await browser.runtime.sendMessage({
+        type: 'NOTION_TEST_CONNECTION'
+      });
+
+      if (response.success) {
+        this.showSuccess('连接测试成功！');
+      } else {
+        this.showError('连接测试失败: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Failed to test connection:', error);
+      this.showError('连接测试失败: ' + error);
+    }
+  }
+
+  /**
    * 加载截图设置
    */
   private async loadScreenshotSettings(): Promise<void> {
@@ -744,79 +966,6 @@ const screenshotOptions: ScreenshotSettingsOptions = {
   }
   }
 
-  /**
-   * 加载视频下载设置
-   */
-  private async loadVideoSettings(): Promise<void> {
-    const videoTab = document.getElementById('video-tab');
-    if (!videoTab) return;
-
-    try {
-      // 获取当前的视频下载设置
-      const videoSettings: VideoDownloadSettings = {
-        autoDownload: this.settings?.videoDownloadSettings?.autoDownload ?? false,
-        defaultQuality: this.settings?.videoDownloadSettings?.defaultQuality ?? 'ask',
-        showProgress: this.settings?.videoDownloadSettings?.showProgress ?? true,
-        notifications: this.settings?.videoDownloadSettings?.notifications ?? true
-      };
-
-      // 创建视频设置面板
-      this.videoSettingsPanel = new VideoSettingsPanel(videoTab, videoSettings);
-
-      // 监听设置变化
-      videoTab.addEventListener('video-settings-changed', async (e: Event) => {
-        const customEvent = e as CustomEvent<VideoDownloadSettings>;
-        await this.handleVideoSettingsChange(customEvent.detail);
-      });
-
-    } catch (error) {
-      console.error('Failed to load video settings:', error);
-      const historyContainer = videoTab.querySelector('#download-history-list');
-      if (historyContainer) {
-        historyContainer.innerHTML = `
-          <div class="error-state">
-            <div class="error-icon">⚠️</div>
-            <p>加载视频设置失败</p>
-          </div>
-        `;
-      }
-    }
-  }
-
-  /**
-   * 处理视频设置变化
-   */
-  private async handleVideoSettingsChange(newSettings: VideoDownloadSettings): Promise<void> {
-    try {
-      if (!this.settings) return;
-
-      // 更新视频下载设置
-      this.settings.videoDownloadSettings = newSettings;
-
-      // 保存设置
-      await saveSettings(this.settings);
-
-      // 通知内容脚本设置已更新
-      try {
-        const tabs = await browser.tabs.query({ url: ['*://twitter.com/*', '*://x.com/*'] });
-        for (const tab of tabs) {
-          if (tab.id) {
-            browser.tabs.sendMessage(tab.id, { 
-              type: 'VIDEO_SETTINGS_UPDATED', 
-              settings: newSettings 
-            }).catch(() => {
-              // 忽略错误，可能页面未加载内容脚本
-            });
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to notify content scripts:', error);
-      }
-
-    } catch (error) {
-      console.error('Failed to save video settings:', error);
-    }
-  }
 
   /**
   * 处理截图设置变化

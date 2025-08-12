@@ -1,10 +1,18 @@
 import VideoDownloadManager from '../lib/background/video-download-manager';
+import { notionAuthManager, notionClient } from '../lib/notion';
 
 export default defineBackground(() => {
   console.log('Twitter Super Copy background script loaded', { id: browser.runtime.id });
 
   // 初始化视频下载管理器
   const videoDownloadManager = new VideoDownloadManager();
+
+  // 初始化 Notion 认证管理器
+  notionAuthManager.loadConfig().then(() => {
+    console.log('Notion auth manager initialized');
+  }).catch(error => {
+    console.error('Failed to initialize Notion auth manager:', error);
+  });
 
   // 设置右键菜单
   setupContextMenus();
@@ -90,6 +98,30 @@ function setupMessageListeners() {
       case 'SAVE_SETTINGS':
     handleSaveSettings(message.settings, sendResponse);
     return true;
+      case 'NOTION_AUTHENTICATE':
+        handleNotionAuthenticate(sendResponse);
+        return true;
+      case 'NOTION_SAVE_TWEET':
+        handleNotionSaveTweet(message.data, sendResponse);
+        return true;
+      case 'NOTION_CHECK_EXISTS':
+        handleNotionCheckExists(message.url, sendResponse);
+        return true;
+      case 'NOTION_CREATE_DATABASE':
+        handleNotionCreateDatabase(message.parentPageId, message.title, sendResponse);
+        return true;
+      case 'NOTION_GET_DATABASE_STATS':
+        handleNotionGetDatabaseStats(sendResponse);
+        return true;
+      case 'NOTION_GET_USER_PAGES':
+        handleNotionGetUserPages(sendResponse);
+        return true;
+      case 'NOTION_DISCONNECT':
+        handleNotionDisconnect(sendResponse);
+        return true;
+      case 'NOTION_IS_CONNECTED':
+        handleNotionIsConnected(sendResponse);
+        return true;
  }
     
   return false;
@@ -182,5 +214,173 @@ async function handleSaveSettings(settings: any, sendResponse: (response: any) =
   } catch (error) {
     console.error('Failed to save settings:', error);
   sendResponse({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+}
+
+/**
+ * 处理 Notion 认证请求
+ */
+async function handleNotionAuthenticate(sendResponse: (response: any) => void) {
+  try {
+    const result = await notionAuthManager.authenticate();
+    sendResponse(result);
+  } catch (error) {
+    console.error('Failed to handle Notion authentication:', error);
+    sendResponse({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+}
+
+/**
+ * 处理 Notion 保存推文请求
+ */
+async function handleNotionSaveTweet(tweetData: any, sendResponse: (response: any) => void) {
+  try {
+    const config = notionAuthManager.getCurrentConfig();
+    if (!config?.accessToken || !config?.databaseId) {
+      sendResponse({ 
+        success: false, 
+        error: 'Notion not configured or authenticated' 
+      });
+      return;
+    }
+
+    const result = await notionClient.saveTweet(config.databaseId, tweetData);
+    sendResponse(result);
+  } catch (error) {
+    console.error('Failed to save tweet to Notion:', error);
+    sendResponse({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+}
+
+/**
+ * 处理检查推文是否存在请求
+ */
+async function handleNotionCheckExists(url: string, sendResponse: (response: any) => void) {
+  try {
+    const config = notionAuthManager.getCurrentConfig();
+    if (!config?.accessToken || !config?.databaseId) {
+      sendResponse({ exists: false });
+      return;
+    }
+
+    const exists = await notionClient.checkTweetExists(config.databaseId, url);
+    sendResponse({ exists });
+  } catch (error) {
+    console.error('Failed to check tweet existence:', error);
+    sendResponse({ exists: false });
+  }
+}
+
+/**
+ * 处理创建 Notion 数据库请求
+ */
+async function handleNotionCreateDatabase(parentPageId: string, title: string, sendResponse: (response: any) => void) {
+  try {
+    const database = await notionClient.createDatabase(parentPageId, title);
+    
+    // 保存数据库 ID
+    await notionAuthManager.saveConfig({ databaseId: database.id });
+    
+    sendResponse({ 
+      success: true, 
+      database: database 
+    });
+  } catch (error) {
+    console.error('Failed to create Notion database:', error);
+    sendResponse({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+}
+
+/**
+ * 处理获取数据库统计请求
+ */
+async function handleNotionGetDatabaseStats(sendResponse: (response: any) => void) {
+  try {
+    const config = notionAuthManager.getCurrentConfig();
+    if (!config?.accessToken || !config?.databaseId) {
+      sendResponse({ 
+        success: false, 
+        error: 'Notion not configured' 
+      });
+      return;
+    }
+
+    const stats = await notionClient.getDatabaseStats(config.databaseId);
+    sendResponse({ 
+      success: true, 
+      stats: stats 
+    });
+  } catch (error) {
+    console.error('Failed to get database stats:', error);
+    sendResponse({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+}
+
+/**
+ * 处理获取用户页面请求
+ */
+async function handleNotionGetUserPages(sendResponse: (response: any) => void) {
+  try {
+    const pages = await notionClient.getUserPages();
+    sendResponse({ 
+      success: true, 
+      pages: pages 
+    });
+  } catch (error) {
+    console.error('Failed to get user pages:', error);
+    sendResponse({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+}
+
+/**
+ * 处理断开 Notion 连接请求
+ */
+async function handleNotionDisconnect(sendResponse: (response: any) => void) {
+  try {
+    await notionAuthManager.disconnect();
+    sendResponse({ 
+      success: true, 
+      message: 'Notion disconnected successfully' 
+    });
+  } catch (error) {
+    console.error('Failed to disconnect Notion:', error);
+    sendResponse({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+}
+
+/**
+ * 处理检查 Notion 连接状态请求
+ */
+async function handleNotionIsConnected(sendResponse: (response: any) => void) {
+  try {
+    const isConnected = await notionAuthManager.isConnected();
+    sendResponse({ 
+      success: true, 
+      connected: isConnected 
+    });
+  } catch (error) {
+    console.error('Failed to check Notion connection:', error);
+    sendResponse({ 
+      success: false, 
+      connected: false 
+    });
   }
 }

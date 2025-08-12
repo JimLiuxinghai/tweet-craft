@@ -1,5 +1,180 @@
 /* Tweet Craft Popup 样式 - 现代化设计 */
 
+/* ==========================================================================
+   Notion Settings Styles
+   ========================================================================== */
+
+.notion-settings-content {
+  padding: 20px;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid;
+}
+
+.connection-status.connected {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.connection-status.disconnected {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.connection-status .status-icon {
+  font-size: 24px;
+  margin-right: 12px;
+  font-weight: bold;
+}
+
+.connection-status .status-text h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.connection-status .status-text p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.connection-steps {
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+}
+
+.connection-steps ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.connection-steps li {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.connection-steps a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.connection-steps a:hover {
+  text-decoration: underline;
+}
+
+.connection-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 14px;
+}
+
+.form-group input {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.save-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.database-info {
+  background: #f0f9ff;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #0ea5e9;
+}
+
+.database-info p {
+  margin: 0 0 12px 0;
+  color: #0c4a6e;
+  font-size: 14px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.primary-button {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.primary-button:hover {
+  background: #2563eb;
+}
+
+.secondary-button {
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.secondary-button:hover {
+  background: #e5e7eb;
+}
+
+/* 响应式调整 */
+@media (max-width: 380px) {
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .primary-button,
+  .secondary-button {
+    width: 100%;
+  }
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -476,6 +651,19 @@ width: 100%;
   display: flex;
   justify-content: space-between;
   gap: 12px;
+  margin-bottom: 8px;
+}
+
+.project-info {
+  text-align: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 8px;
+}
+
+.version-info {
+  font-size: 11px;
+  color: #657786;
+  font-weight: 500;
 }
 
 .footer-button {

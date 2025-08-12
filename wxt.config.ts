@@ -13,13 +13,16 @@ export default defineConfig({
       'contextMenus',
       'scripting',
       'downloads',
-      'notifications'
+      'notifications',
+      'identity'
     ],
     host_permissions: [
       'https://twitter.com/*',
       'https://x.com/*',
       'https://*.twimg.com/*',
-      'https://*.video.twimg.com/*'
+      'https://*.video.twimg.com/*',
+      'https://api.notion.com/*',
+      'https://www.notion.so/*'
     ],
     content_security_policy: {
       extension_pages: "script-src 'self'; object-src 'self';"

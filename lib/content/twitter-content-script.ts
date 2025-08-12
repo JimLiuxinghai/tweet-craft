@@ -12,8 +12,7 @@ import { TwitterActionsBarFixEnhanced } from './twitter-actions-bar-fix-enhanced
 import { TwitterDebugHelper } from './debug-helper';
 import { SettingsDebugFix } from './settings-debug-fix';
 import { TwitterActionButtons } from './action-buttons';
-import TwitterVideoDetector from './twitter-video-detector';
-import { SimpleVideoDownloader } from './simple-video-downloader';
+import { NotionButtonManager } from '../notion/button-manager';
 
 export class TwitterContentScript {
   private isInitialized: boolean = false;
@@ -22,8 +21,7 @@ export class TwitterContentScript {
   private processedTweets: Set<string> = new Set();
   private currentSettings: ExtensionSettings | null = null;
   private styleSheetId = 'twitter-super-copy-styles';
-  private videoDetector?: TwitterVideoDetector;
-  private simpleVideoDownloader?: SimpleVideoDownloader;
+  private notionButtonManager?: NotionButtonManager;
 
   constructor() {
     console.log('TwitterContentScript instance created');
@@ -60,8 +58,9 @@ export class TwitterContentScript {
       this.setupEventListeners();
       this.setupMessageListeners();
       
-      // 初始化视频下载检测器
-      this.initializeVideoDetector();
+            
+      // 初始化 Notion 按钮管理器
+      this.initializeNotionButtonManager();
       
     // 立即处理已存在的推文，参考tweet-craft的实现
       await this.processExistingTweetsImmediate();
@@ -2055,31 +2054,23 @@ const errorMessage = error instanceof Error ? error.message : String(error);
     });
   }
 
+  
   /**
-   * 初始化视频下载检测器
+   * 初始化 Notion 按钮管理器
    */
-  private initializeVideoDetector(): void {
+  private initializeNotionButtonManager(): void {
     try {
-      // 使用简化的视频下载器（更可靠）
-      this.simpleVideoDownloader = new SimpleVideoDownloader();
-      console.log('✅ Simple video downloader initialized successfully');
+      this.notionButtonManager = new NotionButtonManager();
+      console.log('✅ Notion button manager initialized successfully');
       
       // 在开发环境中暴露调试接口
       if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-        (window as any).simpleVideoDownloader = this.simpleVideoDownloader;
-        console.log('🔧 Simple video downloader exposed as window.simpleVideoDownloader');
+        (window as any).notionButtonManager = this.notionButtonManager;
+        console.log('🔧 Notion button manager exposed as window.notionButtonManager');
       }
       
     } catch (error) {
-      console.error('❌ Failed to initialize video detector:', error);
-      
-      // 降级到原有的检测器
-      try {
-        this.videoDetector = new TwitterVideoDetector();
-        console.log('⚠️ Fallback to original video detector');
-      } catch (fallbackError) {
-        console.error('❌ Failed to initialize fallback video detector:', fallbackError);
-      }
+      console.error('❌ Failed to initialize Notion button manager:', error);
     }
   }
 
@@ -2140,6 +2131,9 @@ const errorMessage = error instanceof Error ? error.message : String(error);
     
     // 清理剪贴板管理器
 clipboardManager.cleanup();
+    
+    // 清理 Notion 按钮管理器
+    this.notionButtonManager?.destroy();
     
     // 移除样式
     const styleSheet = document.getElementById(this.styleSheetId);
