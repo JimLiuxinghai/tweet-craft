@@ -834,21 +834,33 @@ browser.tabs.create({ url: 'https://x.com' });
   private async connectNotion(): Promise<void> {
     const tokenInput = document.getElementById('notion-token') as HTMLInputElement;
     const databaseIdInput = document.getElementById('notion-database-id') as HTMLInputElement;
-    
+    console.log(tokenInput.value, 'tokenInput.value************')
     if (!tokenInput?.value) {
       this.showError('请输入 Integration Token');
       return;
     }
 
     try {
+      // 先保存 token 到 storage
+      console.log('Saving token to storage...');
+      await chrome.storage.sync.set({
+        notion_integration_token: tokenInput.value.trim()
+      });
+      console.log('Token saved to storage');
+
+      // 然后发送认证请求
       const response = await browser.runtime.sendMessage({
-        type: 'NOTION_AUTHENTICATE',
-        token: tokenInput.value,
-        databaseId: databaseIdInput?.value || undefined
+        type: 'NOTION_AUTHENTICATE'
       });
 
       if (response.success) {
         this.showSuccess('Notion 连接成功！');
+        // 如果有数据库ID，也保存它
+        if (databaseIdInput?.value) {
+          await chrome.storage.sync.set({
+            notionDatabaseId: databaseIdInput.value
+          });
+        }
         // 重新加载设置
         this.loadNotionSettings();
       } else {
@@ -873,12 +885,17 @@ browser.tabs.create({ url: 'https://x.com' });
         type: 'NOTION_DISCONNECT'
       });
 
+      if (!response) {
+        this.showError('断开连接失败: 未收到响应');
+        return;
+      }
+
       if (response.success) {
         this.showSuccess('Notion 已断开连接');
         // 重新加载设置
         this.loadNotionSettings();
       } else {
-        this.showError('断开连接失败: ' + response.error);
+        this.showError('断开连接失败: ' + (response.error || '未知错误'));
       }
     } catch (error) {
       console.error('Failed to disconnect Notion:', error);
@@ -891,14 +908,47 @@ browser.tabs.create({ url: 'https://x.com' });
    */
   private async configureDatabase(): Promise<void> {
     try {
-      const response = await browser.runtime.sendMessage({
-        type: 'NOTION_CONFIGURE_DATABASE'
+      // 首先获取用户的页面列表
+      const pagesResponse = await browser.runtime.sendMessage({
+        type: 'NOTION_GET_USER_PAGES'
       });
 
-      if (response.success) {
-        this.showSuccess('数据库配置成功！');
+      if (!pagesResponse || !pagesResponse.success) {
+        this.showError('获取页面列表失败: ' + (pagesResponse?.error || '未知错误'));
+        return;
+      }
+
+      const pages = pagesResponse.pages || [];
+      if (pages.length === 0) {
+        this.showError('没有可用的页面。请确保您的集成已被添加到至少一个 Notion 页面。');
+        return;
+      }
+
+      // 创建一个简单的选择界面
+      const selectedPage = await this.showPageSelector(pages);
+      if (!selectedPage) {
+        return; // 用户取消了
+      }
+
+      // 询问数据库名称
+      const databaseName = prompt('请输入数据库名称：', 'Tweet Collection');
+      if (!databaseName) {
+        return; // 用户取消了
+      }
+
+      // 创建数据库
+      const createResponse = await browser.runtime.sendMessage({
+        type: 'NOTION_CREATE_DATABASE',
+        parentPageId: selectedPage.id,
+        title: databaseName
+      });
+
+      if (createResponse && createResponse.success) {
+        this.showSuccess(`数据库 "${databaseName}" 创建成功！`);
+        // 重新加载设置以显示新的数据库信息
+        this.loadNotionSettings();
       } else {
-        this.showError('配置失败: ' + response.error);
+        this.showError('创建数据库失败: ' + (createResponse?.error || '未知错误'));
       }
     } catch (error) {
       console.error('Failed to configure database:', error);
@@ -912,18 +962,139 @@ browser.tabs.create({ url: 'https://x.com' });
   private async testNotionConnection(): Promise<void> {
     try {
       const response = await browser.runtime.sendMessage({
-        type: 'NOTION_TEST_CONNECTION'
+        type: 'NOTION_IS_CONNECTED'
       });
 
-      if (response.success) {
-        this.showSuccess('连接测试成功！');
+      if (!response) {
+        this.showError('测试连接失败: 未收到响应');
+        return;
+      }
+
+      if (response.success && response.connected) {
+        this.showSuccess('Notion 连接正常！');
+      } else if (response.success && !response.connected) {
+        this.showError('Notion 未连接，请先连接您的账户');
       } else {
-        this.showError('连接测试失败: ' + response.error);
+        this.showError('连接测试失败: ' + (response.error || '未知错误'));
       }
     } catch (error) {
       console.error('Failed to test connection:', error);
       this.showError('连接测试失败: ' + error);
     }
+  }
+
+  /**
+   * 显示页面选择器
+   */
+  private async showPageSelector(pages: Array<{ id: string; title: string }>): Promise<{ id: string; title: string } | null> {
+    return new Promise((resolve) => {
+      // 创建模态对话框
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+      `;
+
+      const dialog = document.createElement('div');
+      dialog.style.cssText = `
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 400px;
+        width: 90%;
+        max-height: 500px;
+        overflow-y: auto;
+      `;
+
+      const title = document.createElement('h3');
+      title.textContent = '选择父页面';
+      title.style.marginTop = '0';
+
+      const subtitle = document.createElement('p');
+      subtitle.textContent = '请选择一个页面作为数据库的父页面：';
+      subtitle.style.color = '#666';
+
+      const pageList = document.createElement('div');
+      pageList.style.cssText = `
+        margin: 15px 0;
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      `;
+
+      pages.forEach(page => {
+        const pageItem = document.createElement('div');
+        pageItem.style.cssText = `
+          padding: 10px;
+          border-bottom: 1px solid #eee;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        `;
+        pageItem.textContent = page.title;
+        
+        pageItem.addEventListener('mouseenter', () => {
+          pageItem.style.backgroundColor = '#f5f5f5';
+        });
+        
+        pageItem.addEventListener('mouseleave', () => {
+          pageItem.style.backgroundColor = '';
+        });
+        
+        pageItem.addEventListener('click', () => {
+          document.body.removeChild(modal);
+          resolve(page);
+        });
+        
+        pageList.appendChild(pageItem);
+      });
+
+      const buttonContainer = document.createElement('div');
+      buttonContainer.style.cssText = `
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 15px;
+      `;
+
+      const cancelButton = document.createElement('button');
+      cancelButton.textContent = '取消';
+      cancelButton.style.cssText = `
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+      `;
+      cancelButton.addEventListener('click', () => {
+        document.body.removeChild(modal);
+        resolve(null);
+      });
+
+      buttonContainer.appendChild(cancelButton);
+      dialog.appendChild(title);
+      dialog.appendChild(subtitle);
+      dialog.appendChild(pageList);
+      dialog.appendChild(buttonContainer);
+      modal.appendChild(dialog);
+      document.body.appendChild(modal);
+
+      // 点击背景关闭
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          document.body.removeChild(modal);
+          resolve(null);
+        }
+      });
+    });
   }
 
   /**

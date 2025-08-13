@@ -20,12 +20,28 @@
         </div>
       </div>
 
+      <!-- Integration Token 输入 -->
+      <div v-if="!isConnected" class="token-input-section">
+        <div class="form-group">
+          <label>Integration Token</label>
+          <input 
+            type="password" 
+            v-model="integrationToken" 
+            placeholder="secret_..."
+            :disabled="connecting"
+          />
+          <small class="help-text">
+            在 Notion 设置页面创建集成后获取，格式为 secret_xxx
+          </small>
+        </div>
+      </div>
+
       <div class="connection-actions">
         <button 
           v-if="!isConnected" 
           class="btn btn-primary" 
           @click="connectNotion"
-          :disabled="connecting"
+          :disabled="connecting || !integrationToken"
         >
           <i v-if="connecting" class="fas fa-spinner fa-spin"></i>
           <i v-else class="fab fa-notion"></i>
@@ -39,6 +55,16 @@
         >
           <i class="fas fa-unlink"></i>
           断开连接
+        </button>
+        
+        <button 
+          class="btn btn-info" 
+          @click="runDiagnostics"
+          :disabled="debugging"
+        >
+          <i v-if="debugging" class="fas fa-spinner fa-spin"></i>
+          <i v-else class="fas fa-bug"></i>
+          {{ debugging ? '诊断中...' : '运行诊断' }}
         </button>
       </div>
     </div>
@@ -216,7 +242,9 @@ const emit = defineEmits<{
 const connecting = ref(false)
 const loadingPages = ref(false)
 const creatingDatabase = ref(false)
+const debugging = ref(false)
 const isConnected = ref(false)
+const integrationToken = ref('')
 const databaseId = ref('')
 const selectedParentPage = ref('')
 const databaseName = ref('Tweet Collection')
@@ -254,21 +282,42 @@ const close = () => {
 }
 
 const connectNotion = async () => {
+  console.log('connectNotion called')
+  console.log('integrationToken.value:', integrationToken.value)
+  
+  if (!integrationToken.value) {
+    console.log('No token provided')
+    showNotification('请输入 Integration Token', 'error')
+    return
+  }
+
   connecting.value = true
   try {
+    console.log('Saving token to storage...')
+    // 先保存 token
+    await chrome.storage.sync.set({
+      notion_integration_token: integrationToken.value
+    })
+    console.log('Token saved to storage:', integrationToken.value)
+    
+    console.log('Sending authentication message to background...')
     const response = await chrome.runtime.sendMessage({
       type: 'NOTION_AUTHENTICATE'
     })
-
+    console.log('Background response:', response)
+    
     if (response.success) {
+      console.log('Authentication successful')
       isConnected.value = true
       await loadPages()
       await loadSettings()
       showNotification('Notion 连接成功！', 'success')
     } else {
+      console.log('Authentication failed:', response.error)
       showNotification('连接失败: ' + response.error, 'error')
     }
   } catch (error) {
+    console.log('Connection error:', error)
     showNotification('连接失败: ' + error, 'error')
   } finally {
     connecting.value = false
@@ -466,6 +515,37 @@ const resetSettings = () => {
   stats.total = 0
   stats.thisMonth = 0
   stats.unread = 0
+}
+
+const runDiagnostics = async () => {
+  debugging.value = true
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: 'NOTION_DEBUG'
+    })
+
+    if (response.success) {
+      console.log('诊断结果:', response.results)
+      console.log('诊断报告:\n', response.report)
+      
+      // 显示诊断结果
+      const successCount = response.results.filter((r: any) => r.success).length
+      const totalCount = response.results.length
+      
+      if (successCount === totalCount) {
+        showNotification('诊断完成：所有检查都通过了！', 'success')
+      } else {
+        showNotification(`诊断完成：${successCount}/${totalCount} 项检查通过，请查看控制台了解详情`, 'warning')
+      }
+    } else {
+      showNotification('诊断失败: ' + response.error, 'error')
+    }
+  } catch (error) {
+    console.error('诊断过程中出错:', error)
+    showNotification('诊断过程中出错: ' + error, 'error')
+  } finally {
+    debugging.value = false
+  }
 }
 
 const showNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
@@ -696,6 +776,22 @@ onMounted(async () => {
   border-radius: 6px;
   font-size: 14px;
   box-sizing: border-box;
+}
+
+.help-text {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.token-input-section {
+  margin-bottom: 15px;
+  padding: 15px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .form-group input:focus,

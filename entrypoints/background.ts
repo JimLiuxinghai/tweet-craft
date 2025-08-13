@@ -1,5 +1,5 @@
 import VideoDownloadManager from '../lib/background/video-download-manager';
-import { notionAuthManager, notionClient } from '../lib/notion';
+import { notionAuthManager, notionClient, notionDebugHelper } from '../lib/notion';
 
 export default defineBackground(() => {
   console.log('Twitter Super Copy background script loaded', { id: browser.runtime.id });
@@ -122,6 +122,9 @@ function setupMessageListeners() {
       case 'NOTION_IS_CONNECTED':
         handleNotionIsConnected(sendResponse);
         return true;
+      case 'NOTION_DEBUG':
+        handleNotionDebug(sendResponse);
+        return true;
  }
     
   return false;
@@ -222,7 +225,9 @@ async function handleSaveSettings(settings: any, sendResponse: (response: any) =
  */
 async function handleNotionAuthenticate(sendResponse: (response: any) => void) {
   try {
+    console.log('Starting Notion authentication...');
     const result = await notionAuthManager.authenticate();
+    console.log('Notion authentication result:', result);
     sendResponse(result);
   } catch (error) {
     console.error('Failed to handle Notion authentication:', error);
@@ -381,6 +386,31 @@ async function handleNotionIsConnected(sendResponse: (response: any) => void) {
     sendResponse({ 
       success: false, 
       connected: false 
+    });
+  }
+}
+
+/**
+ * 处理 Notion 调试请求
+ */
+async function handleNotionDebug(sendResponse: (response: any) => void) {
+  try {
+    console.log('Running Notion diagnostics...');
+    const results = await notionDebugHelper.runDiagnostics();
+    const report = notionDebugHelper.generateReport(results);
+    
+    console.log('Notion Diagnostic Report:\n', report);
+    
+    sendResponse({ 
+      success: true, 
+      results,
+      report
+    });
+  } catch (error) {
+    console.error('Failed to run Notion diagnostics:', error);
+    sendResponse({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 }

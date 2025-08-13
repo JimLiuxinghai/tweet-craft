@@ -25,6 +25,17 @@ const zhCN: LocaleData = {
   download_failed: '下载失败',
     copy_failed: '复制失败',
   
+  // Notion功能
+  'notion.save': '保存到 Notion',
+  'notion.saving': '保存中...',
+  'notion.saved': '已保存到 Notion',
+  'notion.failed': '保存失败',
+  'notion.exists': '已存在于 Notion',
+  save_to_notion: '保存到 Notion',
+  notion_save_success: '推文已保存到 Notion',
+  notion_save_failed: '保存到 Notion 失败',
+  notion_already_exists: '推文已存在于 Notion 中',
+  
   // 格式选项
   format_html: 'HTML 格式',
   format_markdown: 'Markdown 格式',
@@ -245,6 +256,17 @@ const en: LocaleData = {
   thread_screenshot_failed: 'Thread screenshot failed',
   download_failed: 'Download failed',
     copy_failed: 'Copy failed',
+  
+  // Notion functionality
+  'notion.save': 'Save to Notion',
+  'notion.saving': 'Saving...',
+  'notion.saved': 'Saved to Notion',
+  'notion.failed': 'Save failed',
+  'notion.exists': 'Already exists in Notion',
+  save_to_notion: 'Save to Notion',
+  notion_save_success: 'Tweet saved to Notion',
+  notion_save_failed: 'Failed to save to Notion',
+  notion_already_exists: 'Tweet already exists in Notion',
   
   format_html: 'HTML Format',
   format_markdown: 'Markdown Format',

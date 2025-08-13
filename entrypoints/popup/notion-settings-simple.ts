@@ -182,6 +182,21 @@ class SimpleNotionSettings {
 
   private async connectNotion() {
     try {
+      // 获取用户输入的token
+      const tokenInput = document.querySelector('#notion-token') as HTMLInputElement;
+      if (!tokenInput?.value) {
+        alert('请输入 Integration Token');
+        return;
+      }
+
+      // 先保存 token 到 storage
+      console.log('Saving token to storage...');
+      await chrome.storage.sync.set({
+        notion_integration_token: tokenInput.value.trim()
+      });
+      console.log('Token saved to storage');
+
+      // 然后发送认证请求
       const response = await browser.runtime.sendMessage({
         type: 'NOTION_AUTHENTICATE'
       });

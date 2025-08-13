@@ -7,7 +7,7 @@ import {
   DatabaseQueryParameters,
   CreatePageParameters,
   TweetData,
-  NotionError as NotionApiError,
+  NotionError,
   AuthResult,
   SyncResult
 } from './types';
@@ -38,70 +38,76 @@ export class NotionClient {
     }
 
     const url = `${this.apiUrl}${endpoint}`;
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Authorization': `Bearer ${this.config.accessToken}`,
-        'Notion-Version': this.version,
-        'Content-Type': 'application/json',
-        ...options.headers
-      }
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const error: any = {
-        code: errorData.code || 'unknown_error',
-        message: errorData.message || `HTTP ${response.status}`,
-        status: response.status
-      };
-      throw error;
-    }
-
-    return response.json();
-  }
-
-  async authenticate(code: string, redirectUri: string, clientId: string, clientSecret: string): Promise<AuthResult> {
+    
     try {
-      const response = await fetch('https://api.notion.com/v1/oauth/token', {
-        method: 'POST',
+      const response = await fetch(url, {
+        ...options,
         headers: {
+          'Authorization': `Bearer ${this.config.accessToken}`,
+          'Notion-Version': this.version,
           'Content-Type': 'application/json',
-          'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`
-        },
-        body: JSON.stringify({
-          grant_type: 'authorization_code',
-          code,
-          redirect_uri: redirectUri
-        })
+          ...options.headers
+        }
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        return {
-          success: false,
-          error: errorData.error_description || errorData.error || 'Authentication failed'
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = {};
+        }
+
+        // 处理特定的Notion API错误
+        const error: any = {
+          code: errorData.code || `HTTP_${response.status}`,
+          message: this.getErrorMessage(response.status, errorData),
+          status: response.status,
+          details: errorData
         };
+        
+        console.error('Notion API Error:', error);
+        throw error;
       }
 
-      const authData = await response.json();
-      this.config = {
-        accessToken: authData.access_token,
-        workspaceName: authData.workspace_name,
-        workspaceId: authData.workspace_id
-      };
-
-      return {
-        success: true,
-        data: authData
-      };
+      return response.json();
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown authentication error'
-      };
+      // 处理网络错误
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw {
+          code: 'NETWORK_ERROR',
+          message: '网络连接失败，请检查网络设置',
+          status: 0
+        };
+      }
+      throw error;
     }
   }
+
+  private getErrorMessage(status: number, errorData: any): string {
+    const defaultMessage = errorData.message || `HTTP ${status}`;
+    
+    switch (status) {
+      case 400:
+        return '请求参数错误：' + defaultMessage;
+      case 401:
+        return 'Integration Token 无效或已过期，请检查您的 Token';
+      case 403:
+        return '权限不足：请确保您的集成已被添加到目标页面或数据库';
+      case 404:
+        return '资源不存在：请检查页面或数据库ID是否正确';
+      case 429:
+        return '请求过于频繁，请稍后再试';
+      case 500:
+      case 502:
+      case 503:
+        return 'Notion 服务暂时不可用，请稍后再试';
+      default:
+        return defaultMessage;
+    }
+  }
+
+  // authenticate method removed - now using integration tokens directly
 
   async getCurrentUser(): Promise<NotionUser> {
     return this.request<NotionUser>('/users/me');
@@ -271,10 +277,9 @@ export class NotionClient {
         data: page
       };
     } catch (error) {
-      const notionError = error as NotionError;
       return {
         success: false,
-        error: notionError.message || 'Failed to save tweet'
+        error: (error as any).message || 'Failed to save tweet'
       };
     }
   }
@@ -424,9 +429,22 @@ export class NotionClient {
 
   async validateToken(): Promise<boolean> {
     try {
-      await this.getCurrentUser();
+      console.log('Validating Notion token...');
+      const user = await this.getCurrentUser();
+      console.log('Token validation successful, user:', user);
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Token validation failed:', error);
+      
+      // 记录具体的错误信息以便调试
+      if (error.status === 401) {
+        console.error('Token is invalid or expired');
+      } else if (error.status === 403) {
+        console.error('Token lacks required permissions');
+      } else if (error.code === 'NETWORK_ERROR') {
+        console.error('Network error during token validation');
+      }
+      
       return false;
     }
   }

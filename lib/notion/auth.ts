@@ -97,50 +97,71 @@ export class NotionAuthManager {
 
   async authenticate(): Promise<AuthResult> {
     try {
-      const redirectURL = chrome.identity.getRedirectURL();
-      const clientId = await this.getClientId();
-      const authUrl = this.generateAuthUrl(clientId, redirectURL);
-
-      const responseUrl = await chrome.identity.launchWebAuthFlow({
-        url: authUrl,
-        interactive: true
-      });
-
-      if (!responseUrl) {
-        return {
-          success: false,
-          error: 'Authentication was cancelled'
-        };
+      console.log('Starting Notion authentication...');
+      const integrationToken = await this.getIntegrationToken();
+      console.log('Integration token retrieved, length:', integrationToken.length);
+      
+      // 验证token格式
+      if (!integrationToken.startsWith('secret_') && !integrationToken.startsWith('ntn_')) {
+        throw new Error('Integration Token 格式错误，应该以 "secret_" 或 "ntn_" 开头');
       }
+      
+      this.config = {
+        accessToken: integrationToken,
+        workspaceName: 'My Workspace',
+        workspaceId: 'workspace'
+      };
 
-      const code = this.extractAuthCode(responseUrl);
-      if (!code) {
-        return {
-          success: false,
-          error: 'Failed to extract authorization code'
-        };
-      }
-
-      const clientSecret = await this.getClientSecret();
-      const authResult = await notionClient.authenticate(code, redirectURL, clientId, clientSecret);
-
-      if (authResult.success) {
-        this.config = {
-          accessToken: authResult.data.access_token,
-          workspaceName: authResult.data.workspace_name,
-          workspaceId: authResult.data.workspace_id
-        };
-
+      // 先设置配置，再验证
+      notionClient.setConfig(this.config);
+      console.log('Config set, validating token...');
+      
+      const isValid = await notionClient.validateToken();
+      
+      if (isValid) {
+        // 验证成功后保存配置
         await this.saveConfig(this.config);
-        notionClient.setConfig(this.config);
+        console.log('Authentication successful');
+        
+        return {
+          success: true,
+          data: {
+            access_token: integrationToken,
+            workspace_name: 'My Workspace',
+            workspace_id: 'workspace'
+          }
+        };
+      } else {
+        // 验证失败，清除配置
+        this.config = null;
+        notionClient.clearConfig();
+        
+        return {
+          success: false,
+          error: 'Token验证失败，请检查您的Integration Token是否正确，并确保已将集成添加到相关页面'
+        };
       }
-
-      return authResult;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Authentication error:', error);
+      
+      // 清除无效配置
+      this.config = null;
+      notionClient.clearConfig();
+      
+      let errorMessage = 'Authentication failed';
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.status === 401) {
+        errorMessage = 'Integration Token 无效或已过期';
+      } else if (error.status === 403) {
+        errorMessage = '权限不足，请确保集成已被添加到目标页面';
+      } else if (error.code === 'NETWORK_ERROR') {
+        errorMessage = '网络连接失败，请检查网络设置';
+      }
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Authentication failed'
+        error: errorMessage
       };
     }
   }
@@ -149,44 +170,36 @@ export class NotionAuthManager {
     await this.clearConfig();
   }
 
-  private generateAuthUrl(clientId: string, redirectUri: string): string {
-    const scopes = ['read', 'write'];
-    return `https://api.notion.com/v1/oauth/authorize?` +
-           `client_id=${clientId}&` +
-           `response_type=code&` +
-           `owner=user&` +
-           `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-           `scope=${scopes.join(',')}`;
-  }
-
-  private extractAuthCode(responseUrl: string): string | null {
+  private async getIntegrationToken(): Promise<string> {
     try {
-      const url = new URL(responseUrl);
-      return url.searchParams.get('code');
+      const result = await chrome.storage.sync.get(['notion_integration_token']);
+      console.log('Storage result for integration token:', result);
+      
+      const token = result.notion_integration_token;
+      if (!token) {
+        throw new Error('请在 Notion 设置中配置 Integration Token');
+      }
+      
+      // 基本格式验证
+      if (typeof token !== 'string' || token.trim().length === 0) {
+        throw new Error('Integration Token 不能为空');
+      }
+      
+      const trimmedToken = token.trim();
+      if (!trimmedToken.startsWith('secret_') && !trimmedToken.startsWith('ntn_')) {
+        throw new Error('Integration Token 格式错误，应该以 "secret_" 或 "ntn_" 开头');
+      }
+      
+      if (trimmedToken.length < 50) {
+        throw new Error('Integration Token 长度不正确，请检查是否完整');
+      }
+      
+      console.log('Valid integration token found, length:', trimmedToken.length);
+      return trimmedToken;
     } catch (error) {
-      console.error('Error extracting auth code:', error);
-      return null;
+      console.error('Failed to get integration token:', error);
+      throw error;
     }
-  }
-
-  private async getClientId(): Promise<string> {
-    // For public integration, users need to create their own Notion integration
-    // This will be handled through the settings UI where users can input their own credentials
-    const result = await chrome.storage.sync.get(['notion_client_id']);
-    if (result.notion_client_id) {
-      return result.notion_client_id;
-    }
-    throw new Error('请在 Notion 设置中配置 Client ID');
-  }
-
-  private async getClientSecret(): Promise<string> {
-    // For public integration, users need to create their own Notion integration
-    // This will be handled through the settings UI where users can input their own credentials
-    const result = await chrome.storage.sync.get(['notion_client_secret']);
-    if (result.notion_client_secret) {
-      return result.notion_client_secret;
-    }
-    throw new Error('请在 Notion 设置中配置 Client Secret');
   }
 
   getCurrentConfig(): NotionConfig | null {

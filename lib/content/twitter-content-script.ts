@@ -576,8 +576,8 @@ return null;
       return;
     }
 
-    // 检查是否已经有复制按钮
-    const existingButton = element.querySelector('.tsc-copy-button');
+    // 检查是否已经有操作按钮
+    const existingButton = element.querySelector('.tsc-copy-button, .tsc-screenshot-button, .tsc-notion-button');
     if (existingButton) {
       element.classList.add('tsc-processed');
       return;
@@ -595,10 +595,11 @@ return null;
         return;
       }
 
-      // 创建并插入复制按钮和截图按钮
-           const copyButton = TwitterActionButtons.createCopyButton(element, (el, btn) => this.handleCopyClick(el, btn));
- const screenshotButton = TwitterActionButtons.createScreenshotButton(element, (el, btn) => this.handleScreenshotClick(el, btn));
-   const insertSuccess = TwitterActionButtons.insertActionButtons(actionsBar, copyButton, screenshotButton);
+      // 创建复制按钮、截图按钮和Notion按钮
+      const copyButton = TwitterActionButtons.createCopyButton(element, (el, btn) => this.handleCopyClick(el, btn));
+      const screenshotButton = TwitterActionButtons.createScreenshotButton(element, (el, btn) => this.handleScreenshotClick(el, btn));
+      const notionButton = TwitterActionButtons.createNotionButton(element, (el, btn) => this.handleNotionClick(el, btn));
+      const insertSuccess = TwitterActionButtons.insertActionButtons(actionsBar, copyButton, screenshotButton, notionButton);
       
    if (insertSuccess) {
         element.classList.remove('tsc-processing');
@@ -628,10 +629,10 @@ return null;
       return;
     }
  
-    // 检查是否已经有复制按钮 - 更严格的检查
-    const existingButton = element.querySelector('.tsc-copy-button');
+    // 检查是否已经有操作按钮 - 更严格的检查
+    const existingButton = element.querySelector('.tsc-copy-button, .tsc-screenshot-button, .tsc-notion-button');
     if (existingButton) {
-      console.log('Copy button already exists, marking as processed');
+      console.log('Action buttons already exist, marking as processed');
       element.classList.add('tsc-processed');
       return;
     }
@@ -674,12 +675,13 @@ return null;
      return;
         }
 
-// 创建复制按钮和截图按钮
+// 创建复制按钮、截图按钮和Notion按钮
       const copyButton = TwitterActionButtons.createCopyButton(element, (el, btn) => this.handleCopyClick(el, btn));
       const screenshotButton = TwitterActionButtons.createScreenshotButton(element, (el, btn) => this.handleScreenshotClick(el, btn));
+      const notionButton = TwitterActionButtons.createNotionButton(element, (el, btn) => this.handleNotionClick(el, btn));
      
-   // 插入按钮 - 使用新的双按钮插入方法
-   const insertSuccess = TwitterActionButtons.insertActionButtons(actionsBar, copyButton, screenshotButton);
+   // 插入按钮 - 使用新的三按钮插入方法
+   const insertSuccess = TwitterActionButtons.insertActionButtons(actionsBar, copyButton, screenshotButton, notionButton);
    if (!insertSuccess) {
   console.error('Failed to insert copy button into actions bar');
           element.classList.remove('tsc-processing');
@@ -841,6 +843,61 @@ try {
     } catch (error) {
       console.error('Failed to take screenshot:', error);
       TwitterActionButtons.setButtonError(button);
+    } finally {
+      TwitterActionButtons.setButtonLoading(button, false);
+    }
+  }
+
+  /**
+   * 处理Notion按钮点击
+   */
+  private async handleNotionClick(tweetElement: HTMLElement, button: HTMLElement): Promise<void> {
+    try {
+      // 显示加载状态
+      TwitterActionButtons.setButtonLoading(button, true);
+
+      // 动态导入Notion相关模块
+      const { TweetExtractor } = await import('../notion/tweet-extractor');
+      
+      // 提取推文数据
+      const tweetData = TweetExtractor.extractTweetData(tweetElement);
+      if (!tweetData) {
+        throw new Error('无法提取推文数据');
+      }
+
+      // 自动生成标签
+      const autoTags = TweetExtractor.generateTagsFromContent(tweetData.content);
+      tweetData.tags = autoTags;
+
+      // 发送到background script检查是否已存在
+      const existsResponse = await browser.runtime.sendMessage({
+        type: 'NOTION_CHECK_EXISTS',
+        url: tweetData.url
+      });
+
+      if (existsResponse && existsResponse.exists) {
+        this.showToast(i18nManager.t('notion_already_exists') || 'Tweet already exists in Notion', 'warning');
+        TwitterActionButtons.setButtonSuccess(button);
+        return;
+      }
+
+      // 发送到background script保存
+      const result = await browser.runtime.sendMessage({
+        type: 'NOTION_SAVE_TWEET',
+        data: tweetData
+      });
+
+      if (result && result.success) {
+        TwitterActionButtons.setButtonSuccess(button);
+        this.showToast(i18nManager.t('notion_save_success') || 'Tweet saved to Notion!', 'success');
+      } else {
+        throw new Error(result?.error || 'Failed to save to Notion');
+      }
+
+    } catch (error) {
+      console.error('Failed to save to Notion:', error);
+      TwitterActionButtons.setButtonError(button);
+      this.showToast(i18nManager.t('notion_save_failed') || 'Failed to save to Notion', 'error');
     } finally {
       TwitterActionButtons.setButtonLoading(button, false);
     }
@@ -1396,14 +1453,62 @@ break;
       stroke: currentColor;
       }
       
+      /* Notion按钮样式 */
+      .tsc-notion-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34.75px;
+        height: 34.75px;
+        border-radius: 9999px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        color: rgb(83, 100, 113);
+        transition: all 0.2s ease;
+        margin-left: 12px;
+      }
+      
+      .tsc-notion-button:hover {
+        background-color: rgba(55, 53, 47, 0.1);
+        color: rgb(55, 53, 47);
+      }
+      
+      .tsc-notion-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      .tsc-notion-button.tsc-loading .tsc-notion-icon {
+        animation: tsc-spin 1s linear infinite;
+      }
+      
+      .tsc-notion-button.tsc-success {
+        color: rgb(0, 186, 124);
+        background-color: rgba(0, 186, 124, 0.1);
+        transform: scale(1.05);
+      }
+      
+      .tsc-notion-button.tsc-error {
+        color: rgb(244, 33, 46);
+        background-color: rgba(244, 33, 46, 0.1);
+        transform: scale(1.05);
+      }
+
       /* 强制移除SVG填充，覆盖Twitter的默认样式 */
       .tsc-action-icon svg,
    .tsc-action-icon svg *,
       .tsc-copy-icon svg,
       .tsc-copy-icon svg *,
       .tsc-screenshot-icon svg,
-      .tsc-screenshot-icon svg * {
+      .tsc-screenshot-icon svg *,
+      .tsc-notion-icon svg {
         fill: none !important;
+      }
+      
+      /* Notion图标需要填充 */
+      .tsc-notion-icon svg {
+        fill: currentColor !important;
       }
       
   /* 防止处理中的推文被重复处理 */

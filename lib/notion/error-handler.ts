@@ -89,6 +89,11 @@ export class NotionErrorHandler {
 
   getUserFriendlyMessage(error: NotionError): string {
     if (this.isAuthError(error)) {
+      if (error.code === 'HTTP_401') {
+        return 'Integration Token 无效或已过期，请重新配置';
+      } else if (error.code === 'HTTP_403') {
+        return '权限不足，请确保您的集成已被添加到目标页面或数据库';
+      }
       return '认证失败，请重新连接 Notion 账户';
     }
 
@@ -101,7 +106,15 @@ export class NotionErrorHandler {
     }
 
     if (this.isValidationError(error)) {
+      if (error.message.includes('Integration Token')) {
+        return error.message; // 直接返回token相关的详细错误信息
+      }
       return '数据格式错误，请检查输入信息';
+    }
+
+    // 处理特定的Notion API错误
+    if (error.code === 'HTTP_404') {
+      return '资源不存在，请检查页面或数据库ID是否正确';
     }
 
     return error.message || '操作失败，请稍后重试';
