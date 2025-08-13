@@ -188,6 +188,7 @@ export interface TweetData {
     replies: number;
   };
   tags?: string[];
+  category?: string;
   savedAt: string;
 }
 

@@ -213,6 +213,18 @@ export class NotionClient {
             { name: '已归档', color: 'gray' }
           ]
         }
+      },
+      '分类': {
+        select: {
+          options: [
+            { name: '技术', color: 'blue' },
+            { name: '资讯', color: 'green' },
+            { name: '学习', color: 'purple' },
+            { name: '工作', color: 'red' },
+            { name: '生活', color: 'yellow' },
+            { name: '其他', color: 'gray' }
+          ]
+        }
       }
     };
 
@@ -285,7 +297,7 @@ export class NotionClient {
   }
 
   private formatTweetForNotion(tweetData: TweetData): CreatePageParameters['properties'] {
-    const { content, author, username, url, publishTime, type, media, stats, tags = [] } = tweetData;
+    const { content, author, username, url, publishTime, type, media, stats, tags = [], category } = tweetData;
 
     return {
       '标题': {
@@ -370,6 +382,11 @@ export class NotionClient {
       '优先级': {
         select: {
           name: '中'
+        }
+      },
+      '分类': {
+        select: {
+          name: category || '其他'
         }
       }
     };

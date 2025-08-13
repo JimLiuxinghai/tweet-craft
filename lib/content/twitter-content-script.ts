@@ -821,8 +821,32 @@ try {
       // 动态导入增强的截图服务
    const { enhancedScreenshotService } = await import('../screenshot/EnhancedScreenshotService');
 
-  // 等待一小段时间确保内容完全渲染
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // 为第一条推文增加额外的等待时间，确保DOM完全稳定
+      const isFirstTweet = this.isFirstTweetInList(tweetElement);
+      const waitTime = isFirstTweet ? 800 : 300; // 第一条推文等待800ms，其他300ms
+      
+      console.log(`Screenshot wait time: ${waitTime}ms (first tweet: ${isFirstTweet})`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+      
+      // 验证推文元素状态
+      console.log('Tweet element validation:', {
+        isConnected: tweetElement.isConnected,
+        tagName: tweetElement.tagName,
+        className: tweetElement.className,
+        rect: tweetElement.getBoundingClientRect(),
+        offsetParent: !!tweetElement.offsetParent,
+        style: tweetElement.style.display
+      });
+      
+      if (!tweetElement.isConnected) {
+        throw new Error('Tweet element is no longer in DOM');
+      }
+      
+      // 更温和的可见性检查
+      const rect = tweetElement.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) {
+        console.warn('Tweet element has no dimensions, but proceeding with screenshot attempt');
+      }
       
 // 执行截图操作
  const result = await enhancedScreenshotService.captureWithRandomGradient(tweetElement, {
@@ -842,9 +866,38 @@ try {
       
     } catch (error) {
       console.error('Failed to take screenshot:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        tweetElement: {
+          isConnected: tweetElement?.isConnected,
+          rect: tweetElement?.getBoundingClientRect(),
+          className: tweetElement?.className
+        }
+      });
       TwitterActionButtons.setButtonError(button);
     } finally {
       TwitterActionButtons.setButtonLoading(button, false);
+    }
+  }
+
+  /**
+   * 检查是否为列表中的第一条推文
+   */
+  private isFirstTweetInList(tweetElement: HTMLElement): boolean {
+    try {
+      // 获取当前页面所有推文元素
+      const allTweets = this.findTweetElementsEnhanced(document.body);
+      
+      if (allTweets.length === 0) return false;
+      
+      // 检查当前推文是否是第一个可见的推文
+      const firstTweet = allTweets[0];
+      return firstTweet === tweetElement;
+      
+    } catch (error) {
+      console.warn('Failed to determine if first tweet:', error);
+      return false;
     }
   }
 
@@ -876,7 +929,7 @@ try {
       });
 
       if (existsResponse && existsResponse.exists) {
-        this.showToast(i18nManager.t('notion_already_exists') || 'Tweet already exists in Notion', 'warning');
+        this.showToast(i18nManager.t('notion_already_exists') || 'Tweet already exists in Notion', 'info');
         TwitterActionButtons.setButtonSuccess(button);
         return;
       }

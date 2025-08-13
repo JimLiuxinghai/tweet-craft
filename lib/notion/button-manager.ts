@@ -299,18 +299,11 @@ export class NotionButtonManager {
 
   private async handleSaveTweet(tweetElement: Element, button: HTMLElement) {
     try {
-      // 显示加载状态
-      this.setButtonLoading(button, true);
-
       // 提取推文数据
       const tweetData = TweetExtractor.extractTweetData(tweetElement);
       if (!tweetData) {
         throw new Error('无法提取推文数据');
       }
-
-      // 自动生成标签
-      const autoTags = TweetExtractor.generateTagsFromContent(tweetData.content);
-      tweetData.tags = autoTags;
 
       // 检查是否已存在
       const exists = await this.checkTweetExists(tweetData.url);
@@ -319,6 +312,20 @@ export class NotionButtonManager {
         this.setButtonSaved(button);
         return;
       }
+
+      // 显示分类选择器
+      const selectedCategory = await this.showCategorySelector();
+      if (!selectedCategory) {
+        return; // 用户取消了选择
+      }
+
+      // 显示加载状态
+      this.setButtonLoading(button, true);
+
+      // 自动生成标签
+      const autoTags = TweetExtractor.generateTagsFromContent(tweetData.content);
+      tweetData.tags = autoTags;
+      tweetData.category = selectedCategory;
 
       // 发送到background script保存
       const result = await this.saveTweetToNotion(tweetData);
@@ -484,6 +491,380 @@ export class NotionButtonManager {
     const notionError = notionErrorHandler.handleError(error, context);
     const userMessage = notionErrorHandler.getUserFriendlyMessage(notionError);
     this.showNotification(userMessage, 'error');
+  }
+
+  private async showCategorySelector(): Promise<string | null> {
+    return new Promise((resolve) => {
+      const categories = [
+        { name: '技术', color: '#0066CC' },
+        { name: '资讯', color: '#00AA55' },
+        { name: '学习', color: '#8B5CF6' },
+        { name: '工作', color: '#DC2626' },
+        { name: '生活', color: '#F59E0B' },
+        { name: '其他', color: '#6B7280' }
+      ];
+
+      // 创建模态对话框
+      const modal = document.createElement('div');
+      modal.className = 'tweet-craft-category-modal';
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        backdrop-filter: blur(4px);
+      `;
+
+      const dialog = document.createElement('div');
+      dialog.style.cssText = `
+        background: white;
+        padding: 24px;
+        border-radius: 16px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        position: relative;
+        animation: modalSlideIn 0.3s ease-out;
+      `;
+
+      // 添加动画样式
+      if (!document.getElementById('category-modal-styles')) {
+        const style = document.createElement('style');
+        style.id = 'category-modal-styles';
+        style.textContent = `
+          @keyframes modalSlideIn {
+            from { 
+              opacity: 0; 
+              transform: translateY(-20px) scale(0.95); 
+            }
+            to { 
+              opacity: 1; 
+              transform: translateY(0) scale(1); 
+            }
+          }
+          
+          .category-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      const title = document.createElement('h3');
+      title.textContent = '选择分类';
+      title.style.cssText = `
+        margin: 0 0 16px 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1f2937;
+        text-align: center;
+      `;
+
+      const subtitle = document.createElement('p');
+      subtitle.textContent = '为这条推文选择一个分类：';
+      subtitle.style.cssText = `
+        margin: 0 0 20px 0;
+        color: #6b7280;
+        font-size: 14px;
+        text-align: center;
+      `;
+
+      const categoryGrid = document.createElement('div');
+      categoryGrid.style.cssText = `
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+      `;
+
+      categories.forEach(category => {
+        const categoryItem = document.createElement('div');
+        categoryItem.className = 'category-item';
+        categoryItem.style.cssText = `
+          padding: 12px 16px;
+          border: 2px solid ${category.color}20;
+          background: ${category.color}10;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-align: center;
+          font-weight: 500;
+          color: ${category.color};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 48px;
+        `;
+        
+        categoryItem.textContent = category.name;
+        
+        categoryItem.addEventListener('click', () => {
+          document.body.removeChild(modal);
+          resolve(category.name);
+        });
+        
+        categoryGrid.appendChild(categoryItem);
+      });
+
+      // 新建分类选项
+      const newCategoryItem = document.createElement('div');
+      newCategoryItem.className = 'category-item';
+      newCategoryItem.style.cssText = `
+        padding: 12px 16px;
+        border: 2px dashed #d1d5db;
+        background: #f9fafb;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+        font-weight: 500;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        grid-column: span 2;
+      `;
+      
+      newCategoryItem.innerHTML = '+ 新建分类';
+      newCategoryItem.addEventListener('click', async () => {
+        const customCategory = await this.showNewCategoryDialog();
+        document.body.removeChild(modal);
+        resolve(customCategory);
+      });
+      
+      categoryGrid.appendChild(newCategoryItem);
+
+      // 取消按钮
+      const cancelButton = document.createElement('button');
+      cancelButton.textContent = '取消';
+      cancelButton.style.cssText = `
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: #6b7280;
+        transition: all 0.2s ease;
+      `;
+      
+      cancelButton.addEventListener('click', () => {
+        document.body.removeChild(modal);
+        resolve(null);
+      });
+
+      cancelButton.addEventListener('mouseenter', () => {
+        cancelButton.style.background = '#f9fafb';
+        cancelButton.style.borderColor = '#9ca3af';
+      });
+
+      cancelButton.addEventListener('mouseleave', () => {
+        cancelButton.style.background = 'white';
+        cancelButton.style.borderColor = '#d1d5db';
+      });
+
+      dialog.appendChild(title);
+      dialog.appendChild(subtitle);
+      dialog.appendChild(categoryGrid);
+      dialog.appendChild(cancelButton);
+      modal.appendChild(dialog);
+      document.body.appendChild(modal);
+
+      // 点击背景关闭
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          document.body.removeChild(modal);
+          resolve(null);
+        }
+      });
+
+      // ESC键关闭
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          document.body.removeChild(modal);
+          document.removeEventListener('keydown', handleEscape);
+          resolve(null);
+        }
+      };
+      document.addEventListener('keydown', handleEscape);
+    });
+  }
+
+  private async showNewCategoryDialog(): Promise<string | null> {
+    return new Promise((resolve) => {
+      const modal = document.createElement('div');
+      modal.className = 'tweet-craft-new-category-modal';
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10001;
+        backdrop-filter: blur(4px);
+      `;
+
+      const dialog = document.createElement('div');
+      dialog.style.cssText = `
+        background: white;
+        padding: 24px;
+        border-radius: 16px;
+        max-width: 350px;
+        width: 90%;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        animation: modalSlideIn 0.3s ease-out;
+      `;
+
+      const title = document.createElement('h3');
+      title.textContent = '新建分类';
+      title.style.cssText = `
+        margin: 0 0 16px 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1f2937;
+        text-align: center;
+      `;
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = '输入分类名称...';
+      input.style.cssText = `
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+        margin-bottom: 20px;
+        transition: border-color 0.2s ease;
+      `;
+
+      input.addEventListener('focus', () => {
+        input.style.borderColor = '#3b82f6';
+        input.style.outline = 'none';
+      });
+
+      input.addEventListener('blur', () => {
+        input.style.borderColor = '#e5e7eb';
+      });
+
+      const buttonContainer = document.createElement('div');
+      buttonContainer.style.cssText = `
+        display: flex;
+        gap: 12px;
+      `;
+
+      const confirmButton = document.createElement('button');
+      confirmButton.textContent = '确认';
+      confirmButton.style.cssText = `
+        flex: 1;
+        padding: 12px;
+        border: none;
+        background: #3b82f6;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+      `;
+
+      const cancelButton = document.createElement('button');
+      cancelButton.textContent = '取消';
+      cancelButton.style.cssText = `
+        flex: 1;
+        padding: 12px;
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #6b7280;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      `;
+
+      const handleConfirm = () => {
+        const categoryName = input.value.trim();
+        if (categoryName) {
+          document.body.removeChild(modal);
+          resolve(categoryName);
+        } else {
+          input.style.borderColor = '#ef4444';
+          input.focus();
+        }
+      };
+
+      const handleCancel = () => {
+        document.body.removeChild(modal);
+        resolve(null);
+      };
+
+      confirmButton.addEventListener('click', handleConfirm);
+      cancelButton.addEventListener('click', handleCancel);
+
+      // 回车确认
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          handleConfirm();
+        } else if (e.key === 'Escape') {
+          handleCancel();
+        }
+      });
+
+      confirmButton.addEventListener('mouseenter', () => {
+        confirmButton.style.background = '#2563eb';
+      });
+
+      confirmButton.addEventListener('mouseleave', () => {
+        confirmButton.style.background = '#3b82f6';
+      });
+
+      cancelButton.addEventListener('mouseenter', () => {
+        cancelButton.style.background = '#f9fafb';
+        cancelButton.style.borderColor = '#9ca3af';
+      });
+
+      cancelButton.addEventListener('mouseleave', () => {
+        cancelButton.style.background = 'white';
+        cancelButton.style.borderColor = '#d1d5db';
+      });
+
+      buttonContainer.appendChild(confirmButton);
+      buttonContainer.appendChild(cancelButton);
+      
+      dialog.appendChild(title);
+      dialog.appendChild(input);
+      dialog.appendChild(buttonContainer);
+      modal.appendChild(dialog);
+      document.body.appendChild(modal);
+
+      // 自动聚焦输入框
+      setTimeout(() => input.focus(), 100);
+
+      // 点击背景关闭
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          handleCancel();
+        }
+      });
+    });
   }
 
   destroy() {
