@@ -91,6 +91,51 @@ export class TwitterActionButtons {
   }
 
   /**
+   * 创建视频下载按钮 (使用下载图标)
+   */
+  static createVideoDownloadButton(tweetElement: HTMLElement, onClick: (element: HTMLElement, button: HTMLElement) => void): HTMLElement {
+    const button = createElement('button', {
+      className: 'tsc-video-download-button tsc-action-button',
+      'data-testid': 'tsc-video-download',
+      'aria-label': i18nManager.t('download_video') || 'Download Video',
+      title: i18nManager.t('download_video') || 'Download Video'
+    });
+
+    // 添加图标
+    const icon = createElement('div', {
+      className: 'tsc-video-download-icon tsc-action-icon'
+    });
+    
+    // 下载图标SVG，调整为Twitter风格
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '18.75');
+    svg.setAttribute('height', '18.75');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '1.5');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('class', 'r-4qtqp9 r-yyyyoo r-dnmrzs r-bnwqim r-lrvibr r-m6rgpd r-1xvli5t r-1hdv0qi');
+    
+    // 下载图标路径
+    svg.innerHTML = '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>';
+    icon.appendChild(svg);
+
+    button.appendChild(icon);
+
+    // 添加点击事件
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onClick(tweetElement, button);
+    });
+
+    return button;
+  }
+
+  /**
    * 创建Notion保存按钮 (使用Notion图标)
    */
   static createNotionButton(tweetElement: HTMLElement, onClick: (element: HTMLElement, button: HTMLElement) => void): HTMLElement {
@@ -137,11 +182,11 @@ export class TwitterActionButtons {
   /**
    * 插入操作按钮到Twitter操作栏
    */
-  static insertActionButtons(actionsBar: HTMLElement, copyButton: HTMLElement, screenshotButton: HTMLElement, notionButton?: HTMLElement): boolean {
+  static insertActionButtons(actionsBar: HTMLElement, copyButton: HTMLElement, screenshotButton: HTMLElement, videoDownloadButton?: HTMLElement, notionButton?: HTMLElement): boolean {
         try {
       
       // 检查是否已经存在按钮
-      if (actionsBar.querySelector('.tsc-copy-button') || actionsBar.querySelector('.tsc-screenshot-button') || actionsBar.querySelector('.tsc-notion-button')) {
+      if (actionsBar.querySelector('.tsc-copy-button') || actionsBar.querySelector('.tsc-screenshot-button') || actionsBar.querySelector('.tsc-video-download-button') || actionsBar.querySelector('.tsc-notion-button')) {
         return true;
       }
 
@@ -151,6 +196,13 @@ export class TwitterActionButtons {
       
       copyContainer.appendChild(copyButton);
       screenshotContainer.appendChild(screenshotButton);
+
+      // 如果有视频下载按钮，也创建容器
+      let videoDownloadContainer: HTMLElement | null = null;
+      if (videoDownloadButton) {
+        videoDownloadContainer = this.createActionButtonContainer();
+        videoDownloadContainer.appendChild(videoDownloadButton);
+      }
 
       // 如果有Notion按钮，也创建容器
       let notionContainer: HTMLElement | null = null;
@@ -167,24 +219,39 @@ export class TwitterActionButtons {
         bookmarkContainer.parentNode?.insertBefore(copyContainer, bookmarkContainer.nextSibling);
         bookmarkContainer.parentNode?.insertBefore(screenshotContainer, copyContainer.nextSibling);
         
-        // 插入Notion按钮（如果存在）
-        if (notionContainer) {
-          bookmarkContainer.parentNode?.insertBefore(notionContainer, screenshotContainer.nextSibling);
+        // 插入视频下载按钮（如果存在）
+        if (videoDownloadContainer) {
+          bookmarkContainer.parentNode?.insertBefore(videoDownloadContainer, screenshotContainer.nextSibling);
         }
         
-        const buttonCount = notionButton ? 3 : 2;
+        // 插入Notion按钮（如果存在）
+        if (notionContainer) {
+          const lastInserted = videoDownloadContainer || screenshotContainer;
+          bookmarkContainer.parentNode?.insertBefore(notionContainer, lastInserted.nextSibling);
+        }
+        
+        let buttonCount = 2; // copy + screenshot
+        if (videoDownloadButton) buttonCount++;
+        if (notionButton) buttonCount++;
         console.log(`✅ 已在书签按钮后插入 ${buttonCount} 个操作按钮`);
       } else {
         // 在操作栏末尾插入
         actionsBar.appendChild(copyContainer);
         actionsBar.appendChild(screenshotContainer);
         
+        // 插入视频下载按钮（如果存在）
+        if (videoDownloadContainer) {
+          actionsBar.appendChild(videoDownloadContainer);
+        }
+        
         // 插入Notion按钮（如果存在）
         if (notionContainer) {
           actionsBar.appendChild(notionContainer);
         }
         
-        const buttonCount = notionButton ? 3 : 2;
+        let buttonCount = 2; // copy + screenshot
+        if (videoDownloadButton) buttonCount++;
+        if (notionButton) buttonCount++;
         console.log(`✅ 已在操作栏末尾插入 ${buttonCount} 个操作按钮`);
       }
 

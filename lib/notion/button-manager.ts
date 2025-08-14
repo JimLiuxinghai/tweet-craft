@@ -408,12 +408,20 @@ export class NotionButtonManager {
 
   private async saveTweetToNotion(tweetData: TweetData): Promise<{ success: boolean; error?: string }> {
     try {
+      console.log('Sending tweet data to background script:', tweetData);
       const response = await chrome.runtime.sendMessage({
         type: 'NOTION_SAVE_TWEET',
         data: tweetData
       });
+      console.log('Background script response:', response);
+      
+      if (!response) {
+        throw new Error('Background script did not respond');
+      }
+      
       return response;
     } catch (error) {
+      console.error('Error in saveTweetToNotion:', error);
       const notionError = notionErrorHandler.handleError(error, 'NotionButtonManager.saveTweetToNotion');
       return {
         success: false,
@@ -494,8 +502,9 @@ export class NotionButtonManager {
   }
 
   private async showCategorySelector(): Promise<string | null> {
-    return new Promise((resolve) => {
-      const categories = [
+    return new Promise(async (resolve) => {
+      // 从存储中获取分类，如果没有则使用默认分类
+      let categories = [
         { name: '技术', color: '#0066CC' },
         { name: '资讯', color: '#00AA55' },
         { name: '学习', color: '#8B5CF6' },
@@ -503,6 +512,25 @@ export class NotionButtonManager {
         { name: '生活', color: '#F59E0B' },
         { name: '其他', color: '#6B7280' }
       ];
+
+      try {
+        const result = await chrome.storage.sync.get(['notionCategories', 'notionSettings']);
+        if (result.notionCategories && result.notionCategories.length > 0) {
+          categories = result.notionCategories;
+        }
+
+        // 检查是否有默认分类设置
+        if (result.notionSettings && result.notionSettings.defaultCategory) {
+          const defaultCategory = result.notionSettings.defaultCategory;
+          const defaultCategoryExists = categories.find(cat => cat.name === defaultCategory);
+          if (defaultCategoryExists) {
+            resolve(defaultCategory);
+            return;
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load categories from storage, using defaults:', error);
+      }
 
       // 创建模态对话框
       const modal = document.createElement('div');
@@ -637,6 +665,17 @@ export class NotionButtonManager {
       newCategoryItem.innerHTML = '+ 新建分类';
       newCategoryItem.addEventListener('click', async () => {
         const customCategory = await this.showNewCategoryDialog();
+        if (customCategory) {
+          // 保存新分类到存储
+          try {
+            categories.push({ name: customCategory, color: '#6B7280' });
+            await chrome.storage.sync.set({
+              notionCategories: categories
+            });
+          } catch (error) {
+            console.warn('Failed to save new category:', error);
+          }
+        }
         document.body.removeChild(modal);
         resolve(customCategory);
       });

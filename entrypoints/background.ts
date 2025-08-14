@@ -243,22 +243,43 @@ async function handleNotionAuthenticate(sendResponse: (response: any) => void) {
  */
 async function handleNotionSaveTweet(tweetData: any, sendResponse: (response: any) => void) {
   try {
-    const config = notionAuthManager.getCurrentConfig();
-    if (!config?.accessToken || !config?.databaseId) {
+    console.log('handleNotionSaveTweet called with data:', tweetData);
+    
+    // 重新加载配置以确保是最新的
+    const config = await notionAuthManager.loadConfig();
+    console.log('Loaded config:', config ? 'Config available' : 'No config');
+    
+    if (!config?.accessToken) {
+      console.error('No access token in config');
       sendResponse({ 
         success: false, 
-        error: 'Notion not configured or authenticated' 
+        error: 'Notion 未配置或认证已过期，请重新配置 Integration Token' 
       });
       return;
     }
 
+    if (!config.databaseId) {
+      console.error('No database ID in config');
+      sendResponse({ 
+        success: false, 
+        error: '未选择 Notion 数据库，请在设置中选择或创建数据库' 
+      });
+      return;
+    }
+
+    console.log('Attempting to save tweet to Notion...');
     const result = await notionClient.saveTweet(config.databaseId, tweetData);
+    console.log('Notion save result:', result);
+    
     sendResponse(result);
   } catch (error) {
     console.error('Failed to save tweet to Notion:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error details:', errorMessage);
+    
     sendResponse({ 
       success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+      error: errorMessage
     });
   }
 }

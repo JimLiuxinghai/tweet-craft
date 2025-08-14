@@ -5,7 +5,7 @@ export default defineConfig({
   manifest: {
     name: 'Twitter Super Copy',
     description: 'Enhanced copy functionality for Twitter/X.com with thread support and multiple formats',
-    version: '1.0.1',
+    version: '1.0.2',
     permissions: [
       'activeTab',
       'clipboardWrite',
@@ -14,7 +14,8 @@ export default defineConfig({
       'scripting',
       'downloads',
       'notifications',
-      'identity'
+      'identity',
+      'webRequest'
     ],
     host_permissions: [
       'https://twitter.com/*',
@@ -22,7 +23,10 @@ export default defineConfig({
       'https://*.twimg.com/*',
       'https://*.video.twimg.com/*',
       'https://api.notion.com/*',
-      'https://www.notion.so/*'
+      'https://www.notion.so/*',
+      'https://tweetdown.pages.dev/*',
+      'https://savetweet.net/*',
+      'https://twittervideodownloader.com/*'
     ],
     content_security_policy: {
       extension_pages: "script-src 'self'; object-src 'self';"

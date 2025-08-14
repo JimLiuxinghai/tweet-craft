@@ -1,5 +1,6 @@
 // 截图设置组件
 import { EnhancedScreenshotService } from '@/lib/screenshot/EnhancedScreenshotService';
+import { i18nManager } from '@/lib/i18n';
 import './screenshot-settings.css';
 
 export interface ScreenshotSettingsOptions {
@@ -20,6 +21,14 @@ export class ScreenshotSettingsPanel {
     this.container = container;
   this.options = initialOptions;
     this.render();
+    this.setupLanguageListener();
+  }
+
+  private setupLanguageListener(): void {
+    // 监听语言变化事件
+    window.addEventListener('localeChanged', () => {
+      this.render();
+    });
   }
 
   private render(): void {
@@ -28,49 +37,49 @@ export class ScreenshotSettingsPanel {
     this.container.innerHTML = `
       <div class="screenshot-settings">
         <section class="settings-section">
-     <h3>📷 截图背景设置</h3>
+     <h3>📷 ${i18nManager.t('screenshot.settings.title')}</h3>
           <div class="background-options">
         <label class="option-item">
             <input type="checkbox" id="use-content-options" ${this.options.useContentOptions ? 'checked' : ''}>
             <span class="checkmark"></span>
-     复用复制功能的内容选项
+     ${i18nManager.t('screenshot.settings.content_options')}
      </label>
           </div>
         </section>
 
    <section class="settings-section">
-          <h3>🎨 背景样式</h3>
+          <h3>🎨 ${i18nManager.t('screenshot.settings.background_style')}</h3>
      <div class="background-type-selector">
    <label class="background-option">
   <input type="radio" name="background-type" value="none" ${!this.options.backgroundColor && !this.options.backgroundGradient ? 'checked' : ''}>
               <span class="background-preview solid-preview" style="background: transparent; border: 2px dashed #ccc;"></span>
-  <span>无背景</span>
+  <span>${i18nManager.t('screenshot.settings.no_background')}</span>
   </label>
   
   <label class="background-option">
    <input type="radio" name="background-type" value="solid" ${this.options.backgroundColor ? 'checked' : ''}>
  <span class="background-preview solid-preview" style="background: ${this.options.backgroundColor || '#ffffff'};"></span>
-      <span>纯色背景</span>
+      <span>${i18nManager.t('screenshot.settings.solid_background')}</span>
             </label>
             
  <label class="background-option">
          <input type="radio" name="background-type" value="gradient" ${this.options.backgroundGradient ? 'checked' : ''}>
               <span class="background-preview gradient-preview"></span>
-              <span>渐变背景</span>
+              <span>${i18nManager.t('screenshot.settings.gradient_background')}</span>
         </label>
           </div>
         </section>
 
         <section class="settings-section" id="solid-color-settings" style="display: ${this.options.backgroundColor ? 'block' : 'none'};">
-          <h4>选择背景颜色</h4>
+          <h4>${i18nManager.t('screenshot.settings.select_color')}</h4>
        <div class="color-picker-wrapper">
    <input type="color" id="background-color" value="${this.options.backgroundColor || '#ffffff'}">
-          <label for="background-color">选择颜色</label>
+          <label for="background-color">${i18nManager.t('screenshot.settings.select_color')}</label>
    </div>
       </section>
 
         <section class="settings-section" id="gradient-settings" style="display: ${this.options.backgroundGradient ? 'block' : 'none'};">
-     <h4>选择渐变样式</h4>
+     <h4>${i18nManager.t('screenshot.settings.select_gradient')}</h4>
    <div class="gradient-presets">
  ${presetGradients.map((preset, index) => `
       <div class="gradient-preset ${this.isCurrentGradient(preset.gradient) ? 'active' : ''}" 
@@ -82,35 +91,35 @@ export class ScreenshotSettingsPanel {
           </div>
       
     <div class="custom-gradient-section">
-          <h5>自定义渐变</h5>
+          <h5>${i18nManager.t('screenshot.settings.custom_gradient')}</h5>
  <div class="gradient-controls">
      <div class="gradient-type-selector">
    <label>
                   <input type="radio" name="gradient-type" value="linear" ${!this.options.backgroundGradient || this.options.backgroundGradient.type === 'linear' ? 'checked' : ''}>
-线性渐变
+${i18nManager.t('screenshot.settings.linear_gradient')}
           </label>
                 <label>
                   <input type="radio" name="gradient-type" value="radial" ${this.options.backgroundGradient?.type === 'radial' ? 'checked' : ''}>
-       径向渐变
+       ${i18nManager.t('screenshot.settings.radial_gradient')}
           </label>
               </div>
       
     <div class="gradient-direction" id="linear-direction" style="display: ${(!this.options.backgroundGradient || this.options.backgroundGradient.type === 'linear') ? 'block' : 'none'};">
- <label for="gradient-direction-select">方向:</label>
+ <label for="gradient-direction-select">${i18nManager.t('screenshot.settings.direction')}:</label>
          <select id="gradient-direction-select">
-        <option value="to right" ${this.options.backgroundGradient?.direction === 'to right' ? 'selected' : ''}>左到右</option>
-          <option value="to left" ${this.options.backgroundGradient?.direction === 'to left' ? 'selected' : ''}>右到左</option>
- <option value="to bottom" ${this.options.backgroundGradient?.direction === 'to bottom' ? 'selected' : ''}>上到下</option>
-      <option value="to top" ${this.options.backgroundGradient?.direction === 'to top' ? 'selected' : ''}>下到上</option>
-       <option value="to bottom right" ${this.options.backgroundGradient?.direction === 'to bottom right' ? 'selected' : ''}>左上到右下</option>
-  <option value="to bottom left" ${this.options.backgroundGradient?.direction === 'to bottom left' ? 'selected' : ''}>右上到左下</option>
+        <option value="to right" ${this.options.backgroundGradient?.direction === 'to right' ? 'selected' : ''}>${i18nManager.t('screenshot.settings.left_to_right')}</option>
+          <option value="to left" ${this.options.backgroundGradient?.direction === 'to left' ? 'selected' : ''}>${i18nManager.t('screenshot.settings.right_to_left')}</option>
+ <option value="to bottom" ${this.options.backgroundGradient?.direction === 'to bottom' ? 'selected' : ''}>${i18nManager.t('screenshot.settings.top_to_bottom')}</option>
+      <option value="to top" ${this.options.backgroundGradient?.direction === 'to top' ? 'selected' : ''}>${i18nManager.t('screenshot.settings.bottom_to_top')}</option>
+       <option value="to bottom right" ${this.options.backgroundGradient?.direction === 'to bottom right' ? 'selected' : ''}>${i18nManager.t('screenshot.settings.top_left_to_bottom_right')}</option>
+  <option value="to bottom left" ${this.options.backgroundGradient?.direction === 'to bottom left' ? 'selected' : ''}>${i18nManager.t('screenshot.settings.top_right_to_bottom_left')}</option>
          </select>
     </div>
    
            <div class="gradient-colors">
-      <label>颜色 1:</label>
+      <label>${i18nManager.t('screenshot.settings.color_1')}:</label>
               <input type="color" id="gradient-color-1" value="${this.options.backgroundGradient?.colors[0] || '#1DA1F2'}">
-                <label>颜色 2:</label>
+                <label>${i18nManager.t('screenshot.settings.color_2')}:</label>
        <input type="color" id="gradient-color-2" value="${this.options.backgroundGradient?.colors[1] || '#0d8bd9'}">
     </div>
    </div>
@@ -123,10 +132,10 @@ export class ScreenshotSettingsPanel {
 
         <div class="action-buttons">
         <button id="save-screenshot-settings" class="primary-button">
-            保存截图设置
+            ${i18nManager.t('screenshot.settings.save')}
           </button>
     <button id="reset-screenshot-settings" class="secondary-button">
-            重置默认
+            ${i18nManager.t('screenshot.settings.reset')}
     </button>
         </div>
       </div>
@@ -339,7 +348,7 @@ const gradientDirection = direction || (type === 'linear' ? 'to right' : 'circle
     this.container.dispatchEvent(event);
 
     // 显示保存成功消息
-    this.showNotification('截图设置已保存', 'success');
+    this.showNotification(i18nManager.t('screenshot.settings.saved'), 'success');
   }
 
   private resetSettings(): void {
@@ -361,7 +370,7 @@ const gradientDirection = direction || (type === 'linear' ? 'to right' : 'circle
     });
     this.container.dispatchEvent(event);
 
-    this.showNotification('已重置为默认设置', 'success');
+    this.showNotification(i18nManager.t('screenshot.settings.reset_success'), 'success');
 }
 
   private showNotification(message: string, type: 'success' | 'error'): void {

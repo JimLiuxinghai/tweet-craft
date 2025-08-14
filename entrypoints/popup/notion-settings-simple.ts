@@ -1,16 +1,29 @@
 // 简化的 Notion 设置组件
 import { browser } from 'wxt/browser';
+import { i18nManager } from '@/lib/i18n';
 
 class SimpleNotionSettings {
   private container: HTMLElement | null = null;
 
   constructor() {
     this.createButton();
+    this.setupLanguageListener();
+  }
+
+  private setupLanguageListener(): void {
+    // 监听语言变化事件
+    window.addEventListener('localeChanged', () => {
+      // 更新按钮文本
+      const button = document.querySelector('.notion-settings-btn');
+      if (button) {
+        button.textContent = i18nManager.t('notion.settings.title');
+      }
+    });
   }
 
   private createButton() {
     const button = document.createElement('button');
-    button.textContent = 'Notion 设置';
+    button.textContent = i18nManager.t('notion.settings.title');
     button.className = 'notion-settings-btn';
     button.addEventListener('click', () => this.showSettings());
     
@@ -42,17 +55,17 @@ class SimpleNotionSettings {
     const modal = this.createModal();
     modal.innerHTML = `
       <div class="notion-settings-header">
-        <h3>Notion 设置</h3>
+        <h3>${i18nManager.t('notion.settings.title')}</h3>
         <button class="close-btn">&times;</button>
       </div>
       <div class="notion-settings-content">
         <div class="status-success">
           <span class="status-icon">✓</span>
-          <span>Notion 已连接</span>
+          <span>${i18nManager.t('notion.settings.connected')}</span>
         </div>
         <div class="settings-actions">
-          <button class="disconnect-btn">断开连接</button>
-          <button class="cancel-btn">关闭</button>
+          <button class="disconnect-btn">${i18nManager.t('notion.settings.disconnect')}</button>
+          <button class="cancel-btn">${i18nManager.t('notion.settings.close')}</button>
         </div>
       </div>
     `;
@@ -64,32 +77,32 @@ class SimpleNotionSettings {
     const modal = this.createModal();
     modal.innerHTML = `
       <div class="notion-settings-header">
-        <h3>Notion 设置</h3>
+        <h3>${i18nManager.t('notion.settings.title')}</h3>
         <button class="close-btn">&times;</button>
       </div>
       <div class="notion-settings-content">
         <div class="setup-instructions">
-          <h4>设置说明：</h4>
+          <h4>${i18nManager.t('notion.settings.setup_title')}：</h4>
           <ol>
-            <li>访问 <a href="https://www.notion.so/my-integrations" target="_blank">Notion 集成页面</a></li>
-            <li>点击 "+ New integration"</li>
-            <li>填写集成信息：名称 "Tweet Craft"</li>
-            <li>启用 "Read content" 和 "Insert content" 权限</li>
-            <li>复制 "Internal Integration Token"</li>
-            <li>在下方填入 Client ID 和 Client Secret</li>
+            <li><a href="https://www.notion.so/my-integrations" target="_blank">${i18nManager.t('notion.settings.setup_step1')}</a></li>
+            <li>${i18nManager.t('notion.settings.setup_step2')}</li>
+            <li>${i18nManager.t('notion.settings.setup_step3')}</li>
+            <li>${i18nManager.t('notion.settings.setup_step4')}</li>
+            <li>${i18nManager.t('notion.settings.setup_step5')}</li>
+            <li>${i18nManager.t('notion.settings.setup_step6')}</li>
           </ol>
         </div>
         <div class="form-group">
-          <label>Client ID:</label>
-          <input type="text" id="notion-client-id" placeholder="输入您的 Client ID">
+          <label>${i18nManager.t('notion.settings.client_id')}:</label>
+          <input type="text" id="notion-client-id" placeholder="${i18nManager.t('notion.settings.client_id_placeholder')}">
         </div>
         <div class="form-group">
-          <label>Client Secret:</label>
-          <input type="password" id="notion-client-secret" placeholder="输入您的 Client Secret">
+          <label>${i18nManager.t('notion.settings.client_secret')}:</label>
+          <input type="password" id="notion-client-secret" placeholder="${i18nManager.t('notion.settings.client_secret_placeholder')}">
         </div>
         <div class="settings-actions">
-          <button class="connect-btn">连接 Notion</button>
-          <button class="cancel-btn">取消</button>
+          <button class="connect-btn">${i18nManager.t('notion.settings.connect')}</button>
+          <button class="cancel-btn">${i18nManager.t('notion.settings.cancel')}</button>
         </div>
       </div>
     `;

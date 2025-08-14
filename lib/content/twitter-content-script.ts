@@ -13,6 +13,7 @@ import { TwitterDebugHelper } from './debug-helper';
 import { SettingsDebugFix } from './settings-debug-fix';
 import { TwitterActionButtons } from './action-buttons';
 import { NotionButtonManager } from '../notion/button-manager';
+import TwitterVideoService from '../services/twitter-video-service';
 
 export class TwitterContentScript {
   private isInitialized: boolean = false;
@@ -22,9 +23,11 @@ export class TwitterContentScript {
   private currentSettings: ExtensionSettings | null = null;
   private styleSheetId = 'twitter-super-copy-styles';
   private notionButtonManager?: NotionButtonManager;
+  private videoService: TwitterVideoService;
 
   constructor() {
     console.log('TwitterContentScript instance created');
+    this.videoService = new TwitterVideoService();
   }
 
   /**
@@ -599,7 +602,14 @@ return null;
       const copyButton = TwitterActionButtons.createCopyButton(element, (el, btn) => this.handleCopyClick(el, btn));
       const screenshotButton = TwitterActionButtons.createScreenshotButton(element, (el, btn) => this.handleScreenshotClick(el, btn));
       const notionButton = TwitterActionButtons.createNotionButton(element, (el, btn) => this.handleNotionClick(el, btn));
-      const insertSuccess = TwitterActionButtons.insertActionButtons(actionsBar, copyButton, screenshotButton, notionButton);
+      
+      // 检查是否有视频，如果有就创建视频下载按钮
+      let videoDownloadButton: HTMLElement | undefined;
+      if (this.hasVideo(element)) {
+        videoDownloadButton = TwitterActionButtons.createVideoDownloadButton(element, (el, btn) => this.handleVideoDownloadClick(el, btn));
+      }
+      
+      const insertSuccess = TwitterActionButtons.insertActionButtons(actionsBar, copyButton, screenshotButton, videoDownloadButton, notionButton);
       
    if (insertSuccess) {
         element.classList.remove('tsc-processing');
@@ -679,9 +689,15 @@ return null;
       const copyButton = TwitterActionButtons.createCopyButton(element, (el, btn) => this.handleCopyClick(el, btn));
       const screenshotButton = TwitterActionButtons.createScreenshotButton(element, (el, btn) => this.handleScreenshotClick(el, btn));
       const notionButton = TwitterActionButtons.createNotionButton(element, (el, btn) => this.handleNotionClick(el, btn));
+      
+      // 检查是否有视频，如果有就创建视频下载按钮
+      let videoDownloadButton: HTMLElement | undefined;
+      if (this.hasVideo(element)) {
+        videoDownloadButton = TwitterActionButtons.createVideoDownloadButton(element, (el, btn) => this.handleVideoDownloadClick(el, btn));
+      }
      
-   // 插入按钮 - 使用新的三按钮插入方法
-   const insertSuccess = TwitterActionButtons.insertActionButtons(actionsBar, copyButton, screenshotButton, notionButton);
+   // 插入按钮 - 使用新的四按钮插入方法
+   const insertSuccess = TwitterActionButtons.insertActionButtons(actionsBar, copyButton, screenshotButton, videoDownloadButton, notionButton);
    if (!insertSuccess) {
   console.error('Failed to insert copy button into actions bar');
           element.classList.remove('tsc-processing');
@@ -2273,6 +2289,112 @@ const errorMessage = error instanceof Error ? error.message : String(error);
     }
     
     return path.join(' > ');
+  }
+
+  /**
+   * 检查推文是否包含视频
+   */
+  private hasVideo(element: HTMLElement): boolean {
+    // 查找视频元素的各种选择器
+    const videoSelectors = [
+      'video',
+      '[data-testid="videoPlayer"]',
+      '[data-testid="previewInterstitial"]',
+      '[aria-label*="Video"]',
+      '[aria-label*="video"]',
+      '.r-1w513bd', // Twitter 视频播放器的类名
+      '[role="presentation"] video',
+      'div[style*="background-image"]:has-text("play")', // 视频缩略图
+    ];
+
+    for (const selector of videoSelectors) {
+      if (element.querySelector(selector)) {
+        console.log('Video found with selector:', selector);
+        return true;
+      }
+    }
+
+    // 检查是否有视频相关的文本内容
+    const tweetText = element.textContent || '';
+    if (tweetText.includes('video') || tweetText.includes('Video')) {
+      const hasVideoEmbed = element.querySelector('[data-testid="card.layoutLarge.media"], [data-testid="card.layoutSmall.media"]');
+      if (hasVideoEmbed) {
+        console.log('Video detected through text and media card');
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * 处理视频下载按钮点击
+   */
+  private async handleVideoDownloadClick(element: HTMLElement, button: HTMLElement): Promise<void> {
+    try {
+      console.log('Video download button clicked for element:', element);
+      
+      // 设置按钮为加载状态
+      TwitterActionButtons.setButtonLoading(button, true);
+      
+      // 获取推文URL
+      const tweetUrl = this.getTweetUrl(element);
+      if (!tweetUrl) {
+        throw new Error('Cannot find tweet URL');
+      }
+
+      console.log('Tweet URL for video download:', tweetUrl);
+
+      // 使用视频服务处理下载
+      const result = await this.videoService.downloadVideoViaService(tweetUrl);
+      
+      if (result.success) {
+        // 显示成功状态
+        TwitterActionButtons.setButtonSuccess(button);
+        this.showToast('视频下载服务已打开，请在新标签页中下载视频', 'success');
+      } else {
+        throw new Error(result.error || 'Video download failed');
+      }
+      
+    } catch (error) {
+      console.error('Video download failed:', error);
+      TwitterActionButtons.setButtonError(button);
+      this.showToast(
+        error instanceof Error ? error.message : '视频下载失败，请稍后重试',
+        'error'
+      );
+    } finally {
+      // 清除加载状态
+      TwitterActionButtons.setButtonLoading(button, false);
+    }
+  }
+
+  /**
+   * 获取推文URL
+   */
+  private getTweetUrl(element: HTMLElement): string | null {
+    // 查找推文链接
+    const timeElement = element.querySelector('time');
+    if (timeElement && timeElement.parentElement) {
+      const linkElement = timeElement.parentElement as HTMLAnchorElement;
+      if (linkElement.href) {
+        return linkElement.href;
+      }
+    }
+
+    // 备用方法：查找任何推文状态链接
+    const statusLink = element.querySelector('a[href*="/status/"]') as HTMLAnchorElement;
+    if (statusLink && statusLink.href) {
+      return statusLink.href;
+    }
+
+    // 最后的备用方法：从当前页面URL构造
+    const currentUrl = window.location.href;
+    if (currentUrl.includes('/status/')) {
+      return currentUrl;
+    }
+
+    return null;
   }
 
   /**

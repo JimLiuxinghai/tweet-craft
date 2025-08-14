@@ -286,7 +286,7 @@ this.settings = await getSettings();
             <span class="logo">🐦</span>
      ${i18nManager.t('extension_name')}
           </h1>
-      <div class="version">v1.0.0</div>
+      <div class="version">v1.0.2</div>
      </header>
 
    <!-- Tabs -->
@@ -297,11 +297,11 @@ this.settings = await getSettings();
        </button>
           <button class="tab-button" data-tab="screenshot">
             <span class="tab-icon">📷</span>
-            截图设置
+            ${i18nManager.t('screenshot.settings.title')}
           </button>
           <button class="tab-button" data-tab="notion">
             <span class="tab-icon">📝</span>
-            Notion 设置
+            ${i18nManager.t('notion.settings.title')}
           </button>
             </nav>
 
@@ -406,7 +406,7 @@ this.settings = await getSettings();
           <div id="notion-settings-container">
             <div class="loading-placeholder">
               <div class="loading-spinner"></div>
-              <p>加载 Notion 设置中...</p>
+              <p>${i18nManager.t('notion.settings.loading') || '加载 Notion 设置中...'}</p>
             </div>
           </div>
         </div>
@@ -424,7 +424,7 @@ this.settings = await getSettings();
 </button>
           </div>
           <div class="project-info">
-            <div class="version-info">v1.0.0</div>
+            <div class="version-info">v1.0.2</div>
           </div>
         </footer>
       </div>
@@ -684,7 +684,7 @@ browser.tabs.create({ url: 'https://x.com' });
       settingsContainer.innerHTML = `
         <div class="error-state">
           <div class="error-icon">⚠️</div>
-          <p>加载 Notion 设置失败</p>
+          <p>${i18nManager.t('notion.settings.load_failed')}</p>
         </div>
       `;
     }
@@ -699,48 +699,48 @@ browser.tabs.create({ url: 'https://x.com' });
         <div class="connection-status connected">
           <div class="status-icon">✓</div>
           <div class="status-text">
-            <h4>Notion 已连接</h4>
-            <p>您的 Notion 账户已成功连接</p>
+            <h4>${i18nManager.t('notion.settings.connected')}</h4>
+            <p>${i18nManager.t('notion.settings.connected_desc')}</p>
           </div>
         </div>
         
         <div class="settings-section">
-          <h3>数据库设置</h3>
+          <h3>${i18nManager.t('notion.settings.database_settings')}</h3>
           <div class="database-info">
-            <p>您可以将推文保存到 Notion 数据库中</p>
+            <p>${i18nManager.t('notion.settings.database_desc')}</p>
             <div class="action-buttons">
-              <button id="configure-database" class="primary-button">配置数据库</button>
-              <button id="disconnect-notion" class="secondary-button">断开连接</button>
+              <button id="configure-database" class="primary-button">${i18nManager.t('notion.settings.configure_database')}</button>
+              <button id="disconnect-notion" class="secondary-button">${i18nManager.t('notion.settings.disconnect')}</button>
             </div>
           </div>
         </div>
 
         <div class="settings-section">
-          <h3>保存选项</h3>
+          <h3>${i18nManager.t('notion.settings.save_options')}</h3>
           <div class="save-options">
             <label class="option-item">
               <input type="checkbox" id="auto-tags" checked>
               <span class="checkmark"></span>
-              自动添加标签
+              ${i18nManager.t('notion.settings.auto_tags')}
             </label>
             <label class="option-item">
               <input type="checkbox" id="save-media" checked>
               <span class="checkmark"></span>
-              保存媒体文件
+              ${i18nManager.t('notion.settings.save_media')}
             </label>
             <label class="option-item">
               <input type="checkbox" id="check-duplicates" checked>
               <span class="checkmark"></span>
-              检查重复推文
+              ${i18nManager.t('notion.settings.check_duplicates')}
             </label>
           </div>
         </div>
 
         <div class="settings-section">
-          <h3>操作</h3>
+          <h3>${i18nManager.t('notion.settings.actions')}</h3>
           <div class="action-buttons">
-            <button id="test-connection" class="secondary-button">测试连接</button>
-            <button id="view-stats" class="secondary-button">查看统计</button>
+            <button id="test-connection" class="secondary-button">${i18nManager.t('notion.settings.test_connection')}</button>
+            <button id="view-stats" class="secondary-button">${i18nManager.t('notion.settings.view_stats')}</button>
           </div>
         </div>
       </div>
@@ -759,37 +759,37 @@ browser.tabs.create({ url: 'https://x.com' });
         <div class="connection-status disconnected">
           <div class="status-icon">!</div>
           <div class="status-text">
-            <h4>Notion 未连接</h4>
-            <p>连接 Notion 以保存推文到数据库</p>
+            <h4>${i18nManager.t('notion.settings.not_connected')}</h4>
+            <p>${i18nManager.t('notion.settings.connection_desc')}</p>
           </div>
         </div>
         
         <div class="settings-section">
-          <h3>连接步骤</h3>
+          <h3>${i18nManager.t('notion.settings.connection_steps')}</h3>
           <div class="connection-steps">
             <ol>
-              <li>访问 <a href="https://www.notion.so/my-integrations" target="_blank">Notion 集成页面</a></li>
-              <li>点击 "+ New integration"</li>
-              <li>填写集成信息：名称 "Tweet Craft"</li>
-              <li>启用 "Read content" 和 "Insert content" 权限</li>
-              <li>复制 "Internal Integration Token"</li>
-              <li>在下方填入相关信息</li>
+              <li><a href="https://www.notion.so/my-integrations" target="_blank">${i18nManager.t('notion.settings.setup_step1')}</a></li>
+              <li>${i18nManager.t('notion.settings.setup_step2')}</li>
+              <li>${i18nManager.t('notion.settings.setup_step3')}</li>
+              <li>${i18nManager.t('notion.settings.setup_step4')}</li>
+              <li>${i18nManager.t('notion.settings.setup_step5')}</li>
+              <li>${i18nManager.t('notion.settings.setup_step6')}</li>
             </ol>
           </div>
         </div>
 
         <div class="settings-section">
-          <h3>连接信息</h3>
+          <h3>${i18nManager.t('notion.settings.connection_info')}</h3>
           <div class="connection-form">
             <div class="form-group">
-              <label>Integration Token:</label>
-              <input type="password" id="notion-token" placeholder="secret_...">
+              <label>${i18nManager.t('notion.settings.integration_token')}:</label>
+              <input type="password" id="notion-token" placeholder="${i18nManager.t('notion.settings.token_placeholder')}">
             </div>
             <div class="form-group">
-              <label>数据库 ID (可选):</label>
-              <input type="text" id="notion-database-id" placeholder="留空以创建新数据库">
+              <label>${i18nManager.t('notion.settings.database_id')}:</label>
+              <input type="text" id="notion-database-id" placeholder="${i18nManager.t('notion.settings.database_placeholder')}">
             </div>
-            <button id="connect-notion" class="primary-button">连接 Notion</button>
+            <button id="connect-notion" class="primary-button">${i18nManager.t('notion.settings.connect')}</button>
           </div>
         </div>
       </div>

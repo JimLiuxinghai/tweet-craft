@@ -2,7 +2,7 @@
   "name": "twitter-super-copy",
   "description": "Enhanced copy functionality for Twitter/X.com with thread support and multiple formats",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.2",
   "type": "module",
   "scripts": {
     "dev": "wxt",
