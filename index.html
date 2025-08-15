@@ -131,7 +131,7 @@
                 </h1>
                 <p class="text-xl text-gray-600 mb-8 leading-relaxed" data-i18n="hero.description">
                     Enhanced browser extension that revolutionizes how you copy and save Twitter content. 
-                    Support for video downloads, threads, multiple formats, beautiful screenshots, and 6 languages.
+                    Support for video downloads, threads, multiple formats, Notion integration, beautiful screenshots, and 6 languages.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                     <a href="https://chromewebstore.google.com/detail/twitter-%E8%B6%85%E7%BA%A7%E5%A2%9E%E5%BC%BA/pancaficlgkdicdeloffhlgdldfhcghf?authuser=0&hl=zh-CN" target="_blank" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover-scale">
@@ -304,6 +304,31 @@
                     </div>
                 </div>
 
+                <!-- Notion Integration -->
+                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
+                    <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-sticky-note text-gray-700 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.notion.title">Notion Integration</h3>
+                    <p class="text-gray-600 mb-4" data-i18n="features.notion.description">
+                        Save tweets directly to your Notion database with one click. Organize and categorize your saved content.
+                    </p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-database text-gray-500 mr-2"></i>
+                            <span data-i18n="features.notion.database">Auto database creation</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-tags text-gray-500 mr-2"></i>
+                            <span data-i18n="features.notion.categories">Category management</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-sync text-gray-500 mr-2"></i>
+                            <span data-i18n="features.notion.duplicate">Duplicate detection</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Privacy First -->
                 <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
                     <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
@@ -419,6 +444,30 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Notion Demo -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <div class="flex items-center mb-4">
+                            <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-sticky-note text-gray-700"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900" data-i18n="demo.notion.title">Notion Save</h3>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-database text-gray-500 mr-2"></i>
+                                <span data-i18n="demo.notion.connect">Connect workspace</span>
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-mouse-pointer text-gray-500 mr-2"></i>
+                                <span data-i18n="demo.notion.oneclick">One-click save</span>
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-tags text-gray-500 mr-2"></i>
+                                <span data-i18n="demo.notion.organize">Auto organize</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Code Samples -->
@@ -517,8 +566,18 @@ This is amazing! 🚀
                                 <i class="fas fa-video text-red-600"></i>
                             </div>
                             <div>
-                                <div class="font-semibold">Video API</div>
-                                <div class="text-sm text-gray-600" data-i18n="tech.video">Video download services</div>
+                                <div class="font-semibold">Video Services</div>
+                                <div class="text-sm text-gray-600" data-i18n="tech.video">Multi-service integration</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-sticky-note text-gray-700"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold">Notion API</div>
+                                <div class="text-sm text-gray-600" data-i18n="tech.notion">Database integration</div>
                             </div>
                         </div>
                         
@@ -539,7 +598,7 @@ This is amazing! 🚀
                     <div class="space-y-4">
                         <div class="bg-white p-4 rounded-lg shadow">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="font-semibold">10,000+ Lines of Code</span>
+                                <span class="font-semibold">8,000+ Lines of Code</span>
                                 <span class="text-sm text-gray-600" data-i18n="tech.lines">Production-ready</span>
                             </div>
                             <div class="text-sm text-gray-600" data-i18n="tech.linesdesc">TypeScript, content scripts, background workers</div>
@@ -548,7 +607,7 @@ This is amazing! 🚀
                         <div class="bg-white p-4 rounded-lg shadow">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="font-semibold">Smart Detection Engine</span>
-                                <span class="text-sm text-gray-600" data-i18n="tech.detection">AI-powered</span>
+                                <span class="text-sm text-gray-600" data-i18n="tech.detection">Multi-algorithm</span>
                             </div>
                             <div class="text-sm text-gray-600" data-i18n="tech.detectiondesc">Video detection, thread analysis, DOM monitoring</div>
                         </div>
@@ -556,17 +615,17 @@ This is amazing! 🚀
                         <div class="bg-white p-4 rounded-lg shadow">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="font-semibold">Multi-Service Integration</span>
-                                <span class="text-sm text-gray-600" data-i18n="tech.services">Reliable downloads</span>
+                                <span class="text-sm text-gray-600" data-i18n="tech.services">Reliable & secure</span>
                             </div>
-                            <div class="text-sm text-gray-600" data-i18n="tech.servicesdesc">TweetDown, SaveTweet, fallback services</div>
+                            <div class="text-sm text-gray-600" data-i18n="tech.servicesdesc">Video downloads, Notion API, screenshot engine</div>
                         </div>
                         
                         <div class="bg-white p-4 rounded-lg shadow">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="font-semibold">Modular Architecture</span>
-                                <span class="text-sm text-gray-600" data-i18n="tech.modular">Clean design</span>
+                                <span class="font-semibold">Complete i18n System</span>
+                                <span class="text-sm text-gray-600" data-i18n="tech.i18n">6 languages</span>
                             </div>
-                            <div class="text-sm text-gray-600" data-i18n="tech.modulardesc">Content scripts, background workers, popup UI</div>
+                            <div class="text-sm text-gray-600" data-i18n="tech.i18ndesc">Auto detection, real-time switching, unified UI</div>
                         </div>
                     </div>
                 </div>
@@ -655,6 +714,7 @@ This is amazing! 🚀
                         <li><a href="#features" class="hover:text-white transition" data-i18n="footer.video">Video Download</a></li>
                         <li><a href="#features" class="hover:text-white transition" data-i18n="footer.thread">Thread Copy</a></li>
                         <li><a href="#features" class="hover:text-white transition" data-i18n="footer.formats">Multiple Formats</a></li>
+                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.notion">Notion Integration</a></li>
                         <li><a href="#features" class="hover:text-white transition" data-i18n="footer.screenshots">Screenshots</a></li>
                         <li><a href="#features" class="hover:text-white transition" data-i18n="footer.multilang">Multi-language</a></li>
                     </ul>
@@ -703,7 +763,7 @@ This is amazing! 🚀
                 'nav.technology': 'Technology',
                 'nav.install': 'Install',
                 'hero.title': 'Super Copy for',
-                'hero.description': 'Enhanced browser extension that revolutionizes how you copy and save Twitter content. Support for threads, multiple formats, beautiful screenshots, and 6 languages.',
+                'hero.description': 'Enhanced browser extension that revolutionizes how you copy and save Twitter content. Support for video downloads, threads, multiple formats, Notion integration, beautiful screenshots, and 6 languages.',
                 'hero.install': 'Install Extension',
                 'hero.demo': 'Watch Demo',
                 'features.title': 'Powerful Features',
@@ -723,11 +783,46 @@ This is amazing! 🚀
                 'features.performance.cache': 'LRU cache (200 items max)',
                 'features.privacy.title': 'Privacy First',
                 'features.privacy.description': 'All processing happens locally. No data is sent to external servers.',
+                'features.video.title': 'Smart Video Download',
+                'features.video.description': 'Automatically detect and download Twitter videos with one click. Support multiple quality options and external services.',
+                'features.video.oneclick': 'One-click download',
+                'features.video.quality': 'Multiple quality options',
+                'features.video.services': 'External service integration',
+                'features.thread.pattern': 'Number pattern detection',
+                'features.thread.selfreply': 'Self-reply analysis',
+                'features.thread.visual': 'Visual continuity check',
+                'features.screenshot.themes': 'Custom themes & backgrounds',
+                'features.screenshot.formats': 'PNG, JPG, WebP formats',
+                'features.screenshot.quality': 'High-quality rendering',
+                'features.notion.title': 'Notion Integration',
+                'features.notion.description': 'Save tweets directly to your Notion database with one click. Organize and categorize your saved content.',
+                'features.notion.database': 'Auto database creation',
+                'features.notion.categories': 'Category management',
+                'features.notion.duplicate': 'Duplicate detection',
+                'features.performance.detection': 'Real-time video detection',
+                'features.performance.cache': 'LRU cache optimization',
+                'features.performance.debounce': 'Debounced processing',
                 'features.privacy.local': 'Local processing only',
                 'features.privacy.notracking': 'No tracking or analytics',
                 'demo.title': 'See It In Action',
                 'demo.subtitle': 'Watch how Tweet Craft transforms your Twitter experience',
                 'demo.coming': 'Demo Video Coming Soon',
+                'demo.video.title': 'Video Download',
+                'demo.video.detect': 'Auto-detect videos',
+                'demo.video.button': 'Add download button',
+                'demo.video.download': 'One-click download',
+                'demo.copy.title': 'Smart Copy',
+                'demo.copy.thread': 'Thread detection',
+                'demo.copy.formats': 'Multiple formats',
+                'demo.copy.clipboard': 'Auto clipboard',
+                'demo.screenshot.title': 'Screenshot',
+                'demo.screenshot.themes': 'Custom themes',
+                'demo.screenshot.quality': 'High quality',
+                'demo.screenshot.export': 'Export options',
+                'demo.notion.title': 'Notion Save',
+                'demo.notion.connect': 'Connect workspace',
+                'demo.notion.oneclick': 'One-click save',
+                'demo.notion.organize': 'Auto organize',
                 'demo.html': 'HTML Output Sample',
                 'demo.markdown': 'Markdown Output Sample',
                 'tech.title': 'Built with Modern Technology',
@@ -737,7 +832,15 @@ This is amazing! 🚀
                 'tech.wxt': 'Modern extension framework',
                 'tech.tailwind': 'Utility-first styling',
                 'tech.snapdom': 'Screenshot generation',
+                'tech.video': 'Multi-service integration',
+                'tech.notion': 'Database integration',
+                'tech.chrome': 'Extension platform',
                 'tech.architecture': 'Architecture',
+                'tech.detection': 'Multi-algorithm',
+                'tech.services': 'Reliable & secure',
+                'tech.servicesdesc': 'Video downloads, Notion API, screenshot engine',
+                'tech.i18n': '6 languages',
+                'tech.i18ndesc': 'Auto detection, real-time switching, unified UI',
                 'tech.lines': 'Production-ready',
                 'tech.linesdesc': 'Well-structured, maintainable codebase',
                 'tech.tests': 'Comprehensive coverage',
@@ -760,6 +863,7 @@ This is amazing! 🚀
                 'footer.features': 'Features',
                 'footer.thread': 'Thread Copy',
                 'footer.formats': 'Multiple Formats',
+                'footer.notion': 'Notion Integration',
                 'footer.screenshots': 'Screenshots',
                 'footer.multilang': 'Multi-language',
                 'footer.resources': 'Resources',
@@ -776,7 +880,7 @@ This is amazing! 🚀
                 'nav.technology': '技术栈',
                 'nav.install': '安装',
                 'hero.title': 'Twitter/X',
-                'hero.description': '增强型浏览器插件，彻底改变您复制和保存推特内容的方式。支持推文线程、多种格式、精美截图和6种语言。',
+                'hero.description': '增强型浏览器插件，彻底改变您复制和保存推特内容的方式。支持视频下载、推文线程、多种格式、Notion集成、精美截图和6种语言。',
                 'hero.install': '安装插件',
                 'hero.demo': '观看演示',
                 'features.title': '强大功能',
@@ -796,11 +900,46 @@ This is amazing! 🚀
                 'features.performance.cache': 'LRU缓存（最多200个项目）',
                 'features.privacy.title': '隐私优先',
                 'features.privacy.description': '所有处理都在本地进行。不会向外部服务器发送数据。',
+                'features.video.title': '智能视频下载',
+                'features.video.description': '一键自动检测和下载推特视频。支持多种画质选项和外部服务。',
+                'features.video.oneclick': '一键下载',
+                'features.video.quality': '多种画质选择',
+                'features.video.services': '外部服务集成',
+                'features.thread.pattern': '数字模式识别',
+                'features.thread.selfreply': '自回复分析',
+                'features.thread.visual': '视觉连续性检查',
+                'features.screenshot.themes': '自定义主题和背景',
+                'features.screenshot.formats': 'PNG、JPG、WebP格式',
+                'features.screenshot.quality': '高质量渲染',
+                'features.notion.title': 'Notion 集成',
+                'features.notion.description': '一键将推文直接保存到您的 Notion 数据库。整理和分类您保存的内容。',
+                'features.notion.database': '自动数据库创建',
+                'features.notion.categories': '分类管理',
+                'features.notion.duplicate': '重复检测',
+                'features.performance.detection': '实时视频检测',
+                'features.performance.cache': 'LRU缓存优化',
+                'features.performance.debounce': '防抖处理',
                 'features.privacy.local': '仅本地处理',
                 'features.privacy.notracking': '无跟踪或分析',
                 'demo.title': '实际效果',
                 'demo.subtitle': '观看 Tweet Craft 如何改变您的推特体验',
                 'demo.coming': '演示视频即将推出',
+                'demo.video.title': '视频下载',
+                'demo.video.detect': '自动检测视频',
+                'demo.video.button': '添加下载按钮',
+                'demo.video.download': '一键下载',
+                'demo.copy.title': '智能复制',
+                'demo.copy.thread': '线程检测',
+                'demo.copy.formats': '多种格式',
+                'demo.copy.clipboard': '自动剪贴板',
+                'demo.screenshot.title': '截图功能',
+                'demo.screenshot.themes': '自定义主题',
+                'demo.screenshot.quality': '高品质',
+                'demo.screenshot.export': '导出选项',
+                'demo.notion.title': 'Notion 保存',
+                'demo.notion.connect': '连接工作区',
+                'demo.notion.oneclick': '一键保存',
+                'demo.notion.organize': '自动整理',
                 'demo.html': 'HTML 输出示例',
                 'demo.markdown': 'Markdown 输出示例',
                 'tech.title': '现代技术构建',
@@ -810,7 +949,15 @@ This is amazing! 🚀
                 'tech.wxt': '现代扩展框架',
                 'tech.tailwind': '实用优先样式',
                 'tech.snapdom': '截图生成',
+                'tech.video': '多服务集成',
+                'tech.notion': '数据库集成',
+                'tech.chrome': '扩展平台',
                 'tech.architecture': '架构',
+                'tech.detection': '多算法引擎',
+                'tech.services': '可靠安全',
+                'tech.servicesdesc': '视频下载、Notion API、截图引擎',
+                'tech.i18n': '6种语言',
+                'tech.i18ndesc': '自动检测、实时切换、统一界面',
                 'tech.lines': '生产就绪',
                 'tech.linesdesc': '结构良好、可维护的代码库',
                 'tech.tests': '全面覆盖',
@@ -833,6 +980,7 @@ This is amazing! 🚀
                 'footer.features': '功能',
                 'footer.thread': '线程复制',
                 'footer.formats': '多种格式',
+                'footer.notion': 'Notion 集成',
                 'footer.screenshots': '截图',
                 'footer.multilang': '多语言',
                 'footer.resources': '资源',

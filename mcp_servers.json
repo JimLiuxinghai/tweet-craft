@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "hydra-prompts-nocode": {
+      "command": "env",
+      "args": [
+        "TOKEN=TUNsaXV4aW5naGFpMDIyMDI0",
+        "npx",
+        "@yxfe/hydra-nocode-prompts"
+      ]
+    }
+  }
+}
