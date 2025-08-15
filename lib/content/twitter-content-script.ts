@@ -590,12 +590,16 @@ return null;
       // 立即标记为处理中
       element.classList.add('tsc-processing');
 
-      // 查找推文操作栏
-      const actionsBar = TwitterActionsBarFixEnhanced.findActionsBar(element);
+      // 查找推文操作栏 - 现在也使用fallback机制
+      let actionsBar = TwitterActionsBarFixEnhanced.findActionsBar(element);
       if (!actionsBar) {
-    // 快速失败，不重试
-        element.classList.remove('tsc-processing');
-        return;
+        console.log('❌ Initial actions bar search failed in immediate processing, trying fallback');
+        actionsBar = TwitterActionsBarFixEnhanced.createFallbackActionsBar(element);
+        if (!actionsBar) {
+          console.error('❌ Even fallback actions bar creation failed in immediate processing');
+          element.classList.remove('tsc-processing');
+          return;
+        }
       }
 
       // 创建复制按钮、截图按钮和Notion按钮
@@ -2046,7 +2050,7 @@ font-weight: 600;
  // 分批立即处理，不使用队列
     for (let i = 0; i < existingTweets.length; i += 5) {
       const batch = existingTweets.slice(i, i + 5);
-      await Promise.all(batch.map(tweet => this.processTweetElementImmediate(tweet)));
+      await Promise.all(batch.map(tweet => this.processTweetElement(tweet)));
       
       // 小延迟避免阻塞UI
       if (i + 5 < existingTweets.length) {
@@ -2141,9 +2145,9 @@ const missingButtons: HTMLElement[] = [];
     
     // 如果有遗漏的推文，立即处理它们
     if (missingButtons.length > 0) {
-      console.log(`🔧 Found ${missingButtons.length} tweets missing copy buttons, processing immediately`);
+      console.log(`🔧 Found ${missingButtons.length} tweets missing copy buttons, processing with retry`);
   missingButtons.forEach(tweet => {
-        this.processTweetElementImmediate(tweet);
+        this.processTweetElement(tweet);
       });
     }
   }
@@ -2304,23 +2308,84 @@ const errorMessage = error instanceof Error ? error.message : String(error);
       '[aria-label*="video"]',
       '.r-1w513bd', // Twitter 视频播放器的类名
       '[role="presentation"] video',
-      'div[style*="background-image"]:has-text("play")', // 视频缩略图
+      'div[style*="background-image"]', // 视频缩略图
     ];
 
     for (const selector of videoSelectors) {
-      if (element.querySelector(selector)) {
-        console.log('Video found with selector:', selector);
+      try {
+        const found = element.querySelector(selector);
+        if (found) {
+          // 对于背景图片，额外检查是否包含播放相关的元素
+          if (selector === 'div[style*="background-image"]') {
+            const hasPlayButton = found.querySelector('[aria-label*="play"]') || 
+                                 found.querySelector('[data-testid="playButton"]') ||
+                                 found.textContent?.toLowerCase().includes('play');
+            if (hasPlayButton) {
+              console.log('Video found with selector:', selector);
+              return true;
+            }
+          } else {
+            console.log('Video found with selector:', selector);
+            return true;
+          }
+        }
+      } catch (error) {
+        console.warn('Invalid video selector:', selector, error);
+        continue;
+      }
+    }
+
+    // 检查Twitter特有的视频容器
+    const twitterVideoContainers = [
+      '[data-testid="videoComponent"]',
+      '[data-testid="tweet-video"]',
+      '[data-testid="media-video"]',
+      '.css-1dbjc4n[data-testid] video', // Twitter的视频容器
+    ];
+
+    for (const containerSelector of twitterVideoContainers) {
+      try {
+        if (element.querySelector(containerSelector)) {
+          console.log('Video found in Twitter container:', containerSelector);
+          return true;
+        }
+      } catch (error) {
+        console.warn('Invalid container selector:', containerSelector, error);
+        continue;
+      }
+    }
+
+    // 检查是否有视频相关的媒体卡片
+    const mediaCards = element.querySelectorAll('[data-testid="card.layoutLarge.media"], [data-testid="card.layoutSmall.media"]');
+    for (const card of mediaCards) {
+      const cardElement = card as HTMLElement;
+      // 检查媒体卡片是否包含视频指示器
+      if (cardElement.querySelector('video') || 
+          cardElement.querySelector('[aria-label*="video"]') ||
+          cardElement.querySelector('[data-testid*="video"]')) {
+        console.log('Video detected in media card');
         return true;
       }
     }
 
-    // 检查是否有视频相关的文本内容
-    const tweetText = element.textContent || '';
-    if (tweetText.includes('video') || tweetText.includes('Video')) {
-      const hasVideoEmbed = element.querySelector('[data-testid="card.layoutLarge.media"], [data-testid="card.layoutSmall.media"]');
-      if (hasVideoEmbed) {
-        console.log('Video detected through text and media card');
-        return true;
+    // 检查是否有视频播放器的特征元素
+    const videoIndicators = [
+      '[aria-label*="Play video"]',
+      '[aria-label*="播放视频"]',
+      '[data-testid*="VideoPlayer"]',
+      'svg[aria-label*="Play"]',
+      '.PlayIcon', // 可能的播放图标类名
+    ];
+
+    for (const indicator of videoIndicators) {
+      try {
+        if (element.querySelector(indicator)) {
+          console.log('Video indicator found:', indicator);
+          return true;
+        }
+      } catch (error) {
+        console.warn('Invalid indicator selector:', indicator, error);
+        continue;
       }
     }
 
