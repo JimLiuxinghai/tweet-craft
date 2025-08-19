@@ -12,8 +12,8 @@ import { TwitterActionsBarFixEnhanced } from './twitter-actions-bar-fix-enhanced
 import { TwitterDebugHelper } from './debug-helper';
 import { SettingsDebugFix } from './settings-debug-fix';
 import { TwitterActionButtons } from './action-buttons';
-import TwitterVideoDetector from './twitter-video-detector';
-import { SimpleVideoDownloader } from './simple-video-downloader';
+import { NotionButtonManager } from '../notion/button-manager';
+import TwitterVideoService from '../services/twitter-video-service';
 
 export class TwitterContentScript {
   private isInitialized: boolean = false;
@@ -22,11 +22,12 @@ export class TwitterContentScript {
   private processedTweets: Set<string> = new Set();
   private currentSettings: ExtensionSettings | null = null;
   private styleSheetId = 'twitter-super-copy-styles';
-  private videoDetector?: TwitterVideoDetector;
-  private simpleVideoDownloader?: SimpleVideoDownloader;
+  private notionButtonManager?: NotionButtonManager;
+  private videoService: TwitterVideoService;
 
   constructor() {
     console.log('TwitterContentScript instance created');
+    this.videoService = new TwitterVideoService();
   }
 
   /**
@@ -60,8 +61,9 @@ export class TwitterContentScript {
       this.setupEventListeners();
       this.setupMessageListeners();
       
-      // 初始化视频下载检测器
-      this.initializeVideoDetector();
+            
+      // 初始化 Notion 按钮管理器
+      this.initializeNotionButtonManager();
       
     // 立即处理已存在的推文，参考tweet-craft的实现
       await this.processExistingTweetsImmediate();
@@ -577,8 +579,8 @@ return null;
       return;
     }
 
-    // 检查是否已经有复制按钮
-    const existingButton = element.querySelector('.tsc-copy-button');
+    // 检查是否已经有操作按钮
+    const existingButton = element.querySelector('.tsc-copy-button, .tsc-screenshot-button, .tsc-notion-button');
     if (existingButton) {
       element.classList.add('tsc-processed');
       return;
@@ -588,18 +590,30 @@ return null;
       // 立即标记为处理中
       element.classList.add('tsc-processing');
 
-      // 查找推文操作栏
-      const actionsBar = TwitterActionsBarFixEnhanced.findActionsBar(element);
+      // 查找推文操作栏 - 现在也使用fallback机制
+      let actionsBar = TwitterActionsBarFixEnhanced.findActionsBar(element);
       if (!actionsBar) {
-    // 快速失败，不重试
-        element.classList.remove('tsc-processing');
-        return;
+        console.log('❌ Initial actions bar search failed in immediate processing, trying fallback');
+        actionsBar = TwitterActionsBarFixEnhanced.createFallbackActionsBar(element);
+        if (!actionsBar) {
+          console.error('❌ Even fallback actions bar creation failed in immediate processing');
+          element.classList.remove('tsc-processing');
+          return;
+        }
       }
 
-      // 创建并插入复制按钮和截图按钮
-           const copyButton = TwitterActionButtons.createCopyButton(element, (el, btn) => this.handleCopyClick(el, btn));
- const screenshotButton = TwitterActionButtons.createScreenshotButton(element, (el, btn) => this.handleScreenshotClick(el, btn));
-   const insertSuccess = TwitterActionButtons.insertActionButtons(actionsBar, copyButton, screenshotButton);
+      // 创建复制按钮、截图按钮和Notion按钮
+      const copyButton = TwitterActionButtons.createCopyButton(element, (el, btn) => this.handleCopyClick(el, btn));
+      const screenshotButton = TwitterActionButtons.createScreenshotButton(element, (el, btn) => this.handleScreenshotClick(el, btn));
+      const notionButton = TwitterActionButtons.createNotionButton(element, (el, btn) => this.handleNotionClick(el, btn));
+      
+      // 检查是否有视频，如果有就创建视频下载按钮
+      let videoDownloadButton: HTMLElement | undefined;
+      if (this.hasVideo(element)) {
+        videoDownloadButton = TwitterActionButtons.createVideoDownloadButton(element, (el, btn) => this.handleVideoDownloadClick(el, btn));
+      }
+      
+      const insertSuccess = TwitterActionButtons.insertActionButtons(actionsBar, copyButton, screenshotButton, videoDownloadButton, notionButton);
       
    if (insertSuccess) {
         element.classList.remove('tsc-processing');
@@ -629,10 +643,10 @@ return null;
       return;
     }
  
-    // 检查是否已经有复制按钮 - 更严格的检查
-    const existingButton = element.querySelector('.tsc-copy-button');
+    // 检查是否已经有操作按钮 - 更严格的检查
+    const existingButton = element.querySelector('.tsc-copy-button, .tsc-screenshot-button, .tsc-notion-button');
     if (existingButton) {
-      console.log('Copy button already exists, marking as processed');
+      console.log('Action buttons already exist, marking as processed');
       element.classList.add('tsc-processed');
       return;
     }
@@ -675,12 +689,19 @@ return null;
      return;
         }
 
-// 创建复制按钮和截图按钮
+// 创建复制按钮、截图按钮和Notion按钮
       const copyButton = TwitterActionButtons.createCopyButton(element, (el, btn) => this.handleCopyClick(el, btn));
       const screenshotButton = TwitterActionButtons.createScreenshotButton(element, (el, btn) => this.handleScreenshotClick(el, btn));
+      const notionButton = TwitterActionButtons.createNotionButton(element, (el, btn) => this.handleNotionClick(el, btn));
+      
+      // 检查是否有视频，如果有就创建视频下载按钮
+      let videoDownloadButton: HTMLElement | undefined;
+      if (this.hasVideo(element)) {
+        videoDownloadButton = TwitterActionButtons.createVideoDownloadButton(element, (el, btn) => this.handleVideoDownloadClick(el, btn));
+      }
      
-   // 插入按钮 - 使用新的双按钮插入方法
-   const insertSuccess = TwitterActionButtons.insertActionButtons(actionsBar, copyButton, screenshotButton);
+   // 插入按钮 - 使用新的四按钮插入方法
+   const insertSuccess = TwitterActionButtons.insertActionButtons(actionsBar, copyButton, screenshotButton, videoDownloadButton, notionButton);
    if (!insertSuccess) {
   console.error('Failed to insert copy button into actions bar');
           element.classList.remove('tsc-processing');
@@ -820,8 +841,32 @@ try {
       // 动态导入增强的截图服务
    const { enhancedScreenshotService } = await import('../screenshot/EnhancedScreenshotService');
 
-  // 等待一小段时间确保内容完全渲染
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // 为第一条推文增加额外的等待时间，确保DOM完全稳定
+      const isFirstTweet = this.isFirstTweetInList(tweetElement);
+      const waitTime = isFirstTweet ? 800 : 300; // 第一条推文等待800ms，其他300ms
+      
+      console.log(`Screenshot wait time: ${waitTime}ms (first tweet: ${isFirstTweet})`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+      
+      // 验证推文元素状态
+      console.log('Tweet element validation:', {
+        isConnected: tweetElement.isConnected,
+        tagName: tweetElement.tagName,
+        className: tweetElement.className,
+        rect: tweetElement.getBoundingClientRect(),
+        offsetParent: !!tweetElement.offsetParent,
+        style: tweetElement.style.display
+      });
+      
+      if (!tweetElement.isConnected) {
+        throw new Error('Tweet element is no longer in DOM');
+      }
+      
+      // 更温和的可见性检查
+      const rect = tweetElement.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) {
+        console.warn('Tweet element has no dimensions, but proceeding with screenshot attempt');
+      }
       
 // 执行截图操作
  const result = await enhancedScreenshotService.captureWithRandomGradient(tweetElement, {
@@ -841,7 +886,91 @@ try {
       
     } catch (error) {
       console.error('Failed to take screenshot:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        tweetElement: {
+          isConnected: tweetElement?.isConnected,
+          rect: tweetElement?.getBoundingClientRect(),
+          className: tweetElement?.className
+        }
+      });
       TwitterActionButtons.setButtonError(button);
+    } finally {
+      TwitterActionButtons.setButtonLoading(button, false);
+    }
+  }
+
+  /**
+   * 检查是否为列表中的第一条推文
+   */
+  private isFirstTweetInList(tweetElement: HTMLElement): boolean {
+    try {
+      // 获取当前页面所有推文元素
+      const allTweets = this.findTweetElementsEnhanced(document.body);
+      
+      if (allTweets.length === 0) return false;
+      
+      // 检查当前推文是否是第一个可见的推文
+      const firstTweet = allTweets[0];
+      return firstTweet === tweetElement;
+      
+    } catch (error) {
+      console.warn('Failed to determine if first tweet:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 处理Notion按钮点击
+   */
+  private async handleNotionClick(tweetElement: HTMLElement, button: HTMLElement): Promise<void> {
+    try {
+      // 显示加载状态
+      TwitterActionButtons.setButtonLoading(button, true);
+
+      // 动态导入Notion相关模块
+      const { TweetExtractor } = await import('../notion/tweet-extractor');
+      
+      // 提取推文数据
+      const tweetData = TweetExtractor.extractTweetData(tweetElement);
+      if (!tweetData) {
+        throw new Error('无法提取推文数据');
+      }
+
+      // 自动生成标签
+      const autoTags = TweetExtractor.generateTagsFromContent(tweetData.content);
+      tweetData.tags = autoTags;
+
+      // 发送到background script检查是否已存在
+      const existsResponse = await browser.runtime.sendMessage({
+        type: 'NOTION_CHECK_EXISTS',
+        url: tweetData.url
+      });
+
+      if (existsResponse && existsResponse.exists) {
+        this.showToast(i18nManager.t('notion_already_exists') || 'Tweet already exists in Notion', 'info');
+        TwitterActionButtons.setButtonSuccess(button);
+        return;
+      }
+
+      // 发送到background script保存
+      const result = await browser.runtime.sendMessage({
+        type: 'NOTION_SAVE_TWEET',
+        data: tweetData
+      });
+
+      if (result && result.success) {
+        TwitterActionButtons.setButtonSuccess(button);
+        this.showToast(i18nManager.t('notion_save_success') || 'Tweet saved to Notion!', 'success');
+      } else {
+        throw new Error(result?.error || 'Failed to save to Notion');
+      }
+
+    } catch (error) {
+      console.error('Failed to save to Notion:', error);
+      TwitterActionButtons.setButtonError(button);
+      this.showToast(i18nManager.t('notion_save_failed') || 'Failed to save to Notion', 'error');
     } finally {
       TwitterActionButtons.setButtonLoading(button, false);
     }
@@ -1397,14 +1526,62 @@ break;
       stroke: currentColor;
       }
       
+      /* Notion按钮样式 */
+      .tsc-notion-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34.75px;
+        height: 34.75px;
+        border-radius: 9999px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        color: rgb(83, 100, 113);
+        transition: all 0.2s ease;
+        margin-left: 12px;
+      }
+      
+      .tsc-notion-button:hover {
+        background-color: rgba(55, 53, 47, 0.1);
+        color: rgb(55, 53, 47);
+      }
+      
+      .tsc-notion-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      .tsc-notion-button.tsc-loading .tsc-notion-icon {
+        animation: tsc-spin 1s linear infinite;
+      }
+      
+      .tsc-notion-button.tsc-success {
+        color: rgb(0, 186, 124);
+        background-color: rgba(0, 186, 124, 0.1);
+        transform: scale(1.05);
+      }
+      
+      .tsc-notion-button.tsc-error {
+        color: rgb(244, 33, 46);
+        background-color: rgba(244, 33, 46, 0.1);
+        transform: scale(1.05);
+      }
+
       /* 强制移除SVG填充，覆盖Twitter的默认样式 */
       .tsc-action-icon svg,
    .tsc-action-icon svg *,
       .tsc-copy-icon svg,
       .tsc-copy-icon svg *,
       .tsc-screenshot-icon svg,
-      .tsc-screenshot-icon svg * {
+      .tsc-screenshot-icon svg *,
+      .tsc-notion-icon svg {
         fill: none !important;
+      }
+      
+      /* Notion图标需要填充 */
+      .tsc-notion-icon svg {
+        fill: currentColor !important;
       }
       
   /* 防止处理中的推文被重复处理 */
@@ -1873,7 +2050,7 @@ font-weight: 600;
  // 分批立即处理，不使用队列
     for (let i = 0; i < existingTweets.length; i += 5) {
       const batch = existingTweets.slice(i, i + 5);
-      await Promise.all(batch.map(tweet => this.processTweetElementImmediate(tweet)));
+      await Promise.all(batch.map(tweet => this.processTweetElement(tweet)));
       
       // 小延迟避免阻塞UI
       if (i + 5 < existingTweets.length) {
@@ -1968,9 +2145,9 @@ const missingButtons: HTMLElement[] = [];
     
     // 如果有遗漏的推文，立即处理它们
     if (missingButtons.length > 0) {
-      console.log(`🔧 Found ${missingButtons.length} tweets missing copy buttons, processing immediately`);
+      console.log(`🔧 Found ${missingButtons.length} tweets missing copy buttons, processing with retry`);
   missingButtons.forEach(tweet => {
-        this.processTweetElementImmediate(tweet);
+        this.processTweetElement(tweet);
       });
     }
   }
@@ -2055,31 +2232,23 @@ const errorMessage = error instanceof Error ? error.message : String(error);
     });
   }
 
+  
   /**
-   * 初始化视频下载检测器
+   * 初始化 Notion 按钮管理器
    */
-  private initializeVideoDetector(): void {
+  private initializeNotionButtonManager(): void {
     try {
-      // 使用简化的视频下载器（更可靠）
-      this.simpleVideoDownloader = new SimpleVideoDownloader();
-      console.log('✅ Simple video downloader initialized successfully');
+      this.notionButtonManager = new NotionButtonManager();
+      console.log('✅ Notion button manager initialized successfully');
       
       // 在开发环境中暴露调试接口
       if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-        (window as any).simpleVideoDownloader = this.simpleVideoDownloader;
-        console.log('🔧 Simple video downloader exposed as window.simpleVideoDownloader');
+        (window as any).notionButtonManager = this.notionButtonManager;
+        console.log('🔧 Notion button manager exposed as window.notionButtonManager');
       }
       
     } catch (error) {
-      console.error('❌ Failed to initialize video detector:', error);
-      
-      // 降级到原有的检测器
-      try {
-        this.videoDetector = new TwitterVideoDetector();
-        console.log('⚠️ Fallback to original video detector');
-      } catch (fallbackError) {
-        console.error('❌ Failed to initialize fallback video detector:', fallbackError);
-      }
+      console.error('❌ Failed to initialize Notion button manager:', error);
     }
   }
 
@@ -2127,6 +2296,173 @@ const errorMessage = error instanceof Error ? error.message : String(error);
   }
 
   /**
+   * 检查推文是否包含视频
+   */
+  private hasVideo(element: HTMLElement): boolean {
+    // 查找视频元素的各种选择器
+    const videoSelectors = [
+      'video',
+      '[data-testid="videoPlayer"]',
+      '[data-testid="previewInterstitial"]',
+      '[aria-label*="Video"]',
+      '[aria-label*="video"]',
+      '.r-1w513bd', // Twitter 视频播放器的类名
+      '[role="presentation"] video',
+      'div[style*="background-image"]', // 视频缩略图
+    ];
+
+    for (const selector of videoSelectors) {
+      try {
+        const found = element.querySelector(selector);
+        if (found) {
+          // 对于背景图片，额外检查是否包含播放相关的元素
+          if (selector === 'div[style*="background-image"]') {
+            const hasPlayButton = found.querySelector('[aria-label*="play"]') || 
+                                 found.querySelector('[data-testid="playButton"]') ||
+                                 found.textContent?.toLowerCase().includes('play');
+            if (hasPlayButton) {
+              console.log('Video found with selector:', selector);
+              return true;
+            }
+          } else {
+            console.log('Video found with selector:', selector);
+            return true;
+          }
+        }
+      } catch (error) {
+        console.warn('Invalid video selector:', selector, error);
+        continue;
+      }
+    }
+
+    // 检查Twitter特有的视频容器
+    const twitterVideoContainers = [
+      '[data-testid="videoComponent"]',
+      '[data-testid="tweet-video"]',
+      '[data-testid="media-video"]',
+      '.css-1dbjc4n[data-testid] video', // Twitter的视频容器
+    ];
+
+    for (const containerSelector of twitterVideoContainers) {
+      try {
+        if (element.querySelector(containerSelector)) {
+          console.log('Video found in Twitter container:', containerSelector);
+          return true;
+        }
+      } catch (error) {
+        console.warn('Invalid container selector:', containerSelector, error);
+        continue;
+      }
+    }
+
+    // 检查是否有视频相关的媒体卡片
+    const mediaCards = element.querySelectorAll('[data-testid="card.layoutLarge.media"], [data-testid="card.layoutSmall.media"]');
+    for (const card of mediaCards) {
+      const cardElement = card as HTMLElement;
+      // 检查媒体卡片是否包含视频指示器
+      if (cardElement.querySelector('video') || 
+          cardElement.querySelector('[aria-label*="video"]') ||
+          cardElement.querySelector('[data-testid*="video"]')) {
+        console.log('Video detected in media card');
+        return true;
+      }
+    }
+
+    // 检查是否有视频播放器的特征元素
+    const videoIndicators = [
+      '[aria-label*="Play video"]',
+      '[aria-label*="播放视频"]',
+      '[data-testid*="VideoPlayer"]',
+      'svg[aria-label*="Play"]',
+      '.PlayIcon', // 可能的播放图标类名
+    ];
+
+    for (const indicator of videoIndicators) {
+      try {
+        if (element.querySelector(indicator)) {
+          console.log('Video indicator found:', indicator);
+          return true;
+        }
+      } catch (error) {
+        console.warn('Invalid indicator selector:', indicator, error);
+        continue;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * 处理视频下载按钮点击
+   */
+  private async handleVideoDownloadClick(element: HTMLElement, button: HTMLElement): Promise<void> {
+    try {
+      console.log('Video download button clicked for element:', element);
+      
+      // 设置按钮为加载状态
+      TwitterActionButtons.setButtonLoading(button, true);
+      
+      // 获取推文URL
+      const tweetUrl = this.getTweetUrl(element);
+      if (!tweetUrl) {
+        throw new Error('Cannot find tweet URL');
+      }
+
+      console.log('Tweet URL for video download:', tweetUrl);
+
+      // 使用视频服务处理下载
+      const result = await this.videoService.downloadVideoViaService(tweetUrl);
+      
+      if (result.success) {
+        // 显示成功状态
+        TwitterActionButtons.setButtonSuccess(button);
+        this.showToast('视频下载服务已打开，请在新标签页中下载视频', 'success');
+      } else {
+        throw new Error(result.error || 'Video download failed');
+      }
+      
+    } catch (error) {
+      console.error('Video download failed:', error);
+      TwitterActionButtons.setButtonError(button);
+      this.showToast(
+        error instanceof Error ? error.message : '视频下载失败，请稍后重试',
+        'error'
+      );
+    } finally {
+      // 清除加载状态
+      TwitterActionButtons.setButtonLoading(button, false);
+    }
+  }
+
+  /**
+   * 获取推文URL
+   */
+  private getTweetUrl(element: HTMLElement): string | null {
+    // 查找推文链接
+    const timeElement = element.querySelector('time');
+    if (timeElement && timeElement.parentElement) {
+      const linkElement = timeElement.parentElement as HTMLAnchorElement;
+      if (linkElement.href) {
+        return linkElement.href;
+      }
+    }
+
+    // 备用方法：查找任何推文状态链接
+    const statusLink = element.querySelector('a[href*="/status/"]') as HTMLAnchorElement;
+    if (statusLink && statusLink.href) {
+      return statusLink.href;
+    }
+
+    // 最后的备用方法：从当前页面URL构造
+    const currentUrl = window.location.href;
+    if (currentUrl.includes('/status/')) {
+      return currentUrl;
+    }
+
+    return null;
+  }
+
+  /**
    * 清理资源
    */
   destroy(): void {
@@ -2140,6 +2476,9 @@ const errorMessage = error instanceof Error ? error.message : String(error);
     
     // 清理剪贴板管理器
 clipboardManager.cleanup();
+    
+    // 清理 Notion 按钮管理器
+    this.notionButtonManager?.destroy();
     
     // 移除样式
     const styleSheet = document.getElementById(this.styleSheetId);

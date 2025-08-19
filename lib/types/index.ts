@@ -74,15 +74,7 @@ export interface ExtensionSettings {
     };
     useContentOptions: boolean;
   };
-  videoDownloadSettings?: {
-    autoDownload: boolean;
-    defaultQuality: 'highest' | 'medium' | 'lowest' | 'ask';
-    showProgress: boolean;
-    notifications: boolean;
-    customPath?: string;
-    filenameTemplate?: string;
-  };
-}
+  }
 
 
 export interface ScreenshotOptions {
@@ -221,13 +213,7 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
     },
     useContentOptions: true
   },
-  videoDownloadSettings: {
-    autoDownload: false,
-    defaultQuality: 'ask',
-    showProgress: true,
-    notifications: true
-  }
-};
+  };
 
 export const SUPPORTED_LOCALES = ['zh-CN', 'en', 'ja', 'ko', 'es', 'fr'];
 
