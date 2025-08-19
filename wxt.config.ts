@@ -11,10 +11,8 @@ export default defineConfig({
       'clipboardWrite',
       'storage',
       'contextMenus',
-      'scripting',
       'downloads',
       'notifications',
-      'identity',
       'webRequest'
     ],
     host_permissions: [
