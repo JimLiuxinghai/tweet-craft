@@ -22,7 +22,7 @@ export default defineConfig({
       'https://*.video.twimg.com/*',
       'https://api.notion.com/*',
       'https://www.notion.so/*',
-      'https://tweetdown.pages.dev/*',
+      'https://xvd.concitech.org/*',
       'https://savetweet.net/*',
       'https://twittervideodownloader.com/*'
     ],

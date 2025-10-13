@@ -24,12 +24,12 @@ export interface VideoDownloadResult {
 export class TwitterVideoService {
   private services: VideoDownloadService[] = [
     {
-      name: 'TweetDown',
-      baseUrl: 'https://tweetdown.pages.dev',
+      name: 'XVD',
+      baseUrl: 'https://xvd.concitech.org',
       supportedLanguages: ['en', 'zh-CN', 'ja', 'ko', 'es', 'fr', 'pt', 'ru', 'ar', 'fa'],
       isAvailable: async () => {
         try {
-          const response = await fetch('https://tweetdown.pages.dev', { method: 'HEAD' });
+          const response = await fetch('https://xvd.concitech.org', { method: 'HEAD' });
           return response.ok;
         } catch {
           return false;
@@ -153,12 +153,8 @@ export class TwitterVideoService {
     const encodedUrl = encodeURIComponent(tweetUrl);
     
     switch (service.name) {
-      case 'TweetDown':
-        // TweetDown支持语言参数
-        const langCode = service.supportedLanguages.includes(this.currentLanguage) 
-          ? this.currentLanguage 
-          : 'en';
-        return `${service.baseUrl}/${langCode}?tweet=${encodedUrl}`;
+      case 'XVD':
+        return `${service.baseUrl}?tweet=${encodedUrl}`;
         
       case 'SaveTweet':
         return `${service.baseUrl}/download?url=${encodedUrl}`;
