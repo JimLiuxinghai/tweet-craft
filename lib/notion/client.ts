@@ -15,7 +15,7 @@ import { notionErrorHandler, withRetry, withErrorBoundary } from './error-handle
 
 export class NotionClient {
   private readonly apiUrl = 'https://api.notion.com/v1';
-  private readonly version = '2022-06-28';
+  private readonly version = '2025-09-03';
   private config: NotionConfig | null = null;
 
   constructor(config?: NotionConfig) {
@@ -122,10 +122,47 @@ export class NotionClient {
           property: 'object',
           value: 'page'
         },
-        page_size: 50
+        sort: {
+          direction: 'descending',
+          timestamp: 'last_edited_time'
+        },
+        page_size: 100
       })
     });
     return response.results;
+  }
+
+  private extractRichTextContent(textBlocks?: any[]): string {
+    if (!Array.isArray(textBlocks) || textBlocks.length === 0) {
+      return '';
+    }
+
+    return textBlocks
+      .map(block => block?.plain_text || block?.text?.content || '')
+      .join('')
+      .trim();
+  }
+
+  private extractPageTitle(page: NotionPage): string {
+    if (page?.properties) {
+      const titleProperty = Object.values(page.properties).find((prop: any) => prop?.type === 'title');
+
+      if (titleProperty?.title) {
+        const titleText = this.extractRichTextContent(titleProperty.title);
+        if (titleText) {
+          return titleText;
+        }
+      }
+    }
+
+    if (page?.url) {
+      const slug = page.url.split('/').pop();
+      if (slug) {
+        return decodeURIComponent(slug.replace(/-/g, ' '));
+      }
+    }
+
+    return 'Untitled';
   }
 
   async createDatabase(parentPageId: string, title: string = 'Tweet Collection'): Promise<NotionDatabase> {
@@ -435,13 +472,55 @@ export class NotionClient {
       const pages = await this.searchPages('');
       return pages.map(page => ({
         id: page.id,
-        title: page.properties.title?.title?.[0]?.plain_text || 'Untitled',
+        title: this.extractPageTitle(page),
         url: page.url
       }));
     } catch (error) {
       console.error('Error getting user pages:', error);
       return [];
     }
+  }
+
+  private extractDatabaseTitle(database: NotionDatabase): string {
+    const titleText = this.extractRichTextContent(database?.title);
+    return titleText || 'Untitled database';
+  }
+
+  async getUserDatabases(): Promise<Array<{ id: string; title: string; url: string }>> {
+    try {
+      const response = await this.request<{ results: NotionDatabase[] }>('/search', {
+        method: 'POST',
+        body: JSON.stringify({
+          filter: {
+            property: 'object',
+            value: 'database'
+          },
+          sort: {
+            direction: 'descending',
+            timestamp: 'last_edited_time'
+          },
+          page_size: 100
+        })
+      });
+
+      return response.results.map(database => ({
+        id: database.id,
+        title: this.extractDatabaseTitle(database),
+        url: database.url
+      }));
+    } catch (error) {
+      console.error('Error getting user databases:', error);
+      return [];
+    }
+  }
+
+  async getDatabaseInfo(databaseId: string): Promise<{ id: string; title: string; url: string }> {
+    const database = await this.getDatabase(databaseId);
+    return {
+      id: database.id,
+      title: this.extractDatabaseTitle(database),
+      url: database.url
+    };
   }
 
   async validateToken(): Promise<boolean> {

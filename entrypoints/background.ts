@@ -116,6 +116,12 @@ function setupMessageListeners() {
       case 'NOTION_GET_USER_PAGES':
         handleNotionGetUserPages(sendResponse);
         return true;
+      case 'NOTION_SET_DATABASE':
+        handleNotionSetDatabase(message.databaseId, sendResponse);
+        return true;
+      case 'NOTION_GET_DATABASE_INFO':
+        handleNotionGetDatabaseInfo(sendResponse);
+        return true;
       case 'NOTION_DISCONNECT':
         handleNotionDisconnect(sendResponse);
         return true;
@@ -359,16 +365,74 @@ async function handleNotionGetDatabaseStats(sendResponse: (response: any) => voi
  */
 async function handleNotionGetUserPages(sendResponse: (response: any) => void) {
   try {
-    const pages = await notionClient.getUserPages();
-    sendResponse({ 
-      success: true, 
-      pages: pages 
+    const [pages, databases] = await Promise.all([
+      notionClient.getUserPages(),
+      notionClient.getUserDatabases()
+    ]);
+    sendResponse({
+      success: true,
+      pages: pages,
+      databases
     });
   } catch (error) {
     console.error('Failed to get user pages:', error);
-    sendResponse({ 
-      success: false, 
+    sendResponse({
+      success: false,
       error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+}
+
+/**
+ * 处理设置 Notion 数据库请求
+ */
+async function handleNotionSetDatabase(databaseId: string, sendResponse: (response: any) => void) {
+  try {
+    if (!databaseId) {
+      sendResponse({ success: false, error: 'databaseId is required' });
+      return;
+    }
+
+    const databaseInfo = await notionClient.getDatabaseInfo(databaseId);
+    await notionAuthManager.saveConfig({ databaseId: databaseInfo.id });
+
+    try {
+      await browser.storage.sync.set({ notionDatabaseId: databaseInfo.id });
+    } catch (storageError) {
+      console.warn('Failed to sync legacy database id storage:', storageError);
+    }
+
+    sendResponse({
+      success: true,
+      database: databaseInfo
+    });
+  } catch (error) {
+    console.error('Failed to set Notion database:', error);
+    sendResponse({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+}
+
+/**
+ * 处理获取当前数据库信息请求
+ */
+async function handleNotionGetDatabaseInfo(sendResponse: (response: any) => void) {
+  try {
+    const config = notionAuthManager.getCurrentConfig();
+    if (!config?.databaseId) {
+      sendResponse({ success: true, database: null });
+      return;
+    }
+
+    const databaseInfo = await notionClient.getDatabaseInfo(config.databaseId);
+    sendResponse({ success: true, database: databaseInfo });
+  } catch (error) {
+    console.error('Failed to get Notion database info:', error);
+    sendResponse({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 }

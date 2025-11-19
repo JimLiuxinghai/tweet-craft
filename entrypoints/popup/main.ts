@@ -857,8 +857,9 @@ browser.tabs.create({ url: 'https://x.com' });
         this.showSuccess('Notion 连接成功！');
         // 如果有数据库ID，也保存它
         if (databaseIdInput?.value) {
-          await chrome.storage.sync.set({
-            notionDatabaseId: databaseIdInput.value
+          await browser.runtime.sendMessage({
+            type: 'NOTION_SET_DATABASE',
+            databaseId: databaseIdInput.value.trim()
           });
         }
         // 重新加载设置
