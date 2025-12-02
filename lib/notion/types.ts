@@ -169,6 +169,13 @@ export interface NotionConfig {
   workspaceId?: string;
 }
 
+export interface MediaAsset {
+  type: 'image' | 'video' | 'gif' | 'link';
+  url: string;
+  previewUrl?: string;
+  alt?: string;
+}
+
 export interface TweetData {
   id: string;
   url: string;
@@ -181,6 +188,7 @@ export interface TweetData {
     hasImages: boolean;
     hasVideo: boolean;
     hasLinks: boolean;
+    assets?: MediaAsset[];
   };
   stats: {
     likes: number;

@@ -929,6 +929,9 @@ try {
       // 显示加载状态
       TwitterActionButtons.setButtonLoading(button, true);
 
+      // 确保推文内容已经展开，包含 "Show more" 部分
+      await this.expandTweetContent(tweetElement);
+
       // 动态导入Notion相关模块
       const { TweetExtractor } = await import('../notion/tweet-extractor');
       
