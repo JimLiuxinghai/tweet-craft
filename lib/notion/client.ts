@@ -171,92 +171,11 @@ export class NotionClient {
       '标题': {
         title: {}
       },
-      '内容': {
-        rich_text: {}
-      },
-      '作者': {
-        rich_text: {}
-      },
-      '作者用户名': {
-        rich_text: {}
-      },
-      '推文链接': {
-        url: {}
-      },
-      '发布时间': {
-        date: {}
-      },
       '保存时间': {
         created_time: {}
       },
-      '标签': {
-        multi_select: {
-          options: [
-            { name: '技术', color: 'blue' },
-            { name: '资讯', color: 'green' },
-            { name: '灵感', color: 'yellow' },
-            { name: '学习', color: 'purple' },
-            { name: '工作', color: 'red' }
-          ]
-        }
-      },
-      '类型': {
-        select: {
-          options: [
-            { name: '原创推文', color: 'blue' },
-            { name: '转推', color: 'green' },
-            { name: '引用推文', color: 'yellow' },
-            { name: '回复', color: 'gray' }
-          ]
-        }
-      },
-      '优先级': {
-        select: {
-          options: [
-            { name: '高', color: 'red' },
-            { name: '中', color: 'yellow' },
-            { name: '低', color: 'gray' }
-          ]
-        }
-      },
-      '包含图片': {
-        checkbox: {}
-      },
-      '包含视频': {
-        checkbox: {}
-      },
-      '包含链接': {
-        checkbox: {}
-      },
-      '媒体文件': {
-        files: {}
-      },
-      '媒体摘要': {
+      '内容': {
         rich_text: {}
-      },
-      '点赞数': {
-        number: {}
-      },
-      '转推数': {
-        number: {}
-      },
-      '回复数': {
-        number: {}
-      },
-      '已读': {
-        checkbox: {}
-      },
-      '收藏': {
-        checkbox: {}
-      },
-      '状态': {
-        select: {
-          options: [
-            { name: '待阅读', color: 'yellow' },
-            { name: '已阅读', color: 'green' },
-            { name: '已归档', color: 'gray' }
-          ]
-        }
       },
       '分类': {
         select: {
@@ -269,6 +188,26 @@ export class NotionClient {
             { name: '其他', color: 'gray' }
           ]
         }
+      },
+      '发布时间': {
+        date: {}
+      },
+      '推文链接': {
+        url: {}
+      },
+      '标签': {
+        multi_select: {
+          options: [
+            { name: '技术', color: 'blue' },
+            { name: '资讯', color: 'green' },
+            { name: '灵感', color: 'yellow' },
+            { name: '学习', color: 'purple' },
+            { name: '工作', color: 'red' }
+          ]
+        }
+      },
+      '媒体信息': {
+        files: {}
       }
     };
 
@@ -341,11 +280,11 @@ export class NotionClient {
     }
   }
 
-  private formatTweetForNotion(
-    tweetData: TweetData,
-    mediaPropertyMap?: { mediaFilesProperty?: string; mediaSummaryProperty?: string }
-  ): CreatePageParameters['properties'] {
-    const { content, author, username, url, publishTime, type, media, stats, tags = [], category } = tweetData;
+  private formatTweetForNotion(tweetData: TweetData): CreatePageParameters['properties'] {
+    const { content, author, username, url, publishTime, tags = [], category } = tweetData;
+
+    const titleContent = content.slice(0, 100) + (content.length > 100 ? '...' : '');
+    const richContent = `作者: ${author} (@${username})\n\n${content}`;
 
     const mediaAssets = media.assets || [];
     const mediaSummary = this.buildMediaSummary(mediaAssets);
@@ -356,7 +295,7 @@ export class NotionClient {
           {
             type: 'text',
             text: {
-              content: content.slice(0, 100) + (content.length > 100 ? '...' : '')
+              content: titleContent
             }
           }
         ]
@@ -365,23 +304,7 @@ export class NotionClient {
         rich_text: [
           {
             type: 'text',
-            text: { content }
-          }
-        ]
-      },
-      '作者': {
-        rich_text: [
-          {
-            type: 'text',
-            text: { content: author }
-          }
-        ]
-      },
-      '作者用户名': {
-        rich_text: [
-          {
-            type: 'text',
-            text: { content: username }
+            text: { content: richContent }
           }
         ]
       },
@@ -393,52 +316,16 @@ export class NotionClient {
           start: publishTime
         }
       },
-      '类型': {
+      '分类': {
         select: {
-          name: type
+          name: category || '其他'
         }
       },
       '标签': {
         multi_select: tags.map(tag => ({ name: tag }))
       },
-      '包含图片': {
-        checkbox: media.hasImages || mediaAssets.some(asset => asset.type === 'image')
-      },
-      '包含视频': {
-        checkbox: media.hasVideo || mediaAssets.some(asset => asset.type === 'video' || asset.type === 'gif')
-      },
-      '包含链接': {
-        checkbox: media.hasLinks || mediaAssets.some(asset => asset.type === 'link')
-      },
-      '点赞数': {
-        number: stats.likes || 0
-      },
-      '转推数': {
-        number: stats.retweets || 0
-      },
-      '回复数': {
-        number: stats.replies || 0
-      },
-      '状态': {
-        select: {
-          name: '待阅读'
-        }
-      },
-      '已读': {
-        checkbox: false
-      },
-      '收藏': {
-        checkbox: false
-      },
-      '优先级': {
-        select: {
-          name: '中'
-        }
-      },
-      '分类': {
-        select: {
-          name: category || '其他'
-        }
+      '媒体信息': {
+        files: []
       }
     };
 
@@ -539,7 +426,7 @@ export class NotionClient {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       
-      const [totalResponse, thisMonthResponse, unreadResponse] = await Promise.all([
+      const [totalResponse, thisMonthResponse] = await Promise.all([
         this.queryDatabase(databaseId, { page_size: 1 }),
         this.queryDatabase(databaseId, {
           filter: {
@@ -549,22 +436,13 @@ export class NotionClient {
             }
           },
           page_size: 1
-        }),
-        this.queryDatabase(databaseId, {
-          filter: {
-            property: '已读',
-            checkbox: {
-              equals: false
-            }
-          },
-          page_size: 1
         })
       ]);
 
       return {
         total: totalResponse.results.length,
         thisMonth: thisMonthResponse.results.length,
-        unread: unreadResponse.results.length
+        unread: 0
       };
     } catch (error) {
       console.error('Error getting database stats:', error);
@@ -575,11 +453,13 @@ export class NotionClient {
   async getUserPages(): Promise<Array<{ id: string; title: string; url: string }>> {
     try {
       const pages = await this.searchPages('');
-      return pages.map(page => ({
-        id: page.id,
-        title: this.extractPageTitle(page),
-        url: page.url
-      }));
+      return pages
+        .filter(page => page.parent?.type === 'workspace')
+        .map(page => ({
+          id: page.id,
+          title: page.properties.title?.title?.[0]?.plain_text || 'Untitled',
+          url: page.url
+        }));
     } catch (error) {
       console.error('Error getting user pages:', error);
       return [];
