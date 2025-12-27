@@ -1,21 +1,22 @@
-import { 
-  NotionConfig, 
-  NotionDatabase, 
-  NotionPage, 
-  NotionUser, 
+import {
+  NotionConfig,
+  NotionDatabase,
+  NotionPage,
+  NotionUser,
   DatabaseQueryResponse,
   DatabaseQueryParameters,
   CreatePageParameters,
   TweetData,
   NotionError,
   AuthResult,
-  SyncResult
+  SyncResult,
+  MediaAsset
 } from './types';
 import { notionErrorHandler, withRetry, withErrorBoundary } from './error-handler';
 
 export class NotionClient {
   private readonly apiUrl = 'https://api.notion.com/v1';
-  private readonly version = '2022-06-28';
+  private readonly version = '2025-09-03';
   private config: NotionConfig | null = null;
 
   constructor(config?: NotionConfig) {
@@ -122,10 +123,47 @@ export class NotionClient {
           property: 'object',
           value: 'page'
         },
-        page_size: 50
+        sort: {
+          direction: 'descending',
+          timestamp: 'last_edited_time'
+        },
+        page_size: 100
       })
     });
     return response.results;
+  }
+
+  private extractRichTextContent(textBlocks?: any[]): string {
+    if (!Array.isArray(textBlocks) || textBlocks.length === 0) {
+      return '';
+    }
+
+    return textBlocks
+      .map(block => block?.plain_text || block?.text?.content || '')
+      .join('')
+      .trim();
+  }
+
+  private extractPageTitle(page: NotionPage): string {
+    if (page?.properties) {
+      const titleProperty = Object.values(page.properties).find((prop: any) => prop?.type === 'title');
+
+      if (titleProperty?.title) {
+        const titleText = this.extractRichTextContent(titleProperty.title);
+        if (titleText) {
+          return titleText;
+        }
+      }
+    }
+
+    if (page?.url) {
+      const slug = page.url.split('/').pop();
+      if (slug) {
+        return decodeURIComponent(slug.replace(/-/g, ' '));
+      }
+    }
+
+    return 'Untitled';
   }
 
   async createDatabase(parentPageId: string, title: string = 'Tweet Collection'): Promise<NotionDatabase> {
@@ -189,6 +227,12 @@ export class NotionClient {
       },
       '包含链接': {
         checkbox: {}
+      },
+      '媒体文件': {
+        files: {}
+      },
+      '媒体摘要': {
+        rich_text: {}
       },
       '点赞数': {
         number: {}
@@ -274,7 +318,8 @@ export class NotionClient {
 
   async saveTweet(databaseId: string, tweetData: TweetData): Promise<SyncResult> {
     try {
-      const pageData = this.formatTweetForNotion(tweetData);
+      const mediaPropertyMap = await this.ensureMediaSupport(databaseId, tweetData.media?.assets || []);
+      const pageData = this.formatTweetForNotion(tweetData, mediaPropertyMap);
       
       const page = await this.request<NotionPage>('/pages', {
         method: 'POST',
@@ -296,10 +341,16 @@ export class NotionClient {
     }
   }
 
-  private formatTweetForNotion(tweetData: TweetData): CreatePageParameters['properties'] {
+  private formatTweetForNotion(
+    tweetData: TweetData,
+    mediaPropertyMap?: { mediaFilesProperty?: string; mediaSummaryProperty?: string }
+  ): CreatePageParameters['properties'] {
     const { content, author, username, url, publishTime, type, media, stats, tags = [], category } = tweetData;
 
-    return {
+    const mediaAssets = media.assets || [];
+    const mediaSummary = this.buildMediaSummary(mediaAssets);
+
+    const properties: CreatePageParameters['properties'] = {
       '标题': {
         title: [
           {
@@ -351,13 +402,13 @@ export class NotionClient {
         multi_select: tags.map(tag => ({ name: tag }))
       },
       '包含图片': {
-        checkbox: media.hasImages || false
+        checkbox: media.hasImages || mediaAssets.some(asset => asset.type === 'image')
       },
       '包含视频': {
-        checkbox: media.hasVideo || false
+        checkbox: media.hasVideo || mediaAssets.some(asset => asset.type === 'video' || asset.type === 'gif')
       },
       '包含链接': {
-        checkbox: media.hasLinks || false
+        checkbox: media.hasLinks || mediaAssets.some(asset => asset.type === 'link')
       },
       '点赞数': {
         number: stats.likes || 0
@@ -389,6 +440,97 @@ export class NotionClient {
           name: category || '其他'
         }
       }
+    };
+
+    if (mediaPropertyMap?.mediaFilesProperty) {
+      properties[mediaPropertyMap.mediaFilesProperty] = {
+        files: mediaAssets.map((asset, index) => ({
+          name: `${asset.type}-${index + 1}`,
+          type: 'external',
+          external: {
+            url: asset.url
+          }
+        }))
+      };
+    }
+
+    if (mediaPropertyMap?.mediaSummaryProperty && mediaSummary) {
+      properties[mediaPropertyMap.mediaSummaryProperty] = {
+        rich_text: [
+          {
+            type: 'text',
+            text: {
+              content: mediaSummary
+            }
+          }
+        ]
+      };
+    }
+
+    return properties;
+  }
+
+  private buildMediaSummary(assets: MediaAsset[]): string {
+    if (!assets.length) return '';
+
+    const parts = assets.map((asset, index) => {
+      const label = asset.type === 'gif' ? 'GIF' : asset.type.toUpperCase();
+      const alt = asset.alt ? `（${asset.alt.slice(0, 40)}）` : '';
+      return `${index + 1}. ${label} → ${asset.url}${alt}`;
+    });
+
+    return parts.join('\n');
+  }
+
+  private async ensureMediaSupport(
+    databaseId: string,
+    assets: MediaAsset[]
+  ): Promise<{ mediaFilesProperty?: string; mediaSummaryProperty?: string }> {
+    if (!assets.length) {
+      // 仅返回已有的媒体属性（如果存在），避免不必要的 PATCH
+      const database = await this.getDatabase(databaseId);
+      return this.resolveMediaPropertyNames(database);
+    }
+
+    const database = await this.getDatabase(databaseId);
+    const current = this.resolveMediaPropertyNames(database);
+
+    const propertiesToAdd: Record<string, any> = {};
+
+    if (!current.mediaFilesProperty) {
+      propertiesToAdd['媒体文件'] = { files: {} };
+      current.mediaFilesProperty = '媒体文件';
+    }
+
+    if (!current.mediaSummaryProperty) {
+      propertiesToAdd['媒体摘要'] = { rich_text: {} };
+      current.mediaSummaryProperty = '媒体摘要';
+    }
+
+    if (Object.keys(propertiesToAdd).length > 0) {
+      await this.request<NotionDatabase>(`/databases/${databaseId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ properties: propertiesToAdd })
+      });
+    }
+
+    return current;
+  }
+
+  private resolveMediaPropertyNames(database: NotionDatabase): {
+    mediaFilesProperty?: string;
+    mediaSummaryProperty?: string;
+  } {
+    const entries = Object.entries(database.properties || {});
+
+    const filesProperty = entries.find(([, prop]) => prop?.type === 'files');
+    const summaryProperty = database.properties['媒体摘要']?.type === 'rich_text'
+      ? ['媒体摘要', database.properties['媒体摘要']]
+      : entries.find(([name, prop]) => name.toLowerCase().includes('media') && prop?.type === 'rich_text');
+
+    return {
+      mediaFilesProperty: filesProperty ? filesProperty[0] : undefined,
+      mediaSummaryProperty: summaryProperty ? summaryProperty[0] : undefined
     };
   }
 
@@ -435,13 +577,55 @@ export class NotionClient {
       const pages = await this.searchPages('');
       return pages.map(page => ({
         id: page.id,
-        title: page.properties.title?.title?.[0]?.plain_text || 'Untitled',
+        title: this.extractPageTitle(page),
         url: page.url
       }));
     } catch (error) {
       console.error('Error getting user pages:', error);
       return [];
     }
+  }
+
+  private extractDatabaseTitle(database: NotionDatabase): string {
+    const titleText = this.extractRichTextContent(database?.title);
+    return titleText || 'Untitled database';
+  }
+
+  async getUserDatabases(): Promise<Array<{ id: string; title: string; url: string }>> {
+    try {
+      const response = await this.request<{ results: NotionDatabase[] }>('/search', {
+        method: 'POST',
+        body: JSON.stringify({
+          filter: {
+            property: 'object',
+            value: 'database'
+          },
+          sort: {
+            direction: 'descending',
+            timestamp: 'last_edited_time'
+          },
+          page_size: 100
+        })
+      });
+
+      return response.results.map(database => ({
+        id: database.id,
+        title: this.extractDatabaseTitle(database),
+        url: database.url
+      }));
+    } catch (error) {
+      console.error('Error getting user databases:', error);
+      return [];
+    }
+  }
+
+  async getDatabaseInfo(databaseId: string): Promise<{ id: string; title: string; url: string }> {
+    const database = await this.getDatabase(databaseId);
+    return {
+      id: database.id,
+      title: this.extractDatabaseTitle(database),
+      url: database.url
+    };
   }
 
   async validateToken(): Promise<boolean> {

@@ -72,8 +72,46 @@
     <!-- 数据库设置 -->
     <div v-if="isConnected" class="database-section">
       <h4><i class="fas fa-database"></i> 数据库设置</h4>
-      
+
       <div v-if="!databaseId" class="database-setup">
+        <div class="existing-database-card">
+          <div class="form-group">
+            <label>使用已有数据库</label>
+            <select v-model="selectedDatabaseId" :disabled="loadingDatabases">
+              <option value="">选择数据库...</option>
+              <option v-for="database in databases" :key="database.id" :value="database.id">
+                {{ database.title }}
+              </option>
+            </select>
+          </div>
+
+          <div class="existing-actions">
+            <button
+              class="btn btn-success"
+              @click="useExistingDatabase"
+              :disabled="!selectedDatabaseId || applyingDatabase"
+            >
+              <i v-if="applyingDatabase" class="fas fa-spinner fa-spin"></i>
+              <i v-else class="fas fa-check"></i>
+              使用数据库
+            </button>
+            <button
+              type="button"
+              class="btn btn-link"
+              @click="refreshDatabases"
+              :disabled="loadingDatabases"
+            >
+              <i class="fas fa-sync"></i>
+              刷新列表
+            </button>
+          </div>
+          <p class="help-text">如果已经在 Notion 中配置好数据库，可直接在此选择，无需再次创建。</p>
+        </div>
+
+        <div class="section-divider">
+          <span>或创建新数据库</span>
+        </div>
+
         <div class="form-group">
           <label>选择父页面</label>
           <select v-model="selectedParentPage" :disabled="loadingPages">
@@ -342,15 +380,19 @@ const emit = defineEmits<{
 // 响应式数据
 const connecting = ref(false)
 const loadingPages = ref(false)
+const loadingDatabases = ref(false)
 const creatingDatabase = ref(false)
 const debugging = ref(false)
+const applyingDatabase = ref(false)
 const isConnected = ref(false)
 const integrationToken = ref('')
 const databaseId = ref('')
 const selectedParentPage = ref('')
+const selectedDatabaseId = ref('')
 const databaseName = ref('Tweet Collection')
 const pages = ref<Array<{ id: string; title: string }>>([])
-const databaseInfo = ref({ name: '', id: '' })
+const databases = ref<Array<{ id: string; title: string }>>([])
+const databaseInfo = ref({ name: '', id: '', url: '' })
 
 const settings = reactive({
   autoTags: false,
@@ -460,13 +502,16 @@ const disconnectNotion = async () => {
       type: 'NOTION_DISCONNECT'
     })
 
-    if (response.success) {
-      isConnected.value = false
-      databaseId.value = ''
-      pages.value = []
-      resetSettings()
-      showNotification('已断开连接', 'success')
-    }
+      if (response.success) {
+        isConnected.value = false
+        databaseId.value = ''
+        pages.value = []
+        databases.value = []
+        databaseInfo.value = { name: '', id: '', url: '' }
+        selectedDatabaseId.value = ''
+        resetSettings()
+        showNotification('已断开连接', 'success')
+      }
   } catch (error) {
     showNotification('断开连接失败: ' + error, 'error')
   }
@@ -474,18 +519,21 @@ const disconnectNotion = async () => {
 
 const loadPages = async () => {
   loadingPages.value = true
+  loadingDatabases.value = true
   try {
     const response = await chrome.runtime.sendMessage({
       type: 'NOTION_GET_USER_PAGES'
     })
 
     if (response.success) {
-      pages.value = response.pages
+      pages.value = response.pages || []
+      databases.value = response.databases || []
     }
   } catch (error) {
     console.error('Failed to load pages:', error)
   } finally {
     loadingPages.value = false
+    loadingDatabases.value = false
   }
 }
 
@@ -521,18 +569,61 @@ const createDatabase = async () => {
   }
 }
 
-const changeDatabase = () => {
+const useExistingDatabase = async () => {
+  if (!selectedDatabaseId.value) {
+    showNotification('请选择一个数据库', 'error')
+    return
+  }
+
+  await applyDatabaseSelection(selectedDatabaseId.value)
+}
+
+const refreshDatabases = async () => {
+  await loadPages()
+}
+
+const applyDatabaseSelection = async (newDatabaseId: string) => {
+  applyingDatabase.value = true
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: 'NOTION_SET_DATABASE',
+      databaseId: newDatabaseId
+    })
+
+    if (response.success) {
+      databaseId.value = response.database.id
+      databaseInfo.value = {
+        id: response.database.id,
+        name: response.database.title,
+        url: response.database.url
+      }
+      selectedDatabaseId.value = ''
+      await loadStats()
+      showNotification('数据库已更新', 'success')
+    } else {
+      showNotification('设置数据库失败: ' + (response.error || '未知错误'), 'error')
+    }
+  } catch (error) {
+    console.error('Failed to set database:', error)
+    showNotification('设置数据库失败: ' + error, 'error')
+  } finally {
+    applyingDatabase.value = false
+  }
+}
+
+const changeDatabase = async () => {
   const newId = prompt('请输入新的数据库ID:')
-  if (newId) {
-    databaseId.value = newId
-    databaseInfo.value.id = newId
-    saveSettings()
-    showNotification('数据库已更换', 'success')
+  if (newId && newId.trim()) {
+    await applyDatabaseSelection(newId.trim())
   }
 }
 
 const openNotion = () => {
-  if (databaseId.value) {
+  if (databaseInfo.value.url) {
+    chrome.tabs.create({
+      url: databaseInfo.value.url
+    })
+  } else if (databaseId.value) {
     chrome.tabs.create({
       url: `https://www.notion.so/${databaseId.value.replace(/-/g, '')}`
     })
@@ -542,8 +633,7 @@ const openNotion = () => {
 const saveSettings = async () => {
   try {
     await chrome.storage.sync.set({
-      notionSettings: settings,
-      notionDatabaseId: databaseId.value
+      notionSettings: settings
     })
   } catch (error) {
     console.error('Failed to save settings:', error)
@@ -553,15 +643,34 @@ const saveSettings = async () => {
 const loadSettings = async () => {
   try {
     const result = await chrome.storage.sync.get(['notionSettings', 'notionDatabaseId'])
-    
+
     if (result.notionSettings) {
       Object.assign(settings, result.notionSettings)
     }
-    
+
     if (result.notionDatabaseId) {
-      databaseId.value = result.notionDatabaseId
-      databaseInfo.value.id = result.notionDatabaseId
+      await chrome.runtime.sendMessage({
+        type: 'NOTION_SET_DATABASE',
+        databaseId: result.notionDatabaseId
+      })
+      await chrome.storage.sync.remove('notionDatabaseId')
+    }
+
+    const databaseResponse = await chrome.runtime.sendMessage({
+      type: 'NOTION_GET_DATABASE_INFO'
+    })
+
+    if (databaseResponse.success && databaseResponse.database) {
+      databaseId.value = databaseResponse.database.id
+      databaseInfo.value = {
+        id: databaseResponse.database.id,
+        name: databaseResponse.database.title,
+        url: databaseResponse.database.url
+      }
       await loadStats()
+    } else {
+      databaseId.value = ''
+      databaseInfo.value = { id: '', name: '', url: '' }
     }
   } catch (error) {
     console.error('Failed to load settings:', error)
@@ -618,7 +727,7 @@ const handleFileImport = (event: Event) => {
       
       if (data.databaseId) {
         databaseId.value = data.databaseId
-        databaseInfo.value = data.databaseInfo || { id: data.databaseId, name: 'Imported' }
+        databaseInfo.value = data.databaseInfo || { id: data.databaseId, name: 'Imported', url: '' }
       }
       
       saveSettings()
@@ -849,6 +958,65 @@ onMounted(async () => {
 .stats-section,
 .advanced-section {
   margin-bottom: 25px;
+}
+
+.existing-database-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f9fafb;
+  margin-bottom: 16px;
+}
+
+.existing-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-link {
+  background: none;
+  color: #2563eb;
+  padding: 8px 12px;
+}
+
+.btn-link:hover {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.section-divider {
+  position: relative;
+  text-align: center;
+  margin: 16px 0;
+  color: #9ca3af;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 35%;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.section-divider::before {
+  left: 0;
+}
+
+.section-divider::after {
+  right: 0;
+}
+
+.help-text {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 8px;
 }
 
 .connection-section h4,
