@@ -15,6 +15,12 @@ export interface NotionPage {
   created_time: string;
   last_edited_time: string;
   archived: boolean;
+  parent?: {
+    type: 'workspace' | 'page_id' | 'database_id';
+    workspace?: boolean;
+    page_id?: string;
+    database_id?: string;
+  };
   properties: Record<string, any>;
   url: string;
 }
