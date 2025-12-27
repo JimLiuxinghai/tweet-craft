@@ -66,7 +66,15 @@ export class NotionAuthManager {
     await chrome.storage.sync.set(updateData);
 
     if (this.config) {
-      this.config = { ...this.config, ...config };
+      this.config = { ...this.config, ...config } as NotionConfig;
+    } else {
+      const currentConfig = await this.loadConfig();
+      if (currentConfig) {
+        this.config = { ...currentConfig, ...config } as NotionConfig;
+      }
+    }
+
+    if (this.config?.accessToken) {
       notionClient.setConfig(this.config);
     }
   }

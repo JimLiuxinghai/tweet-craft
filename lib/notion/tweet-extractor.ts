@@ -1,4 +1,4 @@
-import { TweetData } from '../notion/types';
+import { MediaAsset, TweetData } from '../notion/types';
 
 export class TweetExtractor {
   static extractTweetData(tweetElement: Element): TweetData | null {
@@ -68,7 +68,15 @@ export class TweetExtractor {
 
   private static extractTweetContent(tweetElement: Element): string {
     const contentElement = tweetElement.querySelector('[data-testid="tweetText"]');
-    return contentElement?.textContent?.trim() || '';
+
+    if (!contentElement) return '';
+
+    // 使用 innerText 保留换行，同时确保已经展开的“Show more”文本也被包含
+    const content = (contentElement as HTMLElement).innerText
+      .replace(/\s+$/g, '')
+      .replace(/^\s+/g, '');
+
+    return content.trim();
   }
 
   private static extractPublishTime(tweetElement: Element): string | null {
@@ -76,12 +84,69 @@ export class TweetExtractor {
     return timeElement?.getAttribute('datetime');
   }
 
-  private static extractMediaInfo(tweetElement: Element): { hasImages: boolean; hasVideo: boolean; hasLinks: boolean } {
-    const hasImages = tweetElement.querySelectorAll('[data-testid="tweetPhoto"], [data-testid="Image"]').length > 0;
-    const hasVideo = tweetElement.querySelector('video, [data-testid="videoPlayer"]') !== null;
-    const hasLinks = tweetElement.querySelectorAll('a[href^="http"]').length > 0;
+  private static extractMediaInfo(tweetElement: Element): {
+    hasImages: boolean;
+    hasVideo: boolean;
+    hasLinks: boolean;
+    assets: MediaAsset[];
+  } {
+    const assets: MediaAsset[] = [];
 
-    return { hasImages, hasVideo, hasLinks };
+    // 图片
+    const imageElements = tweetElement.querySelectorAll('[data-testid="tweetPhoto"] img, [data-testid="Image"] img');
+    imageElements.forEach(img => {
+      const url = img.getAttribute('src');
+      if (!url) return;
+      assets.push({
+        type: 'image',
+        url,
+        alt: img.getAttribute('alt') || undefined
+      });
+    });
+
+    // 视频 / GIF
+    const videoElement = tweetElement.querySelector('video, [data-testid="videoPlayer"] video') as HTMLVideoElement | null;
+    if (videoElement) {
+      const source = videoElement.currentSrc || videoElement.getAttribute('src') || videoElement.querySelector('source')?.getAttribute('src');
+      const poster = videoElement.getAttribute('poster') || undefined;
+      if (source) {
+        assets.push({
+          type: videoElement.loop ? 'gif' : 'video',
+          url: source,
+          previewUrl: poster
+        });
+      }
+    }
+
+    // 外链（排除推文链接自身）
+    const linkElements = tweetElement.querySelectorAll('a[href^="http"]');
+    linkElements.forEach(link => {
+      const href = link.getAttribute('href');
+      if (!href) return;
+      if (href.includes('/status/')) return; // 避免把推文本身的链接当做媒体
+
+      assets.push({
+        type: 'link',
+        url: href
+      });
+    });
+
+    // 去重
+    const uniqueAssets: MediaAsset[] = [];
+    const seen = new Set<string>();
+
+    for (const asset of assets) {
+      const key = `${asset.type}-${asset.url}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      uniqueAssets.push(asset);
+    }
+
+    const hasImages = uniqueAssets.some(asset => asset.type === 'image');
+    const hasVideo = uniqueAssets.some(asset => asset.type === 'video' || asset.type === 'gif');
+    const hasLinks = uniqueAssets.some(asset => asset.type === 'link');
+
+    return { hasImages, hasVideo, hasLinks, assets: uniqueAssets };
   }
 
   private static extractTweetStats(tweetElement: Element): { likes: number; retweets: number; replies: number } {

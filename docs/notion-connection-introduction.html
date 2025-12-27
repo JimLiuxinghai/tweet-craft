@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notion 连接指南 - Tweet Craft</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0f172a;
+      --paper: #f8f5ef;
+      --accent: #ff6b6b;
+      --accent-2: #00c2c7;
+      --accent-3: #ffc857;
+      --muted: rgba(15, 23, 42, 0.65);
+      --card-bg: rgba(248, 245, 239, 0.85);
+      --grid-line: rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #020617, #111827);
+      color: var(--ink);
+      font-family: 'Sora', sans-serif;
+      overflow-x: hidden;
+    }
+
+    .page {
+      position: relative;
+      padding: 4rem 1.5rem 5rem;
+    }
+
+    .page::before,
+    .page::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08), transparent 45%),
+        radial-gradient(circle at 80% 0%, rgba(255, 107, 107, 0.12), transparent 40%),
+        radial-gradient(circle at 0% 80%, rgba(0, 194, 199, 0.12), transparent 35%);
+      mix-blend-mode: screen;
+      z-index: 0;
+      animation: drift 20s linear infinite;
+    }
+
+    @keyframes drift {
+      0% { transform: translate3d(0, 0, 0); }
+      50% { transform: translate3d(10px, -12px, 0); }
+      100% { transform: translate3d(0, 0, 0); }
+    }
+
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.4;
+      mix-blend-mode: soft-light;
+      z-index: 1;
+    }
+
+    main {
+      position: relative;
+      z-index: 2;
+      max-width: 1080px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+    }
+
+    header {
+      padding: 3.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2rem;
+      align-items: center;
+      position: relative;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.5));
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(255, 107, 107, 0.2), transparent 50%),
+        radial-gradient(circle at bottom left, rgba(0, 194, 199, 0.25), transparent 50%);
+      mix-blend-mode: multiply;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    h1 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2.5rem, 3.5vw, 4rem);
+      margin: 0 0 0.8rem;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    h1 span {
+      display: inline-block;
+      padding: 0 0.6rem;
+      background: linear-gradient(120deg, var(--accent), var(--accent-2));
+      color: white;
+      border-radius: 999px;
+      font-size: 0.55em;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+
+    p.lede {
+      font-size: 1.1rem;
+      color: var(--muted);
+      line-height: 1.8;
+      margin: 0 0 1.5rem;
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .hero-meta span {
+      font-family: 'IBM Plex Mono', monospace;
+      padding: 0.5rem 0.9rem;
+      border-radius: 999px;
+      border: 1px dashed rgba(15, 23, 42, 0.2);
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .hero-visual {
+      position: relative;
+      border-radius: 24px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      padding: 2rem;
+      background: #111b2a;
+      color: #f8fafc;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .hero-visual::after {
+      content: '';
+      position: absolute;
+      inset: 10% 5%;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.15; }
+      50% { opacity: 0.4; }
+      100% { opacity: 0.15; }
+    }
+
+    .hero-visual pre {
+      margin: 0;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 1.5rem;
+      border-radius: 16px;
+    }
+
+    section {
+      padding: 3.5rem;
+      border-top: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    h2 {
+      font-family: 'Fraunces', serif;
+      font-size: 2rem;
+      margin: 0 0 1.5rem;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .step-card {
+      background: white;
+      border-radius: 24px;
+      padding: 2rem;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: 0 15px 30px rgba(15, 23, 42, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .step-card::before {
+      content: attr(data-step);
+      position: absolute;
+      top: -1.5rem;
+      right: 1.5rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 6rem;
+      color: rgba(15, 23, 42, 0.05);
+    }
+
+    .step-card h3 {
+      margin-top: 0;
+      font-size: 1.25rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .step-card p {
+      margin-bottom: 0;
+      line-height: 1.7;
+      color: rgba(15, 23, 42, 0.8);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature {
+      padding: 1.8rem;
+      border-radius: 20px;
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .feature h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+      letter-spacing: 0.04em;
+      color: var(--ink);
+    }
+
+    .feature p {
+      margin-bottom: 0.4rem;
+      color: var(--muted);
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 2rem;
+      border-left: 2px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .timeline-item {
+      margin-bottom: 1.5rem;
+      position: relative;
+      padding-left: 1rem;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -2rem;
+      top: 0.35rem;
+      width: 12px;
+      height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 0 6px rgba(255, 107, 107, 0.25);
+    }
+
+    footer {
+      padding: 3rem;
+      background: #050816;
+      color: rgba(248, 245, 239, 0.8);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 1rem;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    footer a {
+      color: var(--accent-3);
+      text-decoration: none;
+    }
+
+    @media (max-width: 640px) {
+      header,
+      section,
+      footer {
+        padding: 2rem;
+      }
+
+      .hero-meta {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <main>
+      <header>
+        <div class="hero-content">
+          <h1>Notion 连接指南 <span>beta</span></h1>
+          <p class="lede">
+            Tweet Craft 原生支持 Notion 2025-09-03 API。通过一次配置，即可将推文创意、线程结构
+            以及多语言草稿自动同步到你专属的 Notion 数据库中，形成真正可检索、可协作的知识语料。
+          </p>
+          <div class="hero-meta">
+            <span>OAuth 2.0 / Internal Integration</span>
+            <span>数据库映射 & 自动补全</span>
+            <span>AI 摘要 & 多语写作</span>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <pre><code>// 初始化 Notion 客户端
+const notion = createNotionClient({
+  auth: process.env.NOTION_TOKEN,
+  apiVersion: '2025-09-03',
+});
+
+await notion.pages.create({
+  parent: { database_id: '<your-db-id>' },
+  properties: buildTweetProperties(tweet),
+});
+</code></pre>
+        </div>
+      </header>
+
+      <section>
+        <h2>三步完成连接</h2>
+        <div class="steps">
+          <article class="step-card" data-step="01">
+            <h3>创建 Notion 集成</h3>
+            <p>在 <strong>https://www.notion.so/my-integrations</strong> 创建 Internal Integration，记录
+              Secret，并赋予 Tweet Craft 工作区访问权限。</p>
+          </article>
+          <article class="step-card" data-step="02">
+            <h3>选择数据库</h3>
+            <p>在 Tweet Craft 设置页点击「连接 Notion」，我们会列出当前账号可用的数据库并显示真实标题，避免
+              「Untitled」困扰。</p>
+          </article>
+          <article class="step-card" data-step="03">
+            <h3>配置字段</h3>
+            <p>使用字段映射向导将推文正文、线程摘要、情绪标签等内容映射到 Notion 属性，保存后立即生效。</p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>体验亮点</h2>
+        <div class="feature-grid">
+          <div class="feature">
+            <h3>语义化标题提取</h3>
+            <p>多策略标题推断，确保数据库与页面在 Notion 中都有可读命名。</p>
+            <p><small>当原推文缺少文本时，会回退到线程摘要或 AI 生成标题。</small></p>
+          </div>
+          <div class="feature">
+            <h3>数据库选择器</h3>
+            <p>下拉列表展示所有可访问数据库，并在后台保存选择，避免重复创建。</p>
+            <p><small>支持刷新、快速搜索与最近使用。</small></p>
+          </div>
+          <div class="feature">
+            <h3>同步守护进程</h3>
+            <p>后台脚本监控 Tweet Craft 状态，失败时自动重试并标记 Notion 页面。</p>
+            <p><small>提供详细日志，方便排查速率限制与字段冲突。</small></p>
+          </div>
+          <div class="feature">
+            <h3>团队友好</h3>
+            <p>在 Notion 中即可查看成员推文素材、任务进度、翻译状态，实现跨团队协作。</p>
+            <p><small>支持共享数据库或个人知识库。</small></p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>工作流示意</h2>
+        <div class="timeline">
+          <div class="timeline-item">
+            <strong>草稿收集</strong>
+            <p>从推文、Threads 或灵感片段快速记录到 Tweet Craft，实时同步到 Notion。</p>
+          </div>
+          <div class="timeline-item">
+            <strong>结构化整理</strong>
+            <p>在 Notion 中添加标签、状态、发布时间，结合数据库视图打造内容看板。</p>
+          </div>
+          <div class="timeline-item">
+            <strong>自动化扩展</strong>
+            <p>利用 Notion Automations 触发 AI 改写、跨平台排程或多语言翻译。</p>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <span>Tweet Craft · Notion Native Bridge</span>
+        <span>配置遇到问题？请发送邮件至 <a href="mailto:hi@tweetcraft.app">hi@tweetcraft.app</a></span>
+        <span>API version: 2025-09-03</span>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
