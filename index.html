@@ -103,6 +103,7 @@
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="#features" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.features">Features</a>
                     <a href="#demo" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.demo">Demo</a>
+                    <a href="#notion-guide" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.notionGuide">Notion Guide</a>
                     <a href="#tech" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.technology">Technology</a>
                     <a href="#install" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.install">Install</a>
                     <div class="flex items-center space-x-2">
@@ -509,6 +510,65 @@ This is amazing! 🚀
         </div>
     </section>
 
+    <!-- Notion Guide Section -->
+    <section id="notion-guide" class="py-16 px-6 bg-gray-50">
+        <div class="container mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4" data-i18n="notionGuide.title">Notion Setup Guide</h2>
+                <p class="text-xl text-gray-600" data-i18n="notionGuide.subtitle">Connect Notion in minutes and reuse your existing database.</p>
+            </div>
+            
+            <div class="grid lg:grid-cols-3 gap-8 items-start">
+                <div class="lg:col-span-2 bg-white p-8 rounded-2xl shadow-lg">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-semibold text-gray-900" data-i18n="notionGuide.steps.title">Setup Checklist</h3>
+                        <span class="text-sm text-gray-500" data-i18n="notionGuide.steps.time">Takes ~6 minutes</span>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center font-semibold text-gray-700">01</div>
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-900" data-i18n="notionGuide.step1.title">Create Integration</h4>
+                                <p class="text-gray-600 text-sm" data-i18n="notionGuide.step1.desc">Generate a Notion Integration Token (secret_/ntn_).</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center font-semibold text-gray-700">02</div>
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-900" data-i18n="notionGuide.step2.title">Share a Parent Page</h4>
+                                <p class="text-gray-600 text-sm" data-i18n="notionGuide.step2.desc">Add the integration via Add connections on your page.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center font-semibold text-gray-700">03</div>
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-900" data-i18n="notionGuide.step3.title">Connect in the Extension</h4>
+                                <p class="text-gray-600 text-sm" data-i18n="notionGuide.step3.desc">Paste the token in Notion settings and connect.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center font-semibold text-gray-700">04</div>
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-900" data-i18n="notionGuide.step4.title">Reuse or Create Database</h4>
+                                <p class="text-gray-600 text-sm" data-i18n="notionGuide.step4.desc">Existing databases are reusable; otherwise create a new one.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-900 text-white p-8 rounded-2xl shadow-lg">
+                    <div class="text-xs uppercase tracking-wider text-gray-300 mb-3" data-i18n="notionGuide.card.label">Quick Access</div>
+                    <h3 class="text-2xl font-semibold mb-4" data-i18n="notionGuide.card.title">Open the full tutorial</h3>
+                    <p class="text-gray-300 mb-6" data-i18n="notionGuide.card.desc">Step-by-step screenshots, troubleshooting, and database ID tips.</p>
+                    <a href="docs/notion-setup-tutorial.html" target="_blank" class="inline-flex items-center bg-white text-gray-900 px-5 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                        <i class="fas fa-book-open mr-2"></i>
+                        <span data-i18n="notionGuide.card.link">View Notion tutorial</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Technology Stack -->
     <section id="tech" class="py-16 px-6 bg-gray-50">
         <div class="container mx-auto">
@@ -726,6 +786,7 @@ This is amazing! 🚀
                         <li><a href="#install" class="hover:text-white transition" data-i18n="footer.installation">Installation</a></li>
                         <li><a href="#features" class="hover:text-white transition" data-i18n="footer.features">Features</a></li>
                         <li><a href="#demo" class="hover:text-white transition" data-i18n="footer.demo">Demo</a></li>
+                        <li><a href="#notion-guide" class="hover:text-white transition" data-i18n="footer.notionGuide">Notion Guide</a></li>
                         <li><a href="mailto:support@concitech.org" class="hover:text-white transition" data-i18n="footer.support">Support</a></li>
                     </ul>
                 </div>
@@ -760,6 +821,7 @@ This is amazing! 🚀
                 'nav.title': 'Tweet Craft',
                 'nav.features': 'Features',
                 'nav.demo': 'Demo',
+                'nav.notionGuide': 'Notion Guide',
                 'nav.technology': 'Technology',
                 'nav.install': 'Install',
                 'hero.title': 'Super Copy for',
@@ -825,6 +887,22 @@ This is amazing! 🚀
                 'demo.notion.organize': 'Auto organize',
                 'demo.html': 'HTML Output Sample',
                 'demo.markdown': 'Markdown Output Sample',
+                'notionGuide.title': 'Notion Setup Guide',
+                'notionGuide.subtitle': 'Connect Notion in minutes and reuse your existing database.',
+                'notionGuide.steps.title': 'Setup Checklist',
+                'notionGuide.steps.time': 'Takes ~6 minutes',
+                'notionGuide.step1.title': 'Create Integration',
+                'notionGuide.step1.desc': 'Generate a Notion Integration Token (secret_/ntn_).',
+                'notionGuide.step2.title': 'Share a Parent Page',
+                'notionGuide.step2.desc': 'Add the integration via Add connections on your page.',
+                'notionGuide.step3.title': 'Connect in the Extension',
+                'notionGuide.step3.desc': 'Paste the token in Notion settings and connect.',
+                'notionGuide.step4.title': 'Reuse or Create Database',
+                'notionGuide.step4.desc': 'Existing databases are reusable; otherwise create a new one.',
+                'notionGuide.card.label': 'Quick Access',
+                'notionGuide.card.title': 'Open the full tutorial',
+                'notionGuide.card.desc': 'Step-by-step screenshots, troubleshooting, and database ID tips.',
+                'notionGuide.card.link': 'View Notion tutorial',
                 'tech.title': 'Built with Modern Technology',
                 'tech.subtitle': 'Powered by cutting-edge web technologies',
                 'tech.stack': 'Tech Stack',
@@ -868,6 +946,7 @@ This is amazing! 🚀
                 'footer.multilang': 'Multi-language',
                 'footer.resources': 'Resources',
                 'footer.installation': 'Installation',
+                'footer.notionGuide': 'Notion Guide',
                 'footer.support': 'Support',
                 'footer.connect': 'Connect',
                 'footer.copyright': 'Built with ❤️ for the Twitter community.',
@@ -877,6 +956,7 @@ This is amazing! 🚀
                 'nav.title': 'Tweet Craft',
                 'nav.features': '功能特性',
                 'nav.demo': '演示',
+                'nav.notionGuide': 'Notion 教程',
                 'nav.technology': '技术栈',
                 'nav.install': '安装',
                 'hero.title': 'Twitter/X',
@@ -942,6 +1022,22 @@ This is amazing! 🚀
                 'demo.notion.organize': '自动整理',
                 'demo.html': 'HTML 输出示例',
                 'demo.markdown': 'Markdown 输出示例',
+                'notionGuide.title': 'Notion 配置教程',
+                'notionGuide.subtitle': '几分钟完成连接并复用已有数据库。',
+                'notionGuide.steps.title': '配置清单',
+                'notionGuide.steps.time': '约 6 分钟',
+                'notionGuide.step1.title': '创建集成',
+                'notionGuide.step1.desc': '生成 Integration Token（secret_/ntn_）。',
+                'notionGuide.step2.title': '分享父页面',
+                'notionGuide.step2.desc': '在页面中通过 Add connections 授权集成。',
+                'notionGuide.step3.title': '扩展内连接',
+                'notionGuide.step3.desc': '在 Notion 设置里粘贴 Token 并连接。',
+                'notionGuide.step4.title': '复用或新建数据库',
+                'notionGuide.step4.desc': '已有数据库直接复用，没有则创建新库。',
+                'notionGuide.card.label': '快速入口',
+                'notionGuide.card.title': '打开完整教程',
+                'notionGuide.card.desc': '含截图步骤、常见报错与数据库 ID 提示。',
+                'notionGuide.card.link': '查看 Notion 教程',
                 'tech.title': '现代技术构建',
                 'tech.subtitle': '由尖端网络技术驱动',
                 'tech.stack': '技术栈',
@@ -985,6 +1081,7 @@ This is amazing! 🚀
                 'footer.multilang': '多语言',
                 'footer.resources': '资源',
                 'footer.installation': '安装',
+                'footer.notionGuide': 'Notion 教程',
                 'footer.support': '支持',
                 'footer.connect': '联系',
                 'footer.copyright': '为推特社区用心打造。',

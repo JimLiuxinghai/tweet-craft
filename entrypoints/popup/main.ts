@@ -9,6 +9,12 @@ import type { ExtensionSettings } from '@/lib/types';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 import { ScreenshotSettingsPanel, type ScreenshotSettingsOptions } from './screenshot-settings';
 
+const NOTION_STORAGE_KEYS = {
+  integrationToken: 'notion_integration_token',
+  databaseId: 'notion_database_id',
+  databaseIdDraft: 'notion_database_id_draft'
+} as const;
+
 /**
  * 通知管理器 - 智能通知系统
  */
@@ -677,7 +683,7 @@ browser.tabs.create({ url: 'https://x.com' });
       if (response.success && response.connected) {
         this.showConnectedNotionSettings(settingsContainer);
       } else {
-        this.showDisconnectedNotionSettings(settingsContainer);
+        await this.showDisconnectedNotionSettings(settingsContainer);
       }
     } catch (error) {
       console.error('Failed to load Notion settings:', error);
@@ -753,7 +759,7 @@ browser.tabs.create({ url: 'https://x.com' });
   /**
    * 显示未连接的 Notion 设置
    */
-  private showDisconnectedNotionSettings(container: HTMLElement): void {
+  private async showDisconnectedNotionSettings(container: HTMLElement): Promise<void> {
     container.innerHTML = `
       <div class="notion-settings-content">
         <div class="connection-status disconnected">
@@ -795,8 +801,40 @@ browser.tabs.create({ url: 'https://x.com' });
       </div>
     `;
 
+    await this.restoreNotionInputValues();
     // 设置事件监听器
     this.setupNotionSettingsEvents();
+  }
+
+  private async restoreNotionInputValues(): Promise<void> {
+    const tokenInput = document.getElementById('notion-token') as HTMLInputElement | null;
+    const databaseIdInput = document.getElementById('notion-database-id') as HTMLInputElement | null;
+
+    if (!tokenInput && !databaseIdInput) {
+      return;
+    }
+
+    try {
+      const stored = await chrome.storage.sync.get([
+        NOTION_STORAGE_KEYS.integrationToken,
+        NOTION_STORAGE_KEYS.databaseIdDraft,
+        NOTION_STORAGE_KEYS.databaseId
+      ]);
+
+      const savedToken = stored[NOTION_STORAGE_KEYS.integrationToken];
+      if (tokenInput && typeof savedToken === 'string' && savedToken.length > 0) {
+        tokenInput.value = savedToken;
+      }
+
+      if (databaseIdInput) {
+        const savedDatabaseId = stored[NOTION_STORAGE_KEYS.databaseIdDraft] ?? stored[NOTION_STORAGE_KEYS.databaseId];
+        if (typeof savedDatabaseId === 'string' && savedDatabaseId.length > 0) {
+          databaseIdInput.value = savedDatabaseId;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to restore Notion input values:', error);
+    }
   }
 
   /**
@@ -826,25 +864,59 @@ browser.tabs.create({ url: 'https://x.com' });
     if (testBtn) {
       testBtn.addEventListener('click', () => this.testNotionConnection());
     }
+
+    const tokenInput = document.getElementById('notion-token') as HTMLInputElement | null;
+    if (tokenInput) {
+      tokenInput.addEventListener('input', async (event) => {
+        const value = (event.target as HTMLInputElement).value;
+        try {
+          await chrome.storage.sync.set({
+            [NOTION_STORAGE_KEYS.integrationToken]: value
+          });
+        } catch (error) {
+          console.error('Failed to cache Notion token input:', error);
+        }
+      });
+    }
+
+    const databaseIdInput = document.getElementById('notion-database-id') as HTMLInputElement | null;
+    if (databaseIdInput) {
+      databaseIdInput.addEventListener('input', async (event) => {
+        const value = (event.target as HTMLInputElement).value.trim();
+        try {
+          if (value) {
+            await chrome.storage.sync.set({
+              [NOTION_STORAGE_KEYS.databaseIdDraft]: value
+            });
+          } else {
+            await chrome.storage.sync.remove(NOTION_STORAGE_KEYS.databaseIdDraft);
+          }
+        } catch (error) {
+          console.error('Failed to cache Notion database id input:', error);
+        }
+      });
+    }
   }
 
   /**
    * 连接 Notion
    */
   private async connectNotion(): Promise<void> {
-    const tokenInput = document.getElementById('notion-token') as HTMLInputElement;
-    const databaseIdInput = document.getElementById('notion-database-id') as HTMLInputElement;
-    console.log(tokenInput.value, 'tokenInput.value************')
+    const tokenInput = document.getElementById('notion-token') as HTMLInputElement | null;
+    const databaseIdInput = document.getElementById('notion-database-id') as HTMLInputElement | null;
     if (!tokenInput?.value) {
       this.showError('请输入 Integration Token');
       return;
     }
 
+    const trimmedToken = tokenInput.value.trim();
+    const trimmedDatabaseId = databaseIdInput?.value.trim();
+
     try {
       // 先保存 token 到 storage
       console.log('Saving token to storage...');
       await chrome.storage.sync.set({
-        notion_integration_token: tokenInput.value.trim()
+        [NOTION_STORAGE_KEYS.integrationToken]: trimmedToken
       });
       console.log('Token saved to storage');
 
@@ -856,11 +928,16 @@ browser.tabs.create({ url: 'https://x.com' });
       if (response.success) {
         this.showSuccess('Notion 连接成功！');
         // 如果有数据库ID，也保存它
-        if (databaseIdInput?.value) {
-          await browser.runtime.sendMessage({
+        if (trimmedDatabaseId) {
+          const setDatabaseResponse = await browser.runtime.sendMessage({
             type: 'NOTION_SET_DATABASE',
-            databaseId: databaseIdInput.value.trim()
+            databaseId: trimmedDatabaseId
           });
+          if (setDatabaseResponse?.success) {
+            await chrome.storage.sync.remove(NOTION_STORAGE_KEYS.databaseIdDraft);
+          } else {
+            this.showError('配置数据库失败: ' + (setDatabaseResponse?.error || '未知错误'));
+          }
         }
         // 重新加载设置
         this.loadNotionSettings();
@@ -920,15 +997,47 @@ browser.tabs.create({ url: 'https://x.com' });
       }
 
       const pages = pagesResponse.pages || [];
-      if (pages.length === 0) {
-        this.showError('没有可用的页面。请确保您的集成已被添加到至少一个 Notion 页面。');
+      const databases = pagesResponse.databases || [];
+      if (pages.length === 0 && databases.length === 0) {
+        this.showError('没有可用的页面或数据库。请确保您的集成已被添加到至少一个 Notion 页面。');
         return;
       }
 
-      // 创建一个简单的选择界面
-      const selectedPage = await this.showPageSelector(pages);
-      if (!selectedPage) {
+      if (databases.length === 1) {
+        const [onlyDatabase] = databases;
+        const setResponse = await browser.runtime.sendMessage({
+          type: 'NOTION_SET_DATABASE',
+          databaseId: onlyDatabase.id
+        });
+
+        if (setResponse && setResponse.success) {
+          this.showSuccess(`已自动连接数据库 "${onlyDatabase.title}"`);
+          this.loadNotionSettings();
+          return;
+        }
+
+        this.showError('自动连接失败，已打开选择器，请手动选择数据库或父页面。原因: ' + (setResponse?.error || '未知错误'));
+      }
+
+      // 选择已有数据库或父页面
+      const selection = await this.showDatabaseOrPageSelector(databases, pages);
+      if (!selection) {
         return; // 用户取消了
+      }
+
+      if (selection.type === 'database') {
+        const setResponse = await browser.runtime.sendMessage({
+          type: 'NOTION_SET_DATABASE',
+          databaseId: selection.item.id
+        });
+
+        if (setResponse && setResponse.success) {
+          this.showSuccess(`已连接数据库 "${selection.item.title}"`);
+          this.loadNotionSettings();
+        } else {
+          this.showError('选择数据库失败: ' + (setResponse?.error || '未知错误'));
+        }
+        return;
       }
 
       // 询问数据库名称
@@ -940,7 +1049,7 @@ browser.tabs.create({ url: 'https://x.com' });
       // 创建数据库
       const createResponse = await browser.runtime.sendMessage({
         type: 'NOTION_CREATE_DATABASE',
-        parentPageId: selectedPage.id,
+        parentPageId: selection.item.id,
         title: databaseName
       });
 
@@ -987,7 +1096,10 @@ browser.tabs.create({ url: 'https://x.com' });
   /**
    * 显示页面选择器
    */
-  private async showPageSelector(pages: Array<{ id: string; title: string }>): Promise<{ id: string; title: string } | null> {
+  private async showDatabaseOrPageSelector(
+    databases: Array<{ id: string; title: string }>,
+    pages: Array<{ id: string; title: string }>
+  ): Promise<{ type: 'database' | 'page'; item: { id: string; title: string } } | null> {
     return new Promise((resolve) => {
       // 创建模态对话框
       const modal = document.createElement('div');
@@ -1013,15 +1125,85 @@ browser.tabs.create({ url: 'https://x.com' });
         width: 90%;
         max-height: 500px;
         overflow-y: auto;
+        color: #0f1419;
       `;
 
       const title = document.createElement('h3');
-      title.textContent = '选择父页面';
+      title.textContent = '选择数据库或父页面';
       title.style.marginTop = '0';
 
       const subtitle = document.createElement('p');
-      subtitle.textContent = '请选择一个页面作为数据库的父页面：';
+      subtitle.textContent = '可复用已有数据库，或选择页面创建新数据库：';
       subtitle.style.color = '#666';
+
+      const databaseSectionTitle = document.createElement('h4');
+      databaseSectionTitle.textContent = '已有数据库';
+      databaseSectionTitle.style.cssText = `
+        margin: 16px 0 8px;
+        font-size: 14px;
+        color: #111827;
+      `;
+
+      const databaseList = document.createElement('div');
+      databaseList.style.cssText = `
+        margin: 8px 0 12px;
+        max-height: 180px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      `;
+
+      if (databases.length === 0) {
+        const emptyDatabases = document.createElement('div');
+        emptyDatabases.textContent = '未找到可复用的数据库';
+        emptyDatabases.style.cssText = `
+          padding: 10px;
+          color: #6b7280;
+          font-size: 13px;
+        `;
+        databaseList.appendChild(emptyDatabases);
+      } else {
+        databases.forEach(database => {
+          const databaseItem = document.createElement('div');
+          databaseItem.style.cssText = `
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            color: #0f1419;
+          `;
+          databaseItem.textContent = database.title || 'Untitled database';
+
+          databaseItem.addEventListener('mouseenter', () => {
+            databaseItem.style.backgroundColor = '#f5f5f5';
+          });
+
+          databaseItem.addEventListener('mouseleave', () => {
+            databaseItem.style.backgroundColor = '';
+          });
+
+          databaseItem.addEventListener('click', () => {
+            document.body.removeChild(modal);
+            resolve({ type: 'database', item: database });
+          });
+
+          databaseList.appendChild(databaseItem);
+        });
+      }
+
+      const divider = document.createElement('div');
+      divider.style.cssText = `
+        margin: 12px 0;
+        border-top: 1px solid #e5e7eb;
+      `;
+
+      const pageSectionTitle = document.createElement('h4');
+      pageSectionTitle.textContent = '创建新数据库';
+      pageSectionTitle.style.cssText = `
+        margin: 12px 0 8px;
+        font-size: 14px;
+        color: #111827;
+      `;
 
       const pageList = document.createElement('div');
       pageList.style.cssText = `
@@ -1032,31 +1214,43 @@ browser.tabs.create({ url: 'https://x.com' });
         border-radius: 4px;
       `;
 
-      pages.forEach(page => {
-        const pageItem = document.createElement('div');
-        pageItem.style.cssText = `
+      if (pages.length === 0) {
+        const emptyPages = document.createElement('div');
+        emptyPages.textContent = '未找到可用页面';
+        emptyPages.style.cssText = `
           padding: 10px;
-          border-bottom: 1px solid #eee;
-          cursor: pointer;
-          transition: background-color 0.2s;
+          color: #6b7280;
+          font-size: 13px;
         `;
-        pageItem.textContent = page.title;
-        
-        pageItem.addEventListener('mouseenter', () => {
-          pageItem.style.backgroundColor = '#f5f5f5';
+        pageList.appendChild(emptyPages);
+      } else {
+        pages.forEach(page => {
+          const pageItem = document.createElement('div');
+          pageItem.style.cssText = `
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            color: #0f1419;
+          `;
+          pageItem.textContent = page.title;
+
+          pageItem.addEventListener('mouseenter', () => {
+            pageItem.style.backgroundColor = '#f5f5f5';
+          });
+
+          pageItem.addEventListener('mouseleave', () => {
+            pageItem.style.backgroundColor = '';
+          });
+
+          pageItem.addEventListener('click', () => {
+            document.body.removeChild(modal);
+            resolve({ type: 'page', item: page });
+          });
+
+          pageList.appendChild(pageItem);
         });
-        
-        pageItem.addEventListener('mouseleave', () => {
-          pageItem.style.backgroundColor = '';
-        });
-        
-        pageItem.addEventListener('click', () => {
-          document.body.removeChild(modal);
-          resolve(page);
-        });
-        
-        pageList.appendChild(pageItem);
-      });
+      }
 
       const buttonContainer = document.createElement('div');
       buttonContainer.style.cssText = `
@@ -1083,6 +1277,10 @@ browser.tabs.create({ url: 'https://x.com' });
       buttonContainer.appendChild(cancelButton);
       dialog.appendChild(title);
       dialog.appendChild(subtitle);
+      dialog.appendChild(databaseSectionTitle);
+      dialog.appendChild(databaseList);
+      dialog.appendChild(divider);
+      dialog.appendChild(pageSectionTitle);
       dialog.appendChild(pageList);
       dialog.appendChild(buttonContainer);
       modal.appendChild(dialog);

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notion 配置教程 - Tweet Craft</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --ink: #0f172a;
+        --muted: rgba(15, 23, 42, 0.7);
+        --paper: #f8f6f2;
+        --panel: rgba(255, 255, 255, 0.85);
+        --accent: #ff7849;
+        --accent-2: #2ec4b6;
+        --accent-3: #f6c453;
+        --line: rgba(15, 23, 42, 0.12);
+        --shadow: 0 24px 60px rgba(15, 23, 42, 0.15);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Sora', sans-serif;
+        color: var(--ink);
+        background: radial-gradient(circle at top, #1b263b, #0b1220 55%);
+        min-height: 100vh;
+      }
+
+      .page {
+        position: relative;
+        padding: 3.5rem 1.5rem 5rem;
+        overflow: hidden;
+      }
+
+      .page::before,
+      .page::after {
+        content: '';
+        position: absolute;
+        inset: -20% 0 0;
+        background-image:
+          radial-gradient(circle at 15% 25%, rgba(255, 120, 73, 0.25), transparent 45%),
+          radial-gradient(circle at 80% 10%, rgba(46, 196, 182, 0.2), transparent 40%),
+          radial-gradient(circle at 70% 85%, rgba(246, 196, 83, 0.2), transparent 35%);
+        z-index: 0;
+        animation: float 14s ease-in-out infinite;
+      }
+
+      .page::after {
+        mix-blend-mode: screen;
+        opacity: 0.6;
+      }
+
+      @keyframes float {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(14px); }
+        100% { transform: translateY(0); }
+      }
+
+      main {
+        position: relative;
+        z-index: 1;
+        max-width: 1100px;
+        margin: 0 auto;
+        background: var(--panel);
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      header {
+        padding: 3.5rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 2.5rem;
+        align-items: center;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.6));
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        background: rgba(46, 196, 182, 0.14);
+        color: #0f4c5c;
+        font-weight: 600;
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        font-family: 'Fraunces', serif;
+        font-size: clamp(2.4rem, 3.8vw, 3.6rem);
+        margin: 1rem 0 0.8rem;
+        letter-spacing: -0.02em;
+      }
+
+      .lede {
+        font-size: 1.05rem;
+        line-height: 1.8;
+        color: var(--muted);
+        margin: 0 0 1.5rem;
+      }
+
+      .hero-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+      }
+
+      .hero-tags span {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 999px;
+        border: 1px dashed var(--line);
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      .hero-card {
+        background: #101827;
+        color: #f8fafc;
+        padding: 2rem;
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-card::after {
+        content: '';
+        position: absolute;
+        inset: 18% 12%;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        opacity: 0.6;
+        animation: pulse 4s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0% { opacity: 0.2; }
+        50% { opacity: 0.6; }
+        100% { opacity: 0.2; }
+      }
+
+      .hero-card h2 {
+        margin: 0 0 1rem;
+        font-family: 'Fraunces', serif;
+        font-size: 1.6rem;
+      }
+
+      .checklist {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .checklist li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.8rem;
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+
+      .checklist li span {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(46, 196, 182, 0.25);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: #7dd3fc;
+      }
+
+      section {
+        padding: 3.2rem 3.5rem;
+        border-top: 1px solid var(--line);
+      }
+
+      h2 {
+        font-family: 'Fraunces', serif;
+        font-size: 2rem;
+        margin: 0 0 1.2rem;
+      }
+
+      .section-lede {
+        color: var(--muted);
+        font-size: 1rem;
+        margin-bottom: 1.8rem;
+        line-height: 1.8;
+      }
+
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .step-card {
+        background: var(--paper);
+        border-radius: 18px;
+        padding: 1.6rem;
+        border: 1px solid rgba(15, 23, 42, 0.1);
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        min-height: 220px;
+        transform: translateY(16px);
+        opacity: 0;
+        animation: rise 0.7s ease forwards;
+      }
+
+      .step-card:nth-child(2) { animation-delay: 0.1s; }
+      .step-card:nth-child(3) { animation-delay: 0.2s; }
+      .step-card:nth-child(4) { animation-delay: 0.3s; }
+
+      @keyframes rise {
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .step-card span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        font-weight: 600;
+        background: rgba(255, 120, 73, 0.15);
+        color: #a23b23;
+        margin-bottom: 1rem;
+      }
+
+      .step-card h3 {
+        margin: 0 0 0.6rem;
+        font-size: 1.2rem;
+      }
+
+      .step-card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .grid-two {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.8rem;
+      }
+
+      .callout {
+        padding: 1.6rem;
+        border-radius: 16px;
+        background: rgba(46, 196, 182, 0.1);
+        border: 1px solid rgba(46, 196, 182, 0.25);
+      }
+
+      .callout h3 {
+        margin: 0 0 0.6rem;
+        font-size: 1.15rem;
+      }
+
+      .callout p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .code {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.9rem;
+        background: #0f172a;
+        color: #f8fafc;
+        padding: 0.8rem 1rem;
+        border-radius: 12px;
+        display: inline-block;
+      }
+
+      .timeline {
+        display: grid;
+        gap: 1.2rem;
+      }
+
+      .timeline-item {
+        display: grid;
+        grid-template-columns: 46px 1fr;
+        gap: 1rem;
+        align-items: start;
+        padding: 1.2rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+      }
+
+      .timeline-item span {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        background: rgba(246, 196, 83, 0.25);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: #a16207;
+      }
+
+      .timeline-item h4 {
+        margin: 0 0 0.4rem;
+        font-size: 1.1rem;
+      }
+
+      .timeline-item p,
+      .timeline-item ul {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .timeline-item ul {
+        padding-left: 1rem;
+        margin-top: 0.4rem;
+      }
+
+      .faq {
+        display: grid;
+        gap: 1rem;
+      }
+
+      details {
+        border-radius: 14px;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: rgba(255, 255, 255, 0.75);
+        padding: 1rem 1.2rem;
+      }
+
+      summary {
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      details p {
+        margin: 0.8rem 0 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      footer {
+        padding: 2.5rem 3.5rem 3rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px dashed var(--line);
+        background: rgba(248, 246, 242, 0.7);
+      }
+
+      footer p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      footer .code {
+        font-size: 0.85rem;
+      }
+
+      @media (max-width: 720px) {
+        header,
+        section,
+        footer {
+          padding: 2.5rem 1.8rem;
+        }
+
+        .hero-tags {
+          gap: 0.5rem;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <main>
+        <header>
+          <div>
+            <div class="badge">Tweet Craft × Notion</div>
+            <h1>Notion 配置教程</h1>
+            <p class="lede">
+              一次性把 Token、页面授权、数据库配置理顺。完成后点击推文的 Notion 按钮即可保存媒体、正文和链接。
+            </p>
+            <div class="hero-tags">
+              <span>预计 6 分钟</span>
+              <span>支持 secret_ / ntn_</span>
+              <span>已有数据库可复用</span>
+            </div>
+          </div>
+          <div class="hero-card">
+            <h2>开始前准备</h2>
+            <ul class="checklist">
+              <li><span>1</span>Notion 账号 + 可编辑的工作区</li>
+              <li><span>2</span>浏览器已安装 Tweet Craft 扩展</li>
+              <li><span>3</span>准备一个父页面（用来放数据库）</li>
+              <li><span>4</span>可复用现成数据库（可选）</li>
+            </ul>
+          </div>
+        </header>
+
+        <section>
+          <h2>快速流程</h2>
+          <p class="section-lede">按顺序完成四步，最常见的问题都能避免。</p>
+          <div class="steps">
+            <article class="step-card">
+              <span>01</span>
+              <h3>创建集成</h3>
+              <p>访问 Notion 集成页面，创建 Internal integration，拿到 Token。</p>
+            </article>
+            <article class="step-card">
+              <span>02</span>
+              <h3>授权父页面</h3>
+              <p>在 Notion 页面右上角分享给集成，否则无法读写数据库。</p>
+            </article>
+            <article class="step-card">
+              <span>03</span>
+              <h3>连接扩展</h3>
+              <p>在扩展的 Notion 设置中粘贴 Token，点击连接。</p>
+            </article>
+            <article class="step-card">
+              <span>04</span>
+              <h3>复用或新建数据库</h3>
+              <p>已有数据库会优先复用；否则选择父页面创建。</p>
+            </article>
+          </div>
+        </section>
+
+        <section>
+          <h2>详细步骤</h2>
+          <p class="section-lede">更适合第一次配置或者遇到权限提示时逐项核对。</p>
+          <div class="timeline">
+            <div class="timeline-item">
+              <span>1</span>
+              <div>
+                <h4>创建 Integration</h4>
+                <p>打开 https://www.notion.so/my-integrations → “+ New integration” → 选择 Internal integration。</p>
+                <ul>
+                  <li>确保 Token 以 <strong>secret_</strong> 或 <strong>ntn_</strong> 开头。</li>
+                  <li>保存 Token，后面要粘贴到扩展。</li>
+                </ul>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <span>2</span>
+              <div>
+                <h4>把集成分享给页面</h4>
+                <p>打开你准备用来放数据库的页面，右上角 “•••” → Add connections → 选择集成。</p>
+                <ul>
+                  <li>没有授权就会出现 “权限不足 / 无可用页面”。</li>
+                </ul>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <span>3</span>
+              <div>
+                <h4>连接扩展</h4>
+                <p>进入扩展 → Notion 设置 → 粘贴 Token → 点击 “连接 Notion”。</p>
+                <ul>
+                  <li>连接成功会显示 “Notion 已连接”。</li>
+                </ul>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <span>4</span>
+              <div>
+                <h4>复用或创建数据库</h4>
+                <p>点击 “配置数据库”：</p>
+                <ul>
+                  <li>只有 1 个数据库时会自动复用。</li>
+                  <li>多数据库时会弹出选择器。</li>
+                  <li>无数据库时选择父页面创建。</li>
+                </ul>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <span>5</span>
+              <div>
+                <h4>保存测试</h4>
+                <p>在 X/Twitter 里点击推文的 Notion 按钮，检查数据库是否出现内容与媒体信息。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>数据库 ID 怎么找</h2>
+          <p class="section-lede">数据库 ID 可选，不填也能创建新库；如果你要手动绑定，按下面方法取值。</p>
+          <div class="grid-two">
+            <div class="callout">
+              <h3>从 URL 里截取</h3>
+              <p>打开数据库页面，URL 中第一段 32 位字符串就是数据库 ID（去掉中划线也可）。</p>
+            </div>
+            <div class="callout">
+              <h3>示例格式</h3>
+              <p class="code">https://www.notion.so/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?v=...</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>常见问题</h2>
+          <p class="section-lede">先看这里，能解决 90% 的连接失败。</p>
+          <div class="faq">
+            <details>
+              <summary>提示 “Integration Token 无效或已过期”</summary>
+              <p>重新复制完整 Token，确认以 <strong>secret_</strong> 或 <strong>ntn_</strong> 开头，并没有空格。</p>
+            </details>
+            <details>
+              <summary>提示 “权限不足 / 没有可用页面”</summary>
+              <p>回到 Notion 页面右上角 “Add connections”，把集成加进去。</p>
+            </details>
+            <details>
+              <summary>数据库信息为空</summary>
+              <p>检查是否有多个工作区，确保集成授权的是当前页面所在工作区。</p>
+            </details>
+            <details>
+              <summary>媒体信息没有保存</summary>
+              <p>确认推文有图片/视频，扩展设置里允许保存媒体；保存后检查 “媒体信息 / 媒体摘要” 字段。</p>
+            </details>
+          </div>
+        </section>
+
+        <footer>
+          <p>需要快速自检？在扩展里点击 “测试连接 / 运行诊断”。</p>
+          <div class="code">Notion API v2022-06-28</div>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

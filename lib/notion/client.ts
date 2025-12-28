@@ -16,7 +16,7 @@ import { notionErrorHandler, withRetry, withErrorBoundary } from './error-handle
 
 export class NotionClient {
   private readonly apiUrl = 'https://api.notion.com/v1';
-  private readonly version = '2025-09-03';
+  private readonly version = '2022-06-28';
   private config: NotionConfig | null = null;
 
   constructor(config?: NotionConfig) {
@@ -206,8 +206,11 @@ export class NotionClient {
           ]
         }
       },
-      '媒体信息': {
+      '媒体文件': {
         files: {}
+      },
+      '媒体信息': {
+        rich_text: {}
       }
     };
 
@@ -280,13 +283,18 @@ export class NotionClient {
     }
   }
 
-  private formatTweetForNotion(tweetData: TweetData): CreatePageParameters['properties'] {
-    const { content, author, username, url, publishTime, tags = [], category } = tweetData;
+  private formatTweetForNotion(
+    tweetData: TweetData,
+    mediaPropertyMap?: { mediaFilesProperty?: string; mediaSummaryProperty?: string }
+  ): CreatePageParameters['properties'] {
+    const { content, author, username, url, publishTime, tags = [], category, media: tweetMedia } = tweetData;
 
     const titleContent = content.slice(0, 100) + (content.length > 100 ? '...' : '');
     const richContent = `作者: ${author} (@${username})\n\n${content}`;
 
+    const media = tweetMedia || { hasImages: false, hasVideo: false, hasLinks: false, assets: [] };
     const mediaAssets = media.assets || [];
+    const fileAssets = mediaAssets.filter(asset => asset.type === 'image' || asset.type === 'gif' || asset.type === 'video');
     const mediaSummary = this.buildMediaSummary(mediaAssets);
 
     const properties: CreatePageParameters['properties'] = {
@@ -323,15 +331,12 @@ export class NotionClient {
       },
       '标签': {
         multi_select: tags.map(tag => ({ name: tag }))
-      },
-      '媒体信息': {
-        files: []
       }
     };
 
-    if (mediaPropertyMap?.mediaFilesProperty) {
+    if (mediaPropertyMap?.mediaFilesProperty && fileAssets.length > 0) {
       properties[mediaPropertyMap.mediaFilesProperty] = {
-        files: mediaAssets.map((asset, index) => ({
+        files: fileAssets.map((asset, index) => ({
           name: `${asset.type}-${index + 1}`,
           type: 'external',
           external: {
@@ -390,8 +395,14 @@ export class NotionClient {
     }
 
     if (!current.mediaSummaryProperty) {
-      propertiesToAdd['媒体摘要'] = { rich_text: {} };
-      current.mediaSummaryProperty = '媒体摘要';
+      const databaseProperties = database.properties || {};
+      const preferredSummaryName =
+        databaseProperties['媒体信息'] && databaseProperties['媒体信息']?.type !== 'rich_text'
+          ? '媒体摘要'
+          : '媒体信息';
+
+      propertiesToAdd[preferredSummaryName] = { rich_text: {} };
+      current.mediaSummaryProperty = preferredSummaryName;
     }
 
     if (Object.keys(propertiesToAdd).length > 0) {
@@ -408,12 +419,22 @@ export class NotionClient {
     mediaFilesProperty?: string;
     mediaSummaryProperty?: string;
   } {
-    const entries = Object.entries(database.properties || {});
+    const properties = database.properties || {};
+    const entries = Object.entries(properties);
 
-    const filesProperty = entries.find(([, prop]) => prop?.type === 'files');
-    const summaryProperty = database.properties['媒体摘要']?.type === 'rich_text'
-      ? ['媒体摘要', database.properties['媒体摘要']]
-      : entries.find(([name, prop]) => name.toLowerCase().includes('media') && prop?.type === 'rich_text');
+    const filesProperty =
+      properties['媒体文件']?.type === 'files'
+        ? (['媒体文件', properties['媒体文件'] as Property] as [string, Property])
+        : (entries.find(([, prop]) => prop?.type === 'files') as [string, Property] | undefined);
+
+    const summaryCandidates = ['媒体信息', '媒体摘要'] as const;
+    const summaryProperty =
+      (summaryCandidates
+        .map(name => (properties[name]?.type === 'rich_text' ? ([name, properties[name] as Property] as [string, Property]) : null))
+        .find((entry): entry is [string, Property] => Boolean(entry))) ||
+      (entries.find(([name, prop]) => name.toLowerCase().includes('media') && prop?.type === 'rich_text') as
+        | [string, Property]
+        | undefined);
 
     return {
       mediaFilesProperty: filesProperty ? filesProperty[0] : undefined,
@@ -454,10 +475,10 @@ export class NotionClient {
     try {
       const pages = await this.searchPages('');
       return pages
-        .filter(page => page.parent?.type === 'workspace')
+        .filter(page => page.parent?.type !== 'database_id')
         .map(page => ({
           id: page.id,
-          title: page.properties.title?.title?.[0]?.plain_text || 'Untitled',
+          title: this.extractPageTitle(page),
           url: page.url
         }));
     } catch (error) {

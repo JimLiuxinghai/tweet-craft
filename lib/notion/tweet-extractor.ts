@@ -1,4 +1,8 @@
+import { EnhancedMediaExtractor } from '../parsers/enhanced-media-extractor';
 import { MediaAsset, TweetData } from '../notion/types';
+
+const TWEET_SELECTOR = '[data-testid="tweet"]';
+const TWEET_ARTICLE_SELECTOR = 'article[data-testid="tweet"]';
 
 export class TweetExtractor {
   static extractTweetData(tweetElement: Element): TweetData | null {
@@ -56,8 +60,15 @@ export class TweetExtractor {
   }
 
   private static extractAuthorInfo(tweetElement: Element): { name: string; handle: string } {
-    const nameElement = tweetElement.querySelector('[data-testid="User-Names"] div[dir="ltr"] span');
-    const handleElement = tweetElement.querySelector('[data-testid="User-Names"] a[role="link"]');
+    const root = this.getRootTweet(tweetElement);
+    const nameElement =
+      root.querySelector('[data-testid="User-Name"] span span') ||
+      root.querySelector('[data-testid="User-Names"] div[dir="ltr"] span') ||
+      root.querySelector('[data-testid="User-Name"] a span span');
+    const handleElement =
+      root.querySelector('[data-testid="User-Name"] a[role="link"] span') ||
+      root.querySelector('[data-testid="User-Names"] a[role="link"] span') ||
+      root.querySelector('[data-testid="User-Names"] a[role="link"]');
     
     const name = nameElement?.textContent?.trim() || '';
     const handleUrl = handleElement?.getAttribute('href') || '';
@@ -67,16 +78,24 @@ export class TweetExtractor {
   }
 
   private static extractTweetContent(tweetElement: Element): string {
-    const contentElement = tweetElement.querySelector('[data-testid="tweetText"]');
+    const rootTweet = this.getRootTweet(tweetElement);
+    const textNodes = Array.from(rootTweet.querySelectorAll('[data-testid="tweetText"]')) as HTMLElement[];
 
-    if (!contentElement) return '';
+    const mainTextBlocks = textNodes
+      .filter(node => this.isWithinRootTweet(node, rootTweet))
+      .map(node => node.innerText?.trim())
+      .filter(Boolean) as string[];
 
-    // 使用 innerText 保留换行，同时确保已经展开的“Show more”文本也被包含
-    const content = (contentElement as HTMLElement).innerText
-      .replace(/\s+$/g, '')
-      .replace(/^\s+/g, '');
+    if (mainTextBlocks.length > 0) {
+      return mainTextBlocks.join('\n\n').trim();
+    }
 
-    return content.trim();
+    const fallbackNode = tweetElement.querySelector('[data-testid="tweetText"]');
+    if (fallbackNode) {
+      return (fallbackNode as HTMLElement).innerText.trim();
+    }
+
+    return (rootTweet.textContent || '').trim();
   }
 
   private static extractPublishTime(tweetElement: Element): string | null {
@@ -91,12 +110,14 @@ export class TweetExtractor {
     assets: MediaAsset[];
   } {
     const assets: MediaAsset[] = [];
+    const rootTweet = this.getRootTweet(tweetElement);
 
     // 图片
-    const imageElements = tweetElement.querySelectorAll('[data-testid="tweetPhoto"] img, [data-testid="Image"] img');
+    const imageElements = rootTweet.querySelectorAll('[data-testid="tweetPhoto"] img, [data-testid="Image"] img');
     imageElements.forEach(img => {
-      const url = img.getAttribute('src');
-      if (!url) return;
+      if (!this.isWithinRootTweet(img, rootTweet)) return;
+      const url = this.normalizeMediaUrl(this.getImageUrl(img as HTMLImageElement), 'image');
+      if (!url || url.startsWith('data:') || url.startsWith('blob:')) return;
       assets.push({
         type: 'image',
         url,
@@ -104,23 +125,43 @@ export class TweetExtractor {
       });
     });
 
+    const backgroundImageElements = rootTweet.querySelectorAll(
+      '[data-testid="tweetPhoto"] div[style*="background-image"], [aria-label="Image"] div[style*="background-image"]'
+    );
+    backgroundImageElements.forEach(element => {
+      if (!this.isWithinRootTweet(element, rootTweet)) return;
+      const url = this.normalizeMediaUrl(this.extractBackgroundImageUrl(element as HTMLElement), 'image');
+      if (!url || url.startsWith('data:') || url.startsWith('blob:')) return;
+      assets.push({
+        type: 'image',
+        url
+      });
+    });
+
     // 视频 / GIF
-    const videoElement = tweetElement.querySelector('video, [data-testid="videoPlayer"] video') as HTMLVideoElement | null;
-    if (videoElement) {
-      const source = videoElement.currentSrc || videoElement.getAttribute('src') || videoElement.querySelector('source')?.getAttribute('src');
-      const poster = videoElement.getAttribute('poster') || undefined;
-      if (source) {
+    const videoElements = Array.from(rootTweet.querySelectorAll('video, [data-testid="videoPlayer"] video')) as HTMLVideoElement[];
+    videoElements.forEach(videoElement => {
+      if (!this.isWithinRootTweet(videoElement, rootTweet)) return;
+      const source =
+        videoElement.currentSrc ||
+        videoElement.getAttribute('src') ||
+        videoElement.querySelector('source')?.getAttribute('src');
+      const type = videoElement.loop ? 'gif' : 'video';
+      const normalizedSource = this.normalizeMediaUrl(source, type);
+      const poster = this.normalizeMediaUrl(videoElement.getAttribute('poster'), 'image') || undefined;
+      if (normalizedSource) {
         assets.push({
-          type: videoElement.loop ? 'gif' : 'video',
-          url: source,
+          type,
+          url: normalizedSource,
           previewUrl: poster
         });
       }
-    }
+    });
 
     // 外链（排除推文链接自身）
-    const linkElements = tweetElement.querySelectorAll('a[href^="http"]');
+    const linkElements = rootTweet.querySelectorAll('a[href^="http"]');
     linkElements.forEach(link => {
+      if (!this.isWithinRootTweet(link, rootTweet)) return;
       const href = link.getAttribute('href');
       if (!href) return;
       if (href.includes('/status/')) return; // 避免把推文本身的链接当做媒体
@@ -132,14 +173,26 @@ export class TweetExtractor {
     });
 
     // 去重
-    const uniqueAssets: MediaAsset[] = [];
-    const seen = new Set<string>();
+    let uniqueAssets = this.dedupeAssets(assets);
 
-    for (const asset of assets) {
-      const key = `${asset.type}-${asset.url}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      uniqueAssets.push(asset);
+    const hasNonLinkMedia = uniqueAssets.some(asset => asset.type !== 'link');
+    if (!hasNonLinkMedia) {
+      try {
+        const enhancedAssets = EnhancedMediaExtractor.extractMediaItems(rootTweet as HTMLElement);
+        for (const asset of enhancedAssets) {
+          const url = this.normalizeMediaUrl(asset.url, asset.type);
+          if (!url || url.startsWith('data:') || url.startsWith('blob:')) continue;
+          uniqueAssets.push({
+            type: asset.type,
+            url,
+            previewUrl: asset.previewUrl,
+            alt: asset.alt
+          });
+        }
+        uniqueAssets = this.dedupeAssets(uniqueAssets);
+      } catch (error) {
+        console.warn('Enhanced media extraction failed:', error);
+      }
     }
 
     const hasImages = uniqueAssets.some(asset => asset.type === 'image');
@@ -237,6 +290,105 @@ export class TweetExtractor {
     // 检查是否包含引用推文
     const quotedTweet = tweetElement.querySelector('[data-testid="tweet"] [data-testid="tweet"]');
     return quotedTweet !== null;
+  }
+
+  private static getRootTweet(element: Element): Element {
+    const article = element.closest(TWEET_ARTICLE_SELECTOR);
+    if (article) return article;
+    const datasetTweet = element.closest(TWEET_SELECTOR);
+    if (datasetTweet) return datasetTweet;
+    return element;
+  }
+
+  private static isWithinRootTweet(target: Element, rootTweet: Element): boolean {
+    if (target === rootTweet) return true;
+    const containingTweet = target.closest(TWEET_SELECTOR);
+    if (!containingTweet) {
+      return rootTweet.contains(target);
+    }
+    return containingTweet === rootTweet;
+  }
+
+  private static normalizeMediaUrl(rawUrl: string | null | undefined, type: MediaAsset['type']): string | null {
+    if (!rawUrl) return null;
+    let url = rawUrl.trim();
+    if (!url) return null;
+    if (url.startsWith('//')) {
+      url = `https:${url}`;
+    }
+
+    try {
+      const parsed = new URL(url);
+      const isTwitterMedia = parsed.hostname.includes('twimg.com');
+
+      if (type === 'image' && isTwitterMedia) {
+        if (parsed.searchParams.has('name')) {
+          parsed.searchParams.set('name', 'orig');
+        } else {
+          parsed.searchParams.append('name', 'orig');
+        }
+        return parsed.toString();
+      }
+
+      if ((type === 'video' || type === 'gif') && isTwitterMedia) {
+        parsed.searchParams.delete('name');
+        return parsed.toString();
+      }
+
+      return parsed.toString();
+    } catch {
+      return url;
+    }
+  }
+
+  private static getImageUrl(img: HTMLImageElement): string | null {
+    if (img.currentSrc) return img.currentSrc;
+
+    const src = img.getAttribute('src');
+    if (src && !src.startsWith('data:') && !src.startsWith('blob:')) {
+      return src;
+    }
+
+    const dataSrc = img.getAttribute('data-src') || img.getAttribute('data-image-url');
+    if (dataSrc) {
+      return dataSrc;
+    }
+
+    const srcsetUrl = this.extractBestSrcsetUrl(img.getAttribute('srcset'));
+    if (srcsetUrl) {
+      return srcsetUrl;
+    }
+
+    return src || null;
+  }
+
+  private static extractBestSrcsetUrl(srcset: string | null | undefined): string | null {
+    if (!srcset) return null;
+    const candidates = srcset
+      .split(',')
+      .map(part => part.trim().split(' ')[0])
+      .filter(Boolean);
+    return candidates.length > 0 ? candidates[candidates.length - 1] : null;
+  }
+
+  private static extractBackgroundImageUrl(element: HTMLElement): string | null {
+    const style = element.getAttribute('style') || '';
+    const match = style.match(/background-image:\s*url\((['"]?)(.*?)\1\)/i);
+    return match?.[2] || null;
+  }
+
+  private static dedupeAssets(assets: MediaAsset[]): MediaAsset[] {
+    const uniqueAssets: MediaAsset[] = [];
+    const seen = new Set<string>();
+
+    for (const asset of assets) {
+      const key = `${asset.type}-${asset.url}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      uniqueAssets.push(asset);
+    }
+
+    return uniqueAssets;
   }
 
   static findTweetElements(): Element[] {
