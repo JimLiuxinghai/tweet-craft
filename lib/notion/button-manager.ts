@@ -1,6 +1,7 @@
 import { TweetExtractor } from './tweet-extractor';
 import { TweetData } from './types';
 import { notionErrorHandler } from './error-handler';
+import { TWITTER_SELECTORS } from '../utils/constants';
 
 export class NotionButtonManager {
   private existingTweets = new WeakSet<Element>();
@@ -297,8 +298,132 @@ export class NotionButtonManager {
     document.head.appendChild(style);
   }
 
+  /**
+   * 展开长推文内容（包含 Show more）
+   */
+  private async expandTweetContent(tweetElement: Element): Promise<void> {
+    if (!(tweetElement instanceof HTMLElement)) return;
+
+    try {
+      const showMoreButton = this.findMainTweetShowMoreButton(tweetElement);
+      if (!showMoreButton) return;
+
+      if (!showMoreButton.offsetParent || showMoreButton.style.display === 'none') return;
+
+      const initialText = this.getTweetTextSnapshot(tweetElement);
+
+      const isLink = showMoreButton.tagName.toLowerCase() === 'a';
+      const preventNavigation = (e: Event) => {
+        if (isLink) {
+          e.preventDefault();
+        }
+      };
+
+      if (isLink) {
+        showMoreButton.addEventListener('click', preventNavigation, { once: true });
+      }
+
+      showMoreButton.click();
+
+      if (isLink) {
+        setTimeout(() => {
+          showMoreButton.removeEventListener('click', preventNavigation);
+        }, 100);
+      }
+
+      let attempts = 0;
+      const maxAttempts = 20;
+
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const currentButton = this.findMainTweetShowMoreButton(tweetElement);
+        const showLessButton = this.findMainTweetShowLessButton(tweetElement);
+        const currentText = this.getTweetTextSnapshot(tweetElement);
+
+        if (!currentButton || showLessButton || currentText.length > initialText.length) {
+          return;
+        }
+
+        attempts++;
+      }
+    } catch (error) {
+      console.warn('Failed to expand tweet content before saving to Notion:', error);
+    }
+  }
+
+  private findMainTweetShowMoreButton(tweetElement: HTMLElement): HTMLElement | null {
+    const allShowMoreButtons = tweetElement.querySelectorAll(TWITTER_SELECTORS.SHOW_MORE_BUTTON);
+
+    if (allShowMoreButtons.length === 0) {
+      return null;
+    }
+
+    if (allShowMoreButtons.length === 1) {
+      return allShowMoreButtons[0] as HTMLElement;
+    }
+
+    for (const button of allShowMoreButtons) {
+      const buttonElement = button as HTMLElement;
+      const quoteTweetContainer = buttonElement.closest('[role="link"][tabindex="0"]');
+
+      if (!quoteTweetContainer) {
+        return buttonElement;
+      }
+
+      const hasQuoteIndicator = buttonElement.closest('[aria-labelledby*="Quote"]');
+      if (!hasQuoteIndicator) {
+        return buttonElement;
+      }
+    }
+
+    return allShowMoreButtons[0] as HTMLElement;
+  }
+
+  private findMainTweetShowLessButton(tweetElement: HTMLElement): HTMLElement | null {
+    const allShowLessButtons = tweetElement.querySelectorAll(TWITTER_SELECTORS.SHOW_LESS_BUTTON);
+
+    if (allShowLessButtons.length === 0) {
+      return null;
+    }
+
+    if (allShowLessButtons.length === 1) {
+      return allShowLessButtons[0] as HTMLElement;
+    }
+
+    for (const button of allShowLessButtons) {
+      const buttonElement = button as HTMLElement;
+      const quoteTweetContainer = buttonElement.closest('[role="link"][tabindex="0"]');
+
+      if (!quoteTweetContainer) {
+        return buttonElement;
+      }
+
+      const hasQuoteIndicator = buttonElement.closest('[aria-labelledby*="Quote"]');
+      if (!hasQuoteIndicator) {
+        return buttonElement;
+      }
+    }
+
+    return allShowLessButtons[0] as HTMLElement;
+  }
+
+  private getTweetTextSnapshot(tweetElement: HTMLElement): string {
+    const textNodes = Array.from(tweetElement.querySelectorAll('[data-testid="tweetText"]')) as HTMLElement[];
+    if (textNodes.length === 0) {
+      return tweetElement.textContent?.trim() || '';
+    }
+
+    return textNodes
+      .map(node => node.innerText || node.textContent || '')
+      .join('\n')
+      .trim();
+  }
+
   private async handleSaveTweet(tweetElement: Element, button: HTMLElement) {
     try {
+      await this.expandTweetContent(tweetElement);
+
       // 提取推文数据
       const tweetData = TweetExtractor.extractTweetData(tweetElement);
       if (!tweetData) {

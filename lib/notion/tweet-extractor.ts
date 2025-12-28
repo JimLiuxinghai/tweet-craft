@@ -83,7 +83,7 @@ export class TweetExtractor {
 
     const mainTextBlocks = textNodes
       .filter(node => this.isWithinRootTweet(node, rootTweet))
-      .map(node => node.innerText?.trim())
+      .map(node => this.getBestText(node))
       .filter(Boolean) as string[];
 
     if (mainTextBlocks.length > 0) {
@@ -92,7 +92,7 @@ export class TweetExtractor {
 
     const fallbackNode = tweetElement.querySelector('[data-testid="tweetText"]');
     if (fallbackNode) {
-      return (fallbackNode as HTMLElement).innerText.trim();
+      return this.getBestText(fallbackNode as HTMLElement);
     }
 
     return (rootTweet.textContent || '').trim();
@@ -389,6 +389,16 @@ export class TweetExtractor {
     }
 
     return uniqueAssets;
+  }
+
+  private static getBestText(node: HTMLElement): string {
+    const innerText = (node.innerText || '').trim();
+    const textContent = (node.textContent || '').trim();
+
+    if (!innerText) return textContent;
+    if (!textContent) return innerText;
+
+    return textContent.length > innerText.length ? textContent : innerText;
   }
 
   static findTweetElements(): Element[] {

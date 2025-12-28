@@ -1075,21 +1075,22 @@ try {
    return;
       }
 
+      const initialText = this.getTweetTextSnapshot(tweetElement);
+
       // 安全点击Show more按钮 - 阻止默认的链接跳转行为
-      const clickEvent = new MouseEvent('click', {
-        view: window,
-        bubbles: true,
-        cancelable: true
-      });
+      const isLink = showMoreButton.tagName.toLowerCase() === 'a';
       
       // 添加事件监听器来阻止默认行为
       const preventNavigation = (e: Event) => {
-        e.preventDefault();
-        e.stopPropagation();
+        if (isLink) {
+          e.preventDefault();
+        }
       };
       
-      showMoreButton.addEventListener('click', preventNavigation, { once: true });
-      showMoreButton.dispatchEvent(clickEvent);
+      if (isLink) {
+        showMoreButton.addEventListener('click', preventNavigation, { once: true });
+      }
+      showMoreButton.click();
       
       // 清理事件监听器（防止意外情况）
   setTimeout(() => {
@@ -1098,7 +1099,7 @@ try {
       
       // 等待内容展开，并验证是否成功展开
       let attempts = 0;
-      const maxAttempts = 10;
+      const maxAttempts = 20;
       
       while (attempts < maxAttempts) {
    await new Promise(resolve => setTimeout(resolve, 100));
@@ -1106,8 +1107,9 @@ try {
       // 检查Show more按钮是否已消失或变成Show less
      const currentButton = this.findMainTweetShowMoreButton(tweetElement);
    const showLessButton = this.findMainTweetShowLessButton(tweetElement);
+      const currentText = this.getTweetTextSnapshot(tweetElement);
         
-        if (!currentButton || showLessButton) {
+        if (!currentButton || showLessButton || currentText.length > initialText.length) {
        console.log('Long tweet content expanded successfully');
           return;
     }
@@ -1121,6 +1123,21 @@ try {
       console.warn('Failed to expand tweet content:', error);
       // 即使展开失败，也继续处理，可能会复制到部分内容
     }
+  }
+
+  /**
+   * 获取推文内容快照，用于检测展开变化
+   */
+  private getTweetTextSnapshot(tweetElement: HTMLElement): string {
+    const textNodes = Array.from(tweetElement.querySelectorAll('[data-testid="tweetText"]')) as HTMLElement[];
+    if (textNodes.length === 0) {
+      return tweetElement.textContent?.trim() || '';
+    }
+
+    return textNodes
+      .map(node => node.innerText || node.textContent || '')
+      .join('\n')
+      .trim();
   }
 
   /**

@@ -27,40 +27,19 @@ export class TwitterVideoService {
       name: 'XVD',
       baseUrl: 'https://xvd.concitech.org',
       supportedLanguages: ['en', 'zh-CN', 'ja', 'ko', 'es', 'fr', 'pt', 'ru', 'ar', 'fa'],
-      isAvailable: async () => {
-        try {
-          const response = await fetch('https://xvd.concitech.org', { method: 'HEAD' });
-          return response.ok;
-        } catch {
-          return false;
-        }
-      }
+      isAvailable: async () => this.checkServiceAvailability('https://xvd.concitech.org')
     },
     {
       name: 'SaveTweet',
       baseUrl: 'https://savetweet.net',
       supportedLanguages: ['en'],
-      isAvailable: async () => {
-        try {
-          const response = await fetch('https://savetweet.net', { method: 'HEAD' });
-          return response.ok;
-        } catch {
-          return false;
-        }
-      }
+      isAvailable: async () => this.checkServiceAvailability('https://savetweet.net')
     },
     {
       name: 'TwitterVideoDownloader',
       baseUrl: 'https://twittervideodownloader.com',
       supportedLanguages: ['en'],
-      isAvailable: async () => {
-        try {
-          const response = await fetch('https://twittervideodownloader.com', { method: 'HEAD' });
-          return response.ok;
-        } catch {
-          return false;
-        }
-      }
+      isAvailable: async () => this.checkServiceAvailability('https://twittervideodownloader.com')
     }
   ];
 
@@ -68,6 +47,24 @@ export class TwitterVideoService {
 
   constructor(language: string = 'en') {
     this.currentLanguage = language;
+  }
+
+  private async checkServiceAvailability(url: string): Promise<boolean> {
+    try {
+      const headResponse = await fetch(url, { method: 'HEAD' });
+      if (headResponse.ok) {
+        return true;
+      }
+    } catch {
+      // Fall through to GET request.
+    }
+
+    try {
+      const getResponse = await fetch(url, { method: 'GET' });
+      return getResponse.ok;
+    } catch {
+      return false;
+    }
   }
 
   /**

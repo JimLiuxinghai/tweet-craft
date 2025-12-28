@@ -14,6 +14,19 @@ import {
 } from './types';
 import { notionErrorHandler, withRetry, withErrorBoundary } from './error-handler';
 
+type AuthorPropertyType = 'rich_text' | 'select' | 'multi_select';
+
+type AuthorPropertyInfo = {
+  name: string;
+  type: AuthorPropertyType;
+};
+
+type DatabasePropertyMap = {
+  mediaFilesProperty?: string;
+  mediaSummaryProperty?: string;
+  authorProperty?: AuthorPropertyInfo;
+};
+
 export class NotionClient {
   private readonly apiUrl = 'https://api.notion.com/v1';
   private readonly version = '2022-06-28';
@@ -174,6 +187,9 @@ export class NotionClient {
       '保存时间': {
         created_time: {}
       },
+      '作者': {
+        rich_text: {}
+      },
       '内容': {
         rich_text: {}
       },
@@ -260,8 +276,8 @@ export class NotionClient {
 
   async saveTweet(databaseId: string, tweetData: TweetData): Promise<SyncResult> {
     try {
-      const mediaPropertyMap = await this.ensureMediaSupport(databaseId, tweetData.media?.assets || []);
-      const pageData = this.formatTweetForNotion(tweetData, mediaPropertyMap);
+      const propertyMap = await this.ensureMediaSupport(databaseId, tweetData.media?.assets || []);
+      const pageData = this.formatTweetForNotion(tweetData, propertyMap);
       
       const page = await this.request<NotionPage>('/pages', {
         method: 'POST',
@@ -285,12 +301,13 @@ export class NotionClient {
 
   private formatTweetForNotion(
     tweetData: TweetData,
-    mediaPropertyMap?: { mediaFilesProperty?: string; mediaSummaryProperty?: string }
+    propertyMap?: DatabasePropertyMap
   ): CreatePageParameters['properties'] {
     const { content, author, username, url, publishTime, tags = [], category, media: tweetMedia } = tweetData;
 
     const titleContent = content.slice(0, 100) + (content.length > 100 ? '...' : '');
-    const richContent = `作者: ${author} (@${username})\n\n${content}`;
+    const authorText = this.buildAuthorText(author, username);
+    const richContent = authorText ? `作者: ${authorText}\n\n${content}` : content;
 
     const media = tweetMedia || { hasImages: false, hasVideo: false, hasLinks: false, assets: [] };
     const mediaAssets = media.assets || [];
@@ -334,8 +351,32 @@ export class NotionClient {
       }
     };
 
-    if (mediaPropertyMap?.mediaFilesProperty && fileAssets.length > 0) {
-      properties[mediaPropertyMap.mediaFilesProperty] = {
+    if (propertyMap?.authorProperty && authorText) {
+      const authorProperty = propertyMap.authorProperty;
+      if (authorProperty.type === 'rich_text') {
+        properties[authorProperty.name] = {
+          rich_text: [
+            {
+              type: 'text',
+              text: { content: authorText }
+            }
+          ]
+        };
+      } else if (authorProperty.type === 'select') {
+        properties[authorProperty.name] = {
+          select: {
+            name: authorText
+          }
+        };
+      } else if (authorProperty.type === 'multi_select') {
+        properties[authorProperty.name] = {
+          multi_select: [{ name: authorText }]
+        };
+      }
+    }
+
+    if (propertyMap?.mediaFilesProperty && fileAssets.length > 0) {
+      properties[propertyMap.mediaFilesProperty] = {
         files: fileAssets.map((asset, index) => ({
           name: `${asset.type}-${index + 1}`,
           type: 'external',
@@ -346,8 +387,8 @@ export class NotionClient {
       };
     }
 
-    if (mediaPropertyMap?.mediaSummaryProperty && mediaSummary) {
-      properties[mediaPropertyMap.mediaSummaryProperty] = {
+    if (propertyMap?.mediaSummaryProperty && mediaSummary) {
+      properties[propertyMap.mediaSummaryProperty] = {
         rich_text: [
           {
             type: 'text',
@@ -360,6 +401,20 @@ export class NotionClient {
     }
 
     return properties;
+  }
+
+  private buildAuthorText(author: string, username: string): string {
+    const trimmedAuthor = author.trim();
+    const trimmedUsername = username.trim();
+
+    if (!trimmedAuthor && !trimmedUsername) return '';
+
+    if (!trimmedUsername) return trimmedAuthor;
+
+    const handle = trimmedUsername.startsWith('@') ? trimmedUsername : `@${trimmedUsername}`;
+    if (!trimmedAuthor) return handle;
+
+    return `${trimmedAuthor} (${handle})`;
   }
 
   private buildMediaSummary(assets: MediaAsset[]): string {
@@ -377,32 +432,43 @@ export class NotionClient {
   private async ensureMediaSupport(
     databaseId: string,
     assets: MediaAsset[]
-  ): Promise<{ mediaFilesProperty?: string; mediaSummaryProperty?: string }> {
-    if (!assets.length) {
-      // 仅返回已有的媒体属性（如果存在），避免不必要的 PATCH
-      const database = await this.getDatabase(databaseId);
-      return this.resolveMediaPropertyNames(database);
-    }
-
+  ): Promise<DatabasePropertyMap> {
     const database = await this.getDatabase(databaseId);
-    const current = this.resolveMediaPropertyNames(database);
+    const current: DatabasePropertyMap = this.resolveMediaPropertyNames(database);
 
     const propertiesToAdd: Record<string, any> = {};
 
-    if (!current.mediaFilesProperty) {
-      propertiesToAdd['媒体文件'] = { files: {} };
-      current.mediaFilesProperty = '媒体文件';
+    const authorCandidate = this.resolveAuthorPropertyCandidate(database);
+    if (authorCandidate) {
+      if (this.isSupportedAuthorPropertyType(authorCandidate.type)) {
+        current.authorProperty = {
+          name: authorCandidate.name,
+          type: authorCandidate.type
+        };
+      } else {
+        console.warn('Author property exists with unsupported type:', authorCandidate.type);
+      }
+    } else {
+      propertiesToAdd['作者'] = { rich_text: {} };
+      current.authorProperty = { name: '作者', type: 'rich_text' };
     }
 
-    if (!current.mediaSummaryProperty) {
-      const databaseProperties = database.properties || {};
-      const preferredSummaryName =
-        databaseProperties['媒体信息'] && databaseProperties['媒体信息']?.type !== 'rich_text'
-          ? '媒体摘要'
-          : '媒体信息';
+    if (assets.length > 0) {
+      if (!current.mediaFilesProperty) {
+        propertiesToAdd['媒体文件'] = { files: {} };
+        current.mediaFilesProperty = '媒体文件';
+      }
 
-      propertiesToAdd[preferredSummaryName] = { rich_text: {} };
-      current.mediaSummaryProperty = preferredSummaryName;
+      if (!current.mediaSummaryProperty) {
+        const databaseProperties = database.properties || {};
+        const preferredSummaryName =
+          databaseProperties['媒体信息'] && databaseProperties['媒体信息']?.type !== 'rich_text'
+            ? '媒体摘要'
+            : '媒体信息';
+
+        propertiesToAdd[preferredSummaryName] = { rich_text: {} };
+        current.mediaSummaryProperty = preferredSummaryName;
+      }
     }
 
     if (Object.keys(propertiesToAdd).length > 0) {
@@ -440,6 +506,30 @@ export class NotionClient {
       mediaFilesProperty: filesProperty ? filesProperty[0] : undefined,
       mediaSummaryProperty: summaryProperty ? summaryProperty[0] : undefined
     };
+  }
+
+  private resolveAuthorPropertyCandidate(database: NotionDatabase): { name: string; type: string } | undefined {
+    const properties = database.properties || {};
+    const directCandidates = ['作者', 'Author', 'author'] as const;
+
+    for (const name of directCandidates) {
+      const property = properties[name];
+      if (property?.type) {
+        return { name, type: property.type };
+      }
+    }
+
+    const entries = Object.entries(properties);
+    const fallback = entries.find(([name]) => name.includes('作者') || name.toLowerCase().includes('author'));
+    if (fallback && fallback[1]?.type) {
+      return { name: fallback[0], type: fallback[1].type };
+    }
+
+    return undefined;
+  }
+
+  private isSupportedAuthorPropertyType(type: string): type is AuthorPropertyType {
+    return type === 'rich_text' || type === 'select' || type === 'multi_select';
   }
 
   async getDatabaseStats(databaseId: string): Promise<{ total: number; thisMonth: number; unread: number }> {
