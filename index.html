@@ -7,474 +7,1515 @@
     <meta name="description" content="Enhanced Twitter/X browser extension with super copy functionality, video download, thread support, multiple formats, and screenshot capabilities. | 增强 Twitter/X 浏览器插件，支持超级复制功能、视频下载、推文线程、多种格式和截图功能。">
     <meta name="keywords" content="Twitter, X, extension, copy, video download, thread, screenshot, browser, Chrome, Firefox, 推特, 插件, 复制, 视频下载, 截图">
     <meta name="author" content="Tweet Craft Team">
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://tweet-craft.vercel.app/">
     <meta property="og:title" content="Tweet Craft - Twitter 超级增强插件">
     <meta property="og:description" content="Enhanced Twitter/X browser extension with super copy functionality, video download, thread support, multiple formats, and screenshot capabilities.">
     <meta property="og:image" content="public/icon/icon.png">
-    
+
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://tweet-craft.vercel.app/">
     <meta property="twitter:title" content="Tweet Craft - Twitter 超级增强插件">
     <meta property="twitter:description" content="Enhanced Twitter/X browser extension with super copy functionality, video download, thread support, multiple formats, and screenshot capabilities.">
     <meta property="twitter:image" content="public/icon/icon.png">
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="public/icon/icon.png">
     <link rel="apple-touch-icon" href="public/icon/icon.png">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- I18n Updates -->
     <script src="public/js/i18n-updates.js"></script>
-    
+
     <!-- Custom styles -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
+        :root {
+            --ink: #0f172a;
+            --ink-soft: #1f2937;
+            --muted: #5c6675;
+            --paper: #f8f4ec;
+            --mist: #f1ece3;
+            --cream: #fff7ea;
+            --line: rgba(15, 23, 42, 0.1);
+            --accent: #f97316;
+            --accent-2: #0ea5a4;
+            --accent-3: #2563eb;
+            --shadow-lg: 0 30px 70px rgba(15, 23, 42, 0.12);
+            --shadow-md: 0 18px 40px rgba(15, 23, 42, 0.1);
+            --radius-xl: 28px;
+            --radius-lg: 22px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
         }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+        * {
+            box-sizing: border-box;
         }
-        
-        .feature-card {
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .code-block {
-            background: #1e293b;
-            color: #e2e8f0;
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'Courier New', monospace;
-            font-size: 0.875rem;
-            overflow-x: auto;
-        }
-        
-        .hover-scale {
-            transition: transform 0.3s ease;
-        }
-        
-        .hover-scale:hover {
-            transform: scale(1.05);
-        }
-        
-        .scroll-smooth {
+
+        html {
             scroll-behavior: smooth;
         }
-        
-        .animate-float {
+
+        body {
+            margin: 0;
+            font-family: "Manrope", sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+                linear-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+            background-size: 72px 72px;
+            pointer-events: none;
+            z-index: -2;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 12% 18%, rgba(249, 115, 22, 0.12), transparent 45%),
+                radial-gradient(circle at 88% 12%, rgba(14, 165, 164, 0.16), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(37, 99, 235, 0.08), transparent 45%);
+            pointer-events: none;
+            z-index: -3;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        h1, h2, h3, h4, h5 {
+            font-family: "Fraunces", serif;
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+
+        p {
+            margin: 0;
+        }
+
+        ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .container {
+            width: min(1200px, 100% - 48px);
+            margin: 0 auto;
+        }
+
+        .section {
+            padding: clamp(72px, 10vw, 120px) 0;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .section-header h2 {
+            font-size: clamp(2rem, 3vw, 3rem);
+        }
+
+        .section-header p {
+            color: var(--muted);
+            font-size: 1.05rem;
+            max-width: 680px;
+            margin: 12px auto 0;
+        }
+
+        .section-header--left {
+            text-align: left;
+        }
+
+        .section-header--left p {
+            margin-left: 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 22px;
+            border-radius: 999px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 18px 35px rgba(249, 115, 22, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 24px 42px rgba(249, 115, 22, 0.35);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .btn-secondary:hover {
+            background: var(--ink);
+            color: #fff;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.7);
+            color: var(--ink-soft);
+        }
+
+        .chip--soft {
+            background: rgba(14, 165, 164, 0.08);
+            border-color: rgba(14, 165, 164, 0.2);
+            color: #0f766e;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            transition-delay: var(--delay, 0ms);
+        }
+
+        .reveal.in-view {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(14px);
+            background: rgba(248, 244, 236, 0.85);
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .site-header.scrolled {
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 12px 0;
+        }
+
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .brand img {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+        }
+
+        .menu-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .menu-toggle span {
+            display: block;
+            width: 18px;
+            height: 2px;
+            background: var(--ink);
+            border-radius: 2px;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .menu-toggle span + span {
+            margin-top: 4px;
+        }
+
+        .nav.open .menu-toggle span:nth-child(1) {
+            transform: translateY(6px) rotate(45deg);
+        }
+
+        .nav.open .menu-toggle span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .nav.open .menu-toggle span:nth-child(3) {
+            transform: translateY(-6px) rotate(-45deg);
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            font-weight: 500;
+            color: var(--ink-soft);
+        }
+
+        .nav-links a {
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -6px;
+            width: 0;
+            height: 2px;
+            background: var(--accent-2);
+            transition: width 0.2s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .lang-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: #fff;
+            cursor: pointer;
+            color: var(--ink-soft);
+            font-weight: 600;
+        }
+
+        .nav-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 999px;
+            background: var(--ink);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
+        }
+
+        .hero {
+            padding: clamp(84px, 12vw, 140px) 0 clamp(72px, 10vw, 120px);
+            position: relative;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(130deg, rgba(255, 247, 234, 0.9), rgba(248, 244, 236, 0)),
+                radial-gradient(circle at 90% 20%, rgba(14, 165, 164, 0.12), transparent 50%);
+            z-index: -1;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: clamp(32px, 6vw, 64px);
+            align-items: center;
+        }
+
+        .hero-kicker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .kicker-chip {
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: rgba(15, 23, 42, 0.08);
+            color: var(--ink);
+        }
+
+        .kicker-chip--outline {
+            background: transparent;
+            border: 1px dashed rgba(14, 165, 164, 0.6);
+            color: #0f766e;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.6rem, 5vw, 4.4rem);
+            line-height: 1.05;
+            margin-bottom: 16px;
+        }
+
+        .hero-accent {
+            background: linear-gradient(120deg, var(--accent-2), var(--accent));
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .hero-description {
+            font-size: 1.1rem;
+            color: var(--muted);
+            max-width: 560px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin: 26px 0 24px;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            color: var(--muted);
+        }
+
+        .hero-meta .meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid var(--line);
+        }
+
+        .hero-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .hero-visual {
+            position: relative;
+        }
+
+        .mockup {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+
+        .mockup-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--line);
+            background: #fdfbf6;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .window-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .window-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #f97316;
+        }
+
+        .window-dots span:nth-child(2) {
+            background: #fbbf24;
+        }
+
+        .window-dots span:nth-child(3) {
+            background: #34d399;
+        }
+
+        .mockup-status {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #0f766e;
+        }
+
+        .mockup-body {
+            padding: 22px;
+            display: grid;
+            gap: 16px;
+        }
+
+        .tweet-card {
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--line);
+            padding: 16px;
+            display: grid;
+            gap: 12px;
+            background: #fffdfa;
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+        }
+
+        .tweet-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(120deg, rgba(14, 165, 164, 0.5), rgba(249, 115, 22, 0.6));
+        }
+
+        .tweet-meta {
+            display: grid;
+            gap: 2px;
+            font-size: 0.85rem;
+        }
+
+        .tweet-name {
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .tweet-handle {
+            color: var(--muted);
+        }
+
+        .tweet-time {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .tweet-lines span {
+            display: block;
+            height: 10px;
+            border-radius: 999px;
+            background: #ececec;
+            margin-bottom: 8px;
+        }
+
+        .tweet-lines span:nth-child(2) {
+            width: 86%;
+        }
+
+        .tweet-lines span:nth-child(3) {
+            width: 72%;
+            margin-bottom: 0;
+        }
+
+        .tweet-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .action-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(14, 165, 164, 0.08);
+            border: 1px solid rgba(14, 165, 164, 0.2);
+            color: #0f766e;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .floating-note {
+            position: absolute;
+            right: -18px;
+            top: 18%;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: #0f172a;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 20px 30px rgba(15, 23, 42, 0.3);
+            font-size: 0.85rem;
             animation: float 6s ease-in-out infinite;
         }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+
+        .feature-grid {
+            display: grid;
+            gap: 24px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
         }
-        
-        .tech-badge {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+
+        .feature-card {
+            position: relative;
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            background: #fff;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            display: grid;
+            gap: 14px;
+            transition: transform 0.2s ease;
+        }
+
+        .feature-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(249, 115, 22, 0.12), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-6px);
+        }
+
+        .feature-card:hover::after {
+            opacity: 1;
+        }
+
+        .feature-card[data-accent="orange"] { --accent-color: #f97316; }
+        .feature-card[data-accent="teal"] { --accent-color: #0ea5a4; }
+        .feature-card[data-accent="blue"] { --accent-color: #2563eb; }
+        .feature-card[data-accent="green"] { --accent-color: #22c55e; }
+        .feature-card[data-accent="amber"] { --accent-color: #d97706; }
+        .feature-card[data-accent="rose"] { --accent-color: #ef4444; }
+        .feature-card[data-accent="slate"] { --accent-color: #475569; }
+        .feature-card[data-accent="sky"] { --accent-color: #0284c7; }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent-color);
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.18);
+            font-size: 1.1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+        }
+
+        .feature-card p {
+            color: var(--muted);
+        }
+
+        .feature-list {
+            display: grid;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: var(--muted);
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .feature-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+            font-size: 0.95rem;
+            color: var(--muted);
+        }
+
+        .section--dark {
+            background: #0b1321;
+            color: #f8fafc;
+        }
+
+        .section--dark .section-header p {
+            color: #cbd5f5;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+            gap: 32px;
+            align-items: center;
+        }
+
+        .demo-cards {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .demo-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .demo-card h3 {
+            font-size: 1.1rem;
+        }
+
+        .demo-list {
+            display: grid;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: #dbe4ff;
+        }
+
+        .demo-list li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .video-frame {
+            border-radius: var(--radius-lg);
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            background: rgba(15, 23, 42, 0.6);
+            padding: 32px;
+            text-align: center;
+            min-height: 280px;
+            display: grid;
+            place-items: center;
+            gap: 16px;
+        }
+
+        .play-ring {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 2px solid rgba(249, 115, 22, 0.8);
+            display: grid;
+            place-items: center;
+            color: #f97316;
+            font-size: 1.6rem;
+        }
+
+        .demo-samples {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+        }
+
+        .code-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: var(--radius-md);
+            padding: 20px;
+        }
+
+        .code-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+        }
+
+        .code-block {
+            background: #101827;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            font-family: "Courier New", monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+        }
+
+        .section--soft {
+            background: var(--mist);
+        }
+
+        .guide-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+            gap: 32px;
+            align-items: start;
+        }
+
+        .guide-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--line);
+            padding: 28px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .guide-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .guide-steps {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .guide-step {
+            display: flex;
+            gap: 12px;
+        }
+
+        .step-index {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.08);
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .guide-step h4 {
+            margin-bottom: 6px;
+            font-size: 1rem;
+        }
+
+        .guide-step p {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .guide-cta {
+            background: #111827;
+            color: #fff;
+            padding: 28px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 24px 40px rgba(15, 23, 42, 0.3);
+        }
+
+        .guide-cta .label {
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 10px;
+        }
+
+        .guide-cta p {
+            color: rgba(255, 255, 255, 0.7);
+            margin: 12px 0 20px;
+        }
+
+        .guide-cta a {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: #fff;
+            color: #111827;
+            font-weight: 600;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+            gap: 32px;
+            align-items: start;
+        }
+
+        .tech-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .tech-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--line);
+            background: #fff;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        .tech-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        .tech-item span {
+            font-weight: 600;
+        }
+
+        .tech-item small {
+            display: block;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .architecture {
+            display: grid;
+            gap: 16px;
+        }
+
+        .architecture-card {
+            background: #fff;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--line);
+            padding: 16px;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+            display: grid;
+            gap: 6px;
+        }
+
+        .architecture-card span {
+            font-weight: 600;
+        }
+
+        .architecture-card small {
+            color: var(--muted);
+        }
+
+        .install-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--line);
+            padding: 28px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .install-steps {
+            display: grid;
+            gap: 18px;
+        }
+
+        .install-step {
+            display: flex;
+            gap: 14px;
+        }
+
+        .install-step .step-index {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--ink);
+            color: #fff;
+            font-weight: 700;
+            display: grid;
+            place-items: center;
+            font-size: 0.9rem;
+        }
+
+        .install-step h4 {
+            margin-bottom: 6px;
+            font-size: 1rem;
+        }
+
+        .install-step p {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .install-action {
+            margin-top: 22px;
+            padding-top: 20px;
+            border-top: 1px solid var(--line);
+        }
+
+        footer {
+            background: #0b1321;
+            color: #e2e8f0;
+            padding: 64px 0 40px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .footer-brand img {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+        }
+
+        .footer-links {
+            display: grid;
+            gap: 10px;
+            color: rgba(226, 232, 240, 0.7);
+        }
+
+        .footer-links a:hover {
+            color: #fff;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            text-align: center;
+            color: rgba(226, 232, 240, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .feature-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .demo-samples {
+                grid-template-columns: 1fr;
+            }
+
+            .tech-grid,
+            .guide-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 960px) {
+            .menu-toggle {
+                display: inline-flex;
+            }
+
+            .nav-menu {
+                display: none;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+                padding: 16px 0 10px;
+                border-top: 1px solid var(--line);
+            }
+
+            .nav.open .nav-menu {
+                display: flex;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .nav-actions {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .nav-cta {
+                justify-content: center;
+            }
+
+            .hero-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-description {
+                max-width: none;
+            }
+
+            .floating-note {
+                position: static;
+                margin-top: 14px;
+                justify-content: center;
+            }
+
+            .demo-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .guide-steps {
+                grid-template-columns: 1fr;
+            }
+
+            .tech-list {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                width: min(1200px, 100% - 32px);
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .hero-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .reveal {
+                transition: none;
+                opacity: 1;
+                transform: none;
+            }
+
+            .btn {
+                transition: none;
+            }
+
+            .floating-note {
+                animation: none;
+            }
         }
     </style>
 </head>
-<body class="scroll-smooth">
-    <!-- Navigation -->
-    <nav class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 shadow-sm">
-        <div class="container mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <img src="public/icon/icon.png" alt="Tweet Craft Logo" class="w-8 h-8 rounded">
-                    <span class="text-xl font-bold text-gray-800" data-i18n="nav.title">Tweet Craft</span>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <nav class="nav" id="siteNav">
+                <div class="nav-bar">
+                    <a class="brand" href="#top">
+                        <img src="public/icon/icon.png" alt="Tweet Craft Logo">
+                        <span data-i18n="nav.title">Tweet Craft</span>
+                    </a>
+                    <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-label="Toggle menu" type="button">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
                 </div>
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="#features" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.features">Features</a>
-                    <a href="#demo" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.demo">Demo</a>
-                    <a href="#notion-guide" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.notionGuide">Notion Guide</a>
-                    <a href="#tech" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.technology">Technology</a>
-                    <a href="#install" class="text-gray-600 hover:text-gray-900 transition" data-i18n="nav.install">Install</a>
-                    <div class="flex items-center space-x-2">
-                        <button id="langToggle" class="flex items-center space-x-2 px-3 py-1 rounded-lg border border-gray-300 hover:border-gray-400 transition">
-                            <i class="fas fa-globe text-gray-600"></i>
-                            <span id="currentLang" class="text-gray-700">EN</span>
+                <div class="nav-menu">
+                    <div class="nav-links">
+                        <a href="#features" data-i18n="nav.features">Features</a>
+                        <a href="#demo" data-i18n="nav.demo">Demo</a>
+                        <a href="#notion-guide" data-i18n="nav.notionGuide">Notion Guide</a>
+                        <a href="#tech" data-i18n="nav.technology">Technology</a>
+                        <a href="#install" data-i18n="nav.install">Install</a>
+                    </div>
+                    <div class="nav-actions">
+                        <button id="langToggle" class="lang-toggle" type="button">
+                            <i class="fas fa-globe"></i>
+                            <span id="currentLang">EN</span>
                         </button>
+                        <a class="nav-cta" href="https://chromewebstore.google.com/detail/twitter-%E8%B6%85%E7%BA%A7%E5%A2%9E%E5%BC%BA/pancaficlgkdicdeloffhlgdldfhcghf?authuser=0&hl=zh-CN" target="_blank" rel="noopener noreferrer">
+                            <i class="fas fa-download"></i>
+                            <span data-i18n="hero.install">Install Extension</span>
+                        </a>
                     </div>
                 </div>
-                <button class="md:hidden text-gray-600">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
+            </nav>
         </div>
-    </nav>
+    </header>
 
-    <!-- Hero Section -->
-    <section class="pt-24 pb-12 px-6">
-        <div class="container mx-auto text-center">
-            <div class="max-w-4xl mx-auto">
-                <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-                    <span data-i18n="hero.title">Super Copy for</span>
-                    <span class="bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                        Twitter/X
-                    </span>
-                </h1>
-                <p class="text-xl text-gray-600 mb-8 leading-relaxed" data-i18n="hero.description">
-                    Enhanced browser extension that revolutionizes how you copy and save Twitter content. 
-                    Support for video downloads, threads, multiple formats, Notion integration, beautiful screenshots, and 6 languages.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-                    <a href="https://chromewebstore.google.com/detail/twitter-%E8%B6%85%E7%BA%A7%E5%A2%9E%E5%BC%BA/pancaficlgkdicdeloffhlgdldfhcghf?authuser=0&hl=zh-CN" target="_blank" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover-scale">
-                        <i class="fas fa-download mr-2"></i>
-                        <span data-i18n="hero.install">Install Extension</span>
-                    </a>
-                    <a href="#demo" class="border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:border-gray-400 transition">
-                        <i class="fas fa-play mr-2"></i>
-                        <span data-i18n="hero.demo">Watch Demo</span>
-                    </a>
+    <main>
+        <section class="hero" id="top">
+            <div class="container hero-grid">
+                <div class="hero-content reveal">
+                    <div class="hero-kicker">
+                        <span class="kicker-chip" data-i18n="features.privacy.title">Privacy First</span>
+                        <span class="kicker-chip kicker-chip--outline" data-i18n="features.notion.title">Notion Integration</span>
+                    </div>
+                    <h1>
+                        <span data-i18n="hero.title">Super Copy for</span>
+                        <span class="hero-accent">Twitter/X</span>
+                    </h1>
+                    <p class="hero-description" data-i18n="hero.description">
+                        Enhanced browser extension that revolutionizes how you copy and save Twitter content.
+                        Support for video downloads, threads, multiple formats, Notion integration, beautiful screenshots, and 6 languages.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="https://chromewebstore.google.com/detail/twitter-%E8%B6%85%E7%BA%A7%E5%A2%9E%E5%BC%BA/pancaficlgkdicdeloffhlgdldfhcghf?authuser=0&hl=zh-CN" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                            <i class="fas fa-download"></i>
+                            <span data-i18n="hero.install">Install Extension</span>
+                        </a>
+                        <a href="#demo" class="btn btn-secondary">
+                            <i class="fas fa-play"></i>
+                            <span data-i18n="hero.demo">Watch Demo</span>
+                        </a>
+                    </div>
+                    <div class="hero-meta">
+                        <div class="meta-item">
+                            <i class="fab fa-chrome"></i>
+                            <span>Chrome</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fab fa-firefox"></i>
+                            <span>Firefox</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fab fa-edge"></i>
+                            <span>Edge</span>
+                        </div>
+                    </div>
+                    <div class="hero-chips">
+                        <span class="chip">HTML</span>
+                        <span class="chip">Markdown</span>
+                        <span class="chip">PNG</span>
+                        <span class="chip">Notion</span>
+                    </div>
                 </div>
-                
-                <!-- Browser Support -->
-                <div class="flex justify-center items-center space-x-6 mb-8">
-                    <div class="flex items-center space-x-2">
-                        <i class="fab fa-chrome text-2xl text-gray-700"></i>
-                        <span class="text-gray-600">Chrome</span>
+                <div class="hero-visual reveal" data-delay="140">
+                    <div class="mockup">
+                        <div class="mockup-header">
+                            <div class="window-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <span>tweetcraft.app</span>
+                            <span class="mockup-status">Live</span>
+                        </div>
+                        <div class="mockup-body">
+                            <div class="tweet-card">
+                                <div class="tweet-header">
+                                    <div class="avatar"></div>
+                                    <div class="tweet-meta">
+                                        <div class="tweet-name">Tweet Craft</div>
+                                        <div class="tweet-handle">@tweetcraft</div>
+                                    </div>
+                                    <div class="tweet-time">12:48</div>
+                                </div>
+                                <div class="tweet-lines">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                                <div class="tweet-tags">
+                                    <span class="chip chip--soft">HTML</span>
+                                    <span class="chip chip--soft">MD</span>
+                                    <span class="chip chip--soft">PNG</span>
+                                    <span class="chip chip--soft">Notion</span>
+                                </div>
+                            </div>
+                            <div class="action-row">
+                                <div class="action-pill">
+                                    <i class="fas fa-bolt"></i>
+                                    <span data-i18n="features.video.title">Smart Video Download</span>
+                                </div>
+                                <div class="action-pill">
+                                    <i class="fas fa-layer-group"></i>
+                                    <span data-i18n="features.thread.title">Smart Thread Detection</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <i class="fab fa-firefox text-2xl text-gray-700"></i>
-                        <span class="text-gray-600">Firefox</span>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <i class="fab fa-edge text-2xl text-gray-700"></i>
-                        <span class="text-gray-600">Edge</span>
+                    <div class="floating-note">
+                        <i class="fas fa-sticky-note"></i>
+                        <span data-i18n="features.notion.title">Notion Integration</span>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Features Section -->
-    <section id="features" class="py-16 px-6 bg-gray-50">
-        <div class="container mx-auto">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4" data-i18n="features.title">Powerful Features</h2>
-                <p class="text-xl text-gray-600" data-i18n="features.subtitle">Everything you need to enhance your Twitter experience</p>
-            </div>
-            
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Video Download Feature -->
-                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
-                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-video text-red-600 text-xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.video.title">Smart Video Download</h3>
-                    <p class="text-gray-600 mb-4" data-i18n="features.video.description">
-                        Automatically detect and download Twitter videos with one click. Support multiple quality options and external services.
-                    </p>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-download text-red-500 mr-2"></i>
-                            <span data-i18n="features.video.oneclick">One-click download</span>
-                        </div>
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-hd-video text-red-500 mr-2"></i>
-                            <span data-i18n="features.video.quality">Multiple quality options</span>
-                        </div>
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-cloud text-red-500 mr-2"></i>
-                            <span data-i18n="features.video.services">External service integration</span>
-                        </div>
-                    </div>
+        <section id="features" class="section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <h2 data-i18n="features.title">Powerful Features</h2>
+                    <p data-i18n="features.subtitle">Everything you need to enhance your Twitter experience</p>
                 </div>
-                <!-- Smart Thread Detection -->
-                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
-                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-link text-blue-600 text-xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.thread.title">Smart Thread Detection</h3>
-                    <p class="text-gray-600 mb-4" data-i18n="features.thread.description">
-                        Automatically detect Twitter threads using advanced algorithms. Copy entire threads with perfect formatting.
-                    </p>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-search text-blue-500 mr-2"></i>
-                            <span data-i18n="features.thread.pattern">Number pattern detection</span>
-                        </div>
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-reply text-blue-500 mr-2"></i>
-                            <span data-i18n="features.thread.selfreply">Self-reply analysis</span>
-                        </div>
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-eye text-blue-500 mr-2"></i>
-                            <span data-i18n="features.thread.visual">Visual continuity check</span>
-                        </div>
-                    </div>
-                </div>
+                <div class="feature-grid">
+                    <article class="feature-card reveal" data-accent="orange" data-delay="0">
+                        <div class="feature-icon"><i class="fas fa-video"></i></div>
+                        <h3 data-i18n="features.video.title">Smart Video Download</h3>
+                        <p data-i18n="features.video.description">
+                            Automatically detect and download Twitter videos with one click. Support multiple quality options and external services.
+                        </p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-download"></i><span data-i18n="features.video.oneclick">One-click download</span></li>
+                            <li><i class="fas fa-hd-video"></i><span data-i18n="features.video.quality">Multiple quality options</span></li>
+                            <li><i class="fas fa-cloud"></i><span data-i18n="features.video.services">External service integration</span></li>
+                        </ul>
+                    </article>
 
-                <!-- Multiple Formats -->
-                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
-                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-file-code text-green-600 text-xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.formats.title">Multiple Output Formats</h3>
-                    <p class="text-gray-600 mb-4" data-i18n="features.formats.description">
-                        Copy tweets in your preferred format. Perfect for different use cases and platforms.
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">HTML</span>
-                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">Markdown</span>
-                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">Plain Text</span>
-                    </div>
-                </div>
+                    <article class="feature-card reveal" data-accent="teal" data-delay="80">
+                        <div class="feature-icon"><i class="fas fa-link"></i></div>
+                        <h3 data-i18n="features.thread.title">Smart Thread Detection</h3>
+                        <p data-i18n="features.thread.description">
+                            Automatically detect Twitter threads using advanced algorithms. Copy entire threads with perfect formatting.
+                        </p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-search"></i><span data-i18n="features.thread.pattern">Number pattern detection</span></li>
+                            <li><i class="fas fa-reply"></i><span data-i18n="features.thread.selfreply">Self-reply analysis</span></li>
+                            <li><i class="fas fa-eye"></i><span data-i18n="features.thread.visual">Visual continuity check</span></li>
+                        </ul>
+                    </article>
 
-                <!-- Beautiful Screenshots -->
-                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
-                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-camera text-purple-600 text-xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.screenshot.title">Beautiful Screenshots</h3>
-                    <p class="text-gray-600 mb-4" data-i18n="features.screenshot.description">
-                        Generate stunning tweet screenshots with customizable themes, backgrounds, and export formats.
-                    </p>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-palette text-purple-500 mr-2"></i>
-                            <span data-i18n="features.screenshot.themes">Custom themes & backgrounds</span>
+                    <article class="feature-card reveal" data-accent="blue" data-delay="160">
+                        <div class="feature-icon"><i class="fas fa-file-code"></i></div>
+                        <h3 data-i18n="features.formats.title">Multiple Output Formats</h3>
+                        <p data-i18n="features.formats.description">
+                            Copy tweets in your preferred format. Perfect for different use cases and platforms.
+                        </p>
+                        <div class="feature-tags">
+                            <span class="chip">HTML</span>
+                            <span class="chip">Markdown</span>
+                            <span class="chip">Plain Text</span>
                         </div>
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-file-image text-purple-500 mr-2"></i>
-                            <span data-i18n="features.screenshot.formats">PNG, JPG, WebP formats</span>
-                        </div>
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-magic text-purple-500 mr-2"></i>
-                            <span data-i18n="features.screenshot.quality">High-quality rendering</span>
-                        </div>
-                    </div>
-                </div>
+                    </article>
 
-                <!-- Multi-language Support -->
-                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
-                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-globe text-orange-600 text-xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.language.title">Multi-language Support</h3>
-                    <p class="text-gray-600 mb-4" data-i18n="features.language.description">
-                        Full internationalization support with automatic language detection.
-                    </p>
-                    <div class="grid grid-cols-2 gap-2 text-sm">
-                        <div class="flex items-center"><i class="fas fa-check text-orange-500 mr-2"></i>中文</div>
-                        <div class="flex items-center"><i class="fas fa-check text-orange-500 mr-2"></i>English</div>
-                        <div class="flex items-center"><i class="fas fa-check text-orange-500 mr-2"></i>日本語</div>
-                        <div class="flex items-center"><i class="fas fa-check text-orange-500 mr-2"></i>한국어</div>
-                    </div>
-                </div>
+                    <article class="feature-card reveal" data-accent="sky" data-delay="240">
+                        <div class="feature-icon"><i class="fas fa-camera"></i></div>
+                        <h3 data-i18n="features.screenshot.title">Beautiful Screenshots</h3>
+                        <p data-i18n="features.screenshot.description">
+                            Generate stunning tweet screenshots with customizable themes, backgrounds, and export formats.
+                        </p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-palette"></i><span data-i18n="features.screenshot.themes">Custom themes & backgrounds</span></li>
+                            <li><i class="fas fa-file-image"></i><span data-i18n="features.screenshot.formats">PNG, JPG, WebP formats</span></li>
+                            <li><i class="fas fa-magic"></i><span data-i18n="features.screenshot.quality">High-quality rendering</span></li>
+                        </ul>
+                    </article>
 
-                <!-- Performance Optimized -->
-                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
-                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-rocket text-yellow-600 text-xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.performance.title">Performance Optimized</h3>
-                    <p class="text-gray-600 mb-4" data-i18n="features.performance.description">
-                        Built with performance in mind. Smart detection, batch processing, and efficient memory management.
-                    </p>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-tachometer-alt text-yellow-500 mr-2"></i>
-                            <span data-i18n="features.performance.detection">Real-time video detection</span>
+                    <article class="feature-card reveal" data-accent="amber" data-delay="320">
+                        <div class="feature-icon"><i class="fas fa-globe"></i></div>
+                        <h3 data-i18n="features.language.title">Multi-language Support</h3>
+                        <p data-i18n="features.language.description">
+                            Full internationalization support with automatic language detection.
+                        </p>
+                        <div class="language-grid">
+                            <span>中文</span>
+                            <span>English</span>
+                            <span>日本語</span>
+                            <span>한국어</span>
                         </div>
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-memory text-yellow-500 mr-2"></i>
-                            <span data-i18n="features.performance.cache">LRU cache optimization</span>
-                        </div>
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-sync text-yellow-500 mr-2"></i>
-                            <span data-i18n="features.performance.debounce">Debounced processing</span>
-                        </div>
-                    </div>
-                </div>
+                    </article>
 
-                <!-- Notion Integration -->
-                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
-                    <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-sticky-note text-gray-700 text-xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.notion.title">Notion Integration</h3>
-                    <p class="text-gray-600 mb-4" data-i18n="features.notion.description">
-                        Save tweets directly to your Notion database with one click. Organize and categorize your saved content.
-                    </p>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-database text-gray-500 mr-2"></i>
-                            <span data-i18n="features.notion.database">Auto database creation</span>
-                        </div>
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-tags text-gray-500 mr-2"></i>
-                            <span data-i18n="features.notion.categories">Category management</span>
-                        </div>
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-sync text-gray-500 mr-2"></i>
-                            <span data-i18n="features.notion.duplicate">Duplicate detection</span>
-                        </div>
-                    </div>
-                </div>
+                    <article class="feature-card reveal" data-accent="green" data-delay="400">
+                        <div class="feature-icon"><i class="fas fa-rocket"></i></div>
+                        <h3 data-i18n="features.performance.title">Performance Optimized</h3>
+                        <p data-i18n="features.performance.description">
+                            Built with performance in mind. Smart detection, batch processing, and efficient memory management.
+                        </p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-tachometer-alt"></i><span data-i18n="features.performance.detection">Real-time video detection</span></li>
+                            <li><i class="fas fa-memory"></i><span data-i18n="features.performance.cache">LRU cache optimization</span></li>
+                            <li><i class="fas fa-sync"></i><span data-i18n="features.performance.debounce">Debounced processing</span></li>
+                        </ul>
+                    </article>
 
-                <!-- Privacy First -->
-                <div class="bg-white p-6 rounded-xl shadow-lg hover-scale">
-                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-shield-alt text-indigo-600 text-xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3" data-i18n="features.privacy.title">Privacy First</h3>
-                    <p class="text-gray-600 mb-4" data-i18n="features.privacy.description">
-                        All processing happens locally. No data is sent to external servers.
-                    </p>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-lock text-indigo-500 mr-2"></i>
-                            <span data-i18n="features.privacy.local">Local processing only</span>
-                        </div>
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-user-secret text-indigo-500 mr-2"></i>
-                            <span data-i18n="features.privacy.notracking">No tracking or analytics</span>
-                        </div>
-                    </div>
+                    <article class="feature-card reveal" data-accent="slate" data-delay="480">
+                        <div class="feature-icon"><i class="fas fa-sticky-note"></i></div>
+                        <h3 data-i18n="features.notion.title">Notion Integration</h3>
+                        <p data-i18n="features.notion.description">
+                            Save tweets directly to your Notion database with one click. Organize and categorize your saved content.
+                        </p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-database"></i><span data-i18n="features.notion.database">Auto database creation</span></li>
+                            <li><i class="fas fa-tags"></i><span data-i18n="features.notion.categories">Category management</span></li>
+                            <li><i class="fas fa-sync"></i><span data-i18n="features.notion.duplicate">Duplicate detection</span></li>
+                        </ul>
+                    </article>
+
+                    <article class="feature-card reveal" data-accent="rose" data-delay="560">
+                        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                        <h3 data-i18n="features.privacy.title">Privacy First</h3>
+                        <p data-i18n="features.privacy.description">
+                            All processing happens locally. No data is sent to external servers.
+                        </p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-lock"></i><span data-i18n="features.privacy.local">Local processing only</span></li>
+                            <li><i class="fas fa-user-secret"></i><span data-i18n="features.privacy.notracking">No tracking or analytics</span></li>
+                        </ul>
+                    </article>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Demo Section -->
-    <section id="demo" class="py-16 px-6">
-        <div class="container mx-auto">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4" data-i18n="demo.title">See It In Action</h2>
-                <p class="text-xl text-gray-600" data-i18n="demo.subtitle">Watch how Tweet Craft transforms your Twitter experience</p>
-            </div>
-            
-            <div class="max-w-4xl mx-auto">
-                <div class="bg-gray-100 rounded-xl p-8 mb-8">
-                    <div class="aspect-video bg-gray-300 rounded-lg flex items-center justify-center">
-                        <div class="text-center">
-                            <i class="fas fa-play-circle text-6xl text-gray-500 mb-4"></i>
-                            <p class="text-gray-600" data-i18n="demo.coming">Demo Video Coming Soon</p>
+        <section id="demo" class="section section--dark">
+            <div class="container">
+                <div class="demo-grid">
+                    <div class="demo-content reveal">
+                        <div class="section-header section-header--left">
+                            <h2 data-i18n="demo.title">See It In Action</h2>
+                            <p data-i18n="demo.subtitle">Watch how Tweet Craft transforms your Twitter experience</p>
+                        </div>
+                        <div class="demo-cards">
+                            <article class="demo-card">
+                                <h3 data-i18n="demo.video.title">Video Download</h3>
+                                <ul class="demo-list">
+                                    <li><i class="fas fa-search"></i><span data-i18n="demo.video.detect">Auto-detect videos</span></li>
+                                    <li><i class="fas fa-mouse-pointer"></i><span data-i18n="demo.video.button">Add download button</span></li>
+                                    <li><i class="fas fa-download"></i><span data-i18n="demo.video.download">One-click download</span></li>
+                                </ul>
+                            </article>
+                            <article class="demo-card">
+                                <h3 data-i18n="demo.copy.title">Smart Copy</h3>
+                                <ul class="demo-list">
+                                    <li><i class="fas fa-link"></i><span data-i18n="demo.copy.thread">Thread detection</span></li>
+                                    <li><i class="fas fa-file-code"></i><span data-i18n="demo.copy.formats">Multiple formats</span></li>
+                                    <li><i class="fas fa-clipboard"></i><span data-i18n="demo.copy.clipboard">Auto clipboard</span></li>
+                                </ul>
+                            </article>
+                            <article class="demo-card">
+                                <h3 data-i18n="demo.screenshot.title">Screenshot</h3>
+                                <ul class="demo-list">
+                                    <li><i class="fas fa-palette"></i><span data-i18n="demo.screenshot.themes">Custom themes</span></li>
+                                    <li><i class="fas fa-image"></i><span data-i18n="demo.screenshot.quality">High quality</span></li>
+                                    <li><i class="fas fa-download"></i><span data-i18n="demo.screenshot.export">Export options</span></li>
+                                </ul>
+                            </article>
+                            <article class="demo-card">
+                                <h3 data-i18n="demo.notion.title">Notion Save</h3>
+                                <ul class="demo-list">
+                                    <li><i class="fas fa-database"></i><span data-i18n="demo.notion.connect">Connect workspace</span></li>
+                                    <li><i class="fas fa-mouse-pointer"></i><span data-i18n="demo.notion.oneclick">One-click save</span></li>
+                                    <li><i class="fas fa-tags"></i><span data-i18n="demo.notion.organize">Auto organize</span></li>
+                                </ul>
+                            </article>
+                        </div>
+                    </div>
+                    <div class="demo-stage reveal" data-delay="120">
+                        <div class="video-frame">
+                            <div class="play-ring">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <p data-i18n="demo.coming">Demo Video Coming Soon</p>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Feature Demos -->
-                <div class="grid md:grid-cols-3 gap-8 mb-8">
-                    <!-- Video Download Demo -->
-                    <div class="bg-white p-6 rounded-xl shadow-lg">
-                        <div class="flex items-center mb-4">
-                            <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
-                                <i class="fas fa-video text-red-600"></i>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-900" data-i18n="demo.video.title">Video Download</h3>
-                        </div>
-                        <div class="space-y-3 text-sm">
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-search text-red-500 mr-2"></i>
-                                <span data-i18n="demo.video.detect">Auto-detect videos</span>
-                            </div>
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-mouse-pointer text-red-500 mr-2"></i>
-                                <span data-i18n="demo.video.button">Add download button</span>
-                            </div>
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-download text-red-500 mr-2"></i>
-                                <span data-i18n="demo.video.download">One-click download</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Copy Features Demo -->
-                    <div class="bg-white p-6 rounded-xl shadow-lg">
-                        <div class="flex items-center mb-4">
-                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                                <i class="fas fa-copy text-blue-600"></i>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-900" data-i18n="demo.copy.title">Smart Copy</h3>
-                        </div>
-                        <div class="space-y-3 text-sm">
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-link text-blue-500 mr-2"></i>
-                                <span data-i18n="demo.copy.thread">Thread detection</span>
-                            </div>
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-file-code text-blue-500 mr-2"></i>
-                                <span data-i18n="demo.copy.formats">Multiple formats</span>
-                            </div>
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-clipboard text-blue-500 mr-2"></i>
-                                <span data-i18n="demo.copy.clipboard">Auto clipboard</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Screenshot Demo -->
-                    <div class="bg-white p-6 rounded-xl shadow-lg">
-                        <div class="flex items-center mb-4">
-                            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                                <i class="fas fa-camera text-purple-600"></i>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-900" data-i18n="demo.screenshot.title">Screenshot</h3>
-                        </div>
-                        <div class="space-y-3 text-sm">
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-palette text-purple-500 mr-2"></i>
-                                <span data-i18n="demo.screenshot.themes">Custom themes</span>
-                            </div>
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-image text-purple-500 mr-2"></i>
-                                <span data-i18n="demo.screenshot.quality">High quality</span>
-                            </div>
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-download text-purple-500 mr-2"></i>
-                                <span data-i18n="demo.screenshot.export">Export options</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Notion Demo -->
-                    <div class="bg-white p-6 rounded-xl shadow-lg">
-                        <div class="flex items-center mb-4">
-                            <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
-                                <i class="fas fa-sticky-note text-gray-700"></i>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-900" data-i18n="demo.notion.title">Notion Save</h3>
-                        </div>
-                        <div class="space-y-3 text-sm">
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-database text-gray-500 mr-2"></i>
-                                <span data-i18n="demo.notion.connect">Connect workspace</span>
-                            </div>
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-mouse-pointer text-gray-500 mr-2"></i>
-                                <span data-i18n="demo.notion.oneclick">One-click save</span>
-                            </div>
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-tags text-gray-500 mr-2"></i>
-                                <span data-i18n="demo.notion.organize">Auto organize</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Code Samples -->
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4" data-i18n="demo.html">HTML Output Sample</h3>
+                <div class="demo-samples">
+                    <div class="code-card reveal">
+                        <h3 data-i18n="demo.html">HTML Output Sample</h3>
                         <div class="code-block">
                             <pre>&lt;div class="tweet-copy"&gt;
   &lt;div class="tweet-header"&gt;
@@ -491,9 +1532,8 @@
 &lt;/div&gt;</pre>
                         </div>
                     </div>
-                    
-                    <div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-4" data-i18n="demo.markdown">Markdown Output Sample</h3>
+                    <div class="code-card reveal" data-delay="80">
+                        <h3 data-i18n="demo.markdown">Markdown Output Sample</h3>
                         <div class="code-block">
                             <pre>**John Doe** (@johndoe)
 *2024/01/01 12:00*
@@ -507,308 +1547,249 @@ This is amazing! 🚀
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Notion Guide Section -->
-    <section id="notion-guide" class="py-16 px-6 bg-gray-50">
-        <div class="container mx-auto">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4" data-i18n="notionGuide.title">Notion Setup Guide</h2>
-                <p class="text-xl text-gray-600" data-i18n="notionGuide.subtitle">Connect Notion in minutes and reuse your existing database.</p>
-            </div>
-            
-            <div class="grid lg:grid-cols-3 gap-8 items-start">
-                <div class="lg:col-span-2 bg-white p-8 rounded-2xl shadow-lg">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-2xl font-semibold text-gray-900" data-i18n="notionGuide.steps.title">Setup Checklist</h3>
-                        <span class="text-sm text-gray-500" data-i18n="notionGuide.steps.time">Takes ~6 minutes</span>
+        <section id="notion-guide" class="section section--soft">
+            <div class="container">
+                <div class="section-header reveal">
+                    <h2 data-i18n="notionGuide.title">Notion Setup Guide</h2>
+                    <p data-i18n="notionGuide.subtitle">Connect Notion in minutes and reuse your existing database.</p>
+                </div>
+                <div class="guide-grid">
+                    <div class="guide-card reveal">
+                        <div class="guide-header">
+                            <h3 data-i18n="notionGuide.steps.title">Setup Checklist</h3>
+                            <span data-i18n="notionGuide.steps.time">Takes ~6 minutes</span>
+                        </div>
+                        <div class="guide-steps">
+                            <div class="guide-step">
+                                <div class="step-index">01</div>
+                                <div>
+                                    <h4 data-i18n="notionGuide.step1.title">Create Integration</h4>
+                                    <p data-i18n="notionGuide.step1.desc">Generate a Notion Integration Token (secret_/ntn_).</p>
+                                </div>
+                            </div>
+                            <div class="guide-step">
+                                <div class="step-index">02</div>
+                                <div>
+                                    <h4 data-i18n="notionGuide.step2.title">Share a Parent Page</h4>
+                                    <p data-i18n="notionGuide.step2.desc">Add the integration via Add connections on your page.</p>
+                                </div>
+                            </div>
+                            <div class="guide-step">
+                                <div class="step-index">03</div>
+                                <div>
+                                    <h4 data-i18n="notionGuide.step3.title">Connect in the Extension</h4>
+                                    <p data-i18n="notionGuide.step3.desc">Paste the token in Notion settings and connect.</p>
+                                </div>
+                            </div>
+                            <div class="guide-step">
+                                <div class="step-index">04</div>
+                                <div>
+                                    <h4 data-i18n="notionGuide.step4.title">Reuse or Create Database</h4>
+                                    <p data-i18n="notionGuide.step4.desc">Existing databases are reusable; otherwise create a new one.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div class="flex items-start space-x-3">
-                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center font-semibold text-gray-700">01</div>
-                            <div>
-                                <h4 class="text-lg font-semibold text-gray-900" data-i18n="notionGuide.step1.title">Create Integration</h4>
-                                <p class="text-gray-600 text-sm" data-i18n="notionGuide.step1.desc">Generate a Notion Integration Token (secret_/ntn_).</p>
+                    <div class="guide-cta reveal" data-delay="120">
+                        <div class="label" data-i18n="notionGuide.card.label">Quick Access</div>
+                        <h3 data-i18n="notionGuide.card.title">Open the full tutorial</h3>
+                        <p data-i18n="notionGuide.card.desc">Step-by-step screenshots, troubleshooting, and database ID tips.</p>
+                        <a href="docs/notion-setup-tutorial.html" target="_blank" rel="noopener noreferrer">
+                            <i class="fas fa-book-open"></i>
+                            <span data-i18n="notionGuide.card.link">View Notion tutorial</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tech" class="section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <h2 data-i18n="tech.title">Built with Modern Technology</h2>
+                    <p data-i18n="tech.subtitle">Powered by cutting-edge web technologies</p>
+                </div>
+                <div class="tech-grid">
+                    <div class="reveal">
+                        <h3 data-i18n="tech.stack">Tech Stack</h3>
+                        <div class="tech-list">
+                            <div class="tech-item">
+                                <div class="tech-icon"><i class="fab fa-js"></i></div>
+                                <div>
+                                    <span>TypeScript</span>
+                                    <small data-i18n="tech.typescript">Type-safe development</small>
+                                </div>
+                            </div>
+                            <div class="tech-item">
+                                <div class="tech-icon"><i class="fas fa-cube"></i></div>
+                                <div>
+                                    <span>WXT</span>
+                                    <small data-i18n="tech.wxt">Modern extension framework</small>
+                                </div>
+                            </div>
+                            <div class="tech-item">
+                                <div class="tech-icon"><i class="fas fa-paint-brush"></i></div>
+                                <div>
+                                    <span>Tailwind CSS</span>
+                                    <small data-i18n="tech.tailwind">Utility-first styling</small>
+                                </div>
+                            </div>
+                            <div class="tech-item">
+                                <div class="tech-icon"><i class="fas fa-image"></i></div>
+                                <div>
+                                    <span>Snapdom</span>
+                                    <small data-i18n="tech.snapdom">Screenshot generation</small>
+                                </div>
+                            </div>
+                            <div class="tech-item">
+                                <div class="tech-icon"><i class="fas fa-video"></i></div>
+                                <div>
+                                    <span>Video Services</span>
+                                    <small data-i18n="tech.video">Multi-service integration</small>
+                                </div>
+                            </div>
+                            <div class="tech-item">
+                                <div class="tech-icon"><i class="fas fa-sticky-note"></i></div>
+                                <div>
+                                    <span>Notion API</span>
+                                    <small data-i18n="tech.notion">Database integration</small>
+                                </div>
+                            </div>
+                            <div class="tech-item">
+                                <div class="tech-icon"><i class="fas fa-cogs"></i></div>
+                                <div>
+                                    <span>Chrome APIs</span>
+                                    <small data-i18n="tech.chrome">Extension platform</small>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex items-start space-x-3">
-                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center font-semibold text-gray-700">02</div>
-                            <div>
-                                <h4 class="text-lg font-semibold text-gray-900" data-i18n="notionGuide.step2.title">Share a Parent Page</h4>
-                                <p class="text-gray-600 text-sm" data-i18n="notionGuide.step2.desc">Add the integration via Add connections on your page.</p>
+                    </div>
+                    <div class="reveal" data-delay="120">
+                        <h3 data-i18n="tech.architecture">Architecture</h3>
+                        <div class="architecture">
+                            <div class="architecture-card">
+                                <span data-i18n="tech.lines">8,000+ Lines of Code</span>
+                                <small data-i18n="tech.linesdesc">TypeScript, content scripts, background workers</small>
                             </div>
-                        </div>
-                        <div class="flex items-start space-x-3">
-                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center font-semibold text-gray-700">03</div>
-                            <div>
-                                <h4 class="text-lg font-semibold text-gray-900" data-i18n="notionGuide.step3.title">Connect in the Extension</h4>
-                                <p class="text-gray-600 text-sm" data-i18n="notionGuide.step3.desc">Paste the token in Notion settings and connect.</p>
+                            <div class="architecture-card">
+                                <span data-i18n="tech.detection">Smart Detection Engine</span>
+                                <small data-i18n="tech.detectiondesc">Video detection, thread analysis, DOM monitoring</small>
                             </div>
-                        </div>
-                        <div class="flex items-start space-x-3">
-                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center font-semibold text-gray-700">04</div>
-                            <div>
-                                <h4 class="text-lg font-semibold text-gray-900" data-i18n="notionGuide.step4.title">Reuse or Create Database</h4>
-                                <p class="text-gray-600 text-sm" data-i18n="notionGuide.step4.desc">Existing databases are reusable; otherwise create a new one.</p>
+                            <div class="architecture-card">
+                                <span data-i18n="tech.services">Multi-Service Integration</span>
+                                <small data-i18n="tech.servicesdesc">Video downloads, Notion API, screenshot engine</small>
+                            </div>
+                            <div class="architecture-card">
+                                <span data-i18n="tech.i18n">Complete i18n System</span>
+                                <small data-i18n="tech.i18ndesc">Auto detection, real-time switching, unified UI</small>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="bg-gray-900 text-white p-8 rounded-2xl shadow-lg">
-                    <div class="text-xs uppercase tracking-wider text-gray-300 mb-3" data-i18n="notionGuide.card.label">Quick Access</div>
-                    <h3 class="text-2xl font-semibold mb-4" data-i18n="notionGuide.card.title">Open the full tutorial</h3>
-                    <p class="text-gray-300 mb-6" data-i18n="notionGuide.card.desc">Step-by-step screenshots, troubleshooting, and database ID tips.</p>
-                    <a href="docs/notion-setup-tutorial.html" target="_blank" class="inline-flex items-center bg-white text-gray-900 px-5 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
-                        <i class="fas fa-book-open mr-2"></i>
-                        <span data-i18n="notionGuide.card.link">View Notion tutorial</span>
-                    </a>
+            </div>
+        </section>
+
+        <section id="install" class="section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <h2 data-i18n="install.title">Get Started Today</h2>
+                    <p data-i18n="install.subtitle">Install Tweet Craft and enhance your Twitter experience</p>
+                </div>
+                <div class="install-card reveal">
+                    <h3 data-i18n="install.guide">Installation Guide</h3>
+                    <div class="install-steps">
+                        <div class="install-step">
+                            <div class="step-index">1</div>
+                            <div>
+                                <h4 data-i18n="install.step1.title">Download the Extension</h4>
+                                <p data-i18n="install.step1.desc">Download the latest version from the Chrome Web Store or build from source.</p>
+                            </div>
+                        </div>
+                        <div class="install-step">
+                            <div class="step-index">2</div>
+                            <div>
+                                <h4 data-i18n="install.step2.title">Enable Developer Mode</h4>
+                                <p data-i18n="install.step2.desc">In your browser, go to extensions page and enable "Developer mode".</p>
+                            </div>
+                        </div>
+                        <div class="install-step">
+                            <div class="step-index">3</div>
+                            <div>
+                                <h4 data-i18n="install.step3.title">Load Extension</h4>
+                                <p data-i18n="install.step3.desc">Click "Load unpacked" and select the extension directory.</p>
+                            </div>
+                        </div>
+                        <div class="install-step">
+                            <div class="step-index">4</div>
+                            <div>
+                                <h4 data-i18n="install.step4.title">Enjoy!</h4>
+                                <p data-i18n="install.step4.desc">Visit Twitter/X.com and start using Tweet Craft features.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="install-action">
+                        <a href="https://chromewebstore.google.com/detail/twitter-%E8%B6%85%E7%BA%A7%E5%A2%9E%E5%BC%BA/pancaficlgkdicdeloffhlgdldfhcghf?authuser=0&hl=zh-CN" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                            <i class="fas fa-download"></i>
+                            <span data-i18n="install.download">Install from Chrome Store</span>
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </main>
 
-    <!-- Technology Stack -->
-    <section id="tech" class="py-16 px-6 bg-gray-50">
-        <div class="container mx-auto">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4" data-i18n="tech.title">Built with Modern Technology</h2>
-                <p class="text-xl text-gray-600" data-i18n="tech.subtitle">Powered by cutting-edge web technologies</p>
-            </div>
-            
-            <div class="grid md:grid-cols-2 gap-12 items-center">
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
                 <div>
-                    <h3 class="text-2xl font-semibold text-gray-900 mb-6" data-i18n="tech.stack">Tech Stack</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <i class="fab fa-js text-blue-600"></i>
-                            </div>
-                            <div>
-                                <div class="font-semibold">TypeScript</div>
-                                <div class="text-sm text-gray-600" data-i18n="tech.typescript">Type-safe development</div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-cube text-purple-600"></i>
-                            </div>
-                            <div>
-                                <div class="font-semibold">WXT</div>
-                                <div class="text-sm text-gray-600" data-i18n="tech.wxt">Modern extension framework</div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-paint-brush text-green-600"></i>
-                            </div>
-                            <div>
-                                <div class="font-semibold">Tailwind CSS</div>
-                                <div class="text-sm text-gray-600" data-i18n="tech.tailwind">Utility-first styling</div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-image text-orange-600"></i>
-                            </div>
-                            <div>
-                                <div class="font-semibold">Snapdom</div>
-                                <div class="text-sm text-gray-600" data-i18n="tech.snapdom">Screenshot generation</div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-video text-red-600"></i>
-                            </div>
-                            <div>
-                                <div class="font-semibold">Video Services</div>
-                                <div class="text-sm text-gray-600" data-i18n="tech.video">Multi-service integration</div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-sticky-note text-gray-700"></i>
-                            </div>
-                            <div>
-                                <div class="font-semibold">Notion API</div>
-                                <div class="text-sm text-gray-600" data-i18n="tech.notion">Database integration</div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-cogs text-indigo-600"></i>
-                            </div>
-                            <div>
-                                <div class="font-semibold">Chrome APIs</div>
-                                <div class="text-sm text-gray-600" data-i18n="tech.chrome">Extension platform</div>
-                            </div>
-                        </div>
+                    <div class="footer-brand">
+                        <img src="public/icon/icon.png" alt="Tweet Craft Logo">
+                        <span>Tweet Craft</span>
                     </div>
-                </div>
-                
-                <div>
-                    <h3 class="text-2xl font-semibold text-gray-900 mb-6" data-i18n="tech.architecture">Architecture</h3>
-                    <div class="space-y-4">
-                        <div class="bg-white p-4 rounded-lg shadow">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="font-semibold">8,000+ Lines of Code</span>
-                                <span class="text-sm text-gray-600" data-i18n="tech.lines">Production-ready</span>
-                            </div>
-                            <div class="text-sm text-gray-600" data-i18n="tech.linesdesc">TypeScript, content scripts, background workers</div>
-                        </div>
-                        
-                        <div class="bg-white p-4 rounded-lg shadow">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="font-semibold">Smart Detection Engine</span>
-                                <span class="text-sm text-gray-600" data-i18n="tech.detection">Multi-algorithm</span>
-                            </div>
-                            <div class="text-sm text-gray-600" data-i18n="tech.detectiondesc">Video detection, thread analysis, DOM monitoring</div>
-                        </div>
-                        
-                        <div class="bg-white p-4 rounded-lg shadow">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="font-semibold">Multi-Service Integration</span>
-                                <span class="text-sm text-gray-600" data-i18n="tech.services">Reliable & secure</span>
-                            </div>
-                            <div class="text-sm text-gray-600" data-i18n="tech.servicesdesc">Video downloads, Notion API, screenshot engine</div>
-                        </div>
-                        
-                        <div class="bg-white p-4 rounded-lg shadow">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="font-semibold">Complete i18n System</span>
-                                <span class="text-sm text-gray-600" data-i18n="tech.i18n">6 languages</span>
-                            </div>
-                            <div class="text-sm text-gray-600" data-i18n="tech.i18ndesc">Auto detection, real-time switching, unified UI</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Installation Section -->
-    <section id="install" class="py-16 px-6">
-        <div class="container mx-auto">
-            <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4" data-i18n="install.title">Get Started Today</h2>
-                <p class="text-xl text-gray-600" data-i18n="install.subtitle">Install Tweet Craft and enhance your Twitter experience</p>
-            </div>
-            
-            <div class="max-w-2xl mx-auto">
-                <div class="bg-white rounded-xl shadow-lg p-8">
-                    <h3 class="text-2xl font-semibold text-gray-900 mb-6" data-i18n="install.guide">Installation Guide</h3>
-                    
-                    <div class="space-y-6">
-                        <div class="flex items-start space-x-4">
-                            <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">1</div>
-                            <div>
-                                <h4 class="font-semibold text-gray-900 mb-2" data-i18n="install.step1.title">Download the Extension</h4>
-                                <p class="text-gray-600" data-i18n="install.step1.desc">Download the latest version from the Chrome Web Store or build from source.</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-start space-x-4">
-                            <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">2</div>
-                            <div>
-                                <h4 class="font-semibold text-gray-900 mb-2" data-i18n="install.step2.title">Enable Developer Mode</h4>
-                                <p class="text-gray-600" data-i18n="install.step2.desc">In your browser, go to extensions page and enable "Developer mode".</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-start space-x-4">
-                            <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">3</div>
-                            <div>
-                                <h4 class="font-semibold text-gray-900 mb-2" data-i18n="install.step3.title">Load Extension</h4>
-                                <p class="text-gray-600" data-i18n="install.step3.desc">Click "Load unpacked" and select the extension directory.</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-start space-x-4">
-                            <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">4</div>
-                            <div>
-                                <h4 class="font-semibold text-gray-900 mb-2" data-i18n="install.step4.title">Enjoy!</h4>
-                                <p class="text-gray-600" data-i18n="install.step4.desc">Visit Twitter/X.com and start using Tweet Craft features.</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-8 pt-8 border-t border-gray-200">
-                        <div class="flex flex-col sm:flex-row gap-4">
-                            <a href="https://chromewebstore.google.com/detail/twitter-%E8%B6%85%E7%BA%A7%E5%A2%9E%E5%BC%BA/pancaficlgkdicdeloffhlgdldfhcghf?authuser=0&hl=zh-CN" target="_blank" class="flex-1 bg-gray-900 text-white text-center py-3 rounded-lg font-semibold hover:bg-gray-800 transition">
-                                <i class="fas fa-download mr-2"></i>
-                                <span data-i18n="install.download">Install from Chrome Store</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12 px-6">
-        <div class="container mx-auto">
-            <div class="grid md:grid-cols-4 gap-8 mb-8">
-                <div>
-                    <div class="flex items-center space-x-2 mb-4">
-                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <img src="public/icon/icon.png" alt="Tweet Craft Logo" class="w-8 h-8 rounded">
-                        </div>
-                        <span class="text-xl font-bold">Tweet Craft</span>
-                    </div>
-                    <p class="text-gray-400" data-i18n="footer.tagline">
+                    <p data-i18n="footer.tagline">
                         Enhanced Twitter/X.com extension with video download, super copy functionality, and beautiful design.
                     </p>
                 </div>
-                
                 <div>
-                    <h4 class="font-semibold mb-4" data-i18n="footer.features">Features</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.video">Video Download</a></li>
-                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.thread">Thread Copy</a></li>
-                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.formats">Multiple Formats</a></li>
-                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.notion">Notion Integration</a></li>
-                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.screenshots">Screenshots</a></li>
-                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.multilang">Multi-language</a></li>
-                    </ul>
+                    <h4 data-i18n="footer.features">Features</h4>
+                    <div class="footer-links">
+                        <a href="#features" data-i18n="footer.video">Video Download</a>
+                        <a href="#features" data-i18n="footer.thread">Thread Copy</a>
+                        <a href="#features" data-i18n="footer.formats">Multiple Formats</a>
+                        <a href="#features" data-i18n="footer.notion">Notion Integration</a>
+                        <a href="#features" data-i18n="footer.screenshots">Screenshots</a>
+                        <a href="#features" data-i18n="footer.multilang">Multi-language</a>
+                    </div>
                 </div>
-                
                 <div>
-                    <h4 class="font-semibold mb-4" data-i18n="footer.resources">Resources</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="#install" class="hover:text-white transition" data-i18n="footer.installation">Installation</a></li>
-                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.features">Features</a></li>
-                        <li><a href="#demo" class="hover:text-white transition" data-i18n="footer.demo">Demo</a></li>
-                        <li><a href="#notion-guide" class="hover:text-white transition" data-i18n="footer.notionGuide">Notion Guide</a></li>
-                        <li><a href="mailto:support@concitech.org" class="hover:text-white transition" data-i18n="footer.support">Support</a></li>
-                    </ul>
+                    <h4 data-i18n="footer.resources">Resources</h4>
+                    <div class="footer-links">
+                        <a href="#install" data-i18n="footer.installation">Installation</a>
+                        <a href="#features" data-i18n="footer.features">Features</a>
+                        <a href="#demo" data-i18n="footer.demo">Demo</a>
+                        <a href="#notion-guide" data-i18n="footer.notionGuide">Notion Guide</a>
+                        <a href="mailto:support@concitech.org" data-i18n="footer.support">Support</a>
+                    </div>
                 </div>
-                
                 <div>
-                    <h4 class="font-semibold mb-4" data-i18n="footer.connect">Connect</h4>
-                    <div class="flex space-x-4">
-                        <a href="mailto:support@concitech.org" class="text-gray-400 hover:text-white transition">
-                            <i class="fas fa-envelope text-xl"></i>
+                    <h4 data-i18n="footer.connect">Connect</h4>
+                    <div class="footer-links">
+                        <a href="mailto:support@concitech.org">
+                            <i class="fas fa-envelope"></i>
+                            <span class="sr-only">Email</span>
                         </a>
-                        <a href="https://x.com/liu7193" target="_blank" class="text-gray-400 hover:text-white transition">
-                            <i class="fab fa-twitter text-xl"></i>
+                        <a href="https://x.com/liu7193" target="_blank" rel="noopener noreferrer">
+                            <i class="fab fa-twitter"></i>
+                            <span class="sr-only">Twitter</span>
                         </a>
                     </div>
                 </div>
             </div>
-            
-            <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+            <div class="footer-bottom">
                 <p>&copy; 2024 Tweet Craft. <span data-i18n="footer.copyright">Built with ❤️ for the Twitter community.</span></p>
-                <p class="mt-2 text-sm">
-                    <span data-i18n="footer.rights">All rights reserved.</span>
-                </p>
+                <p><span data-i18n="footer.rights">All rights reserved.</span></p>
             </div>
         </div>
     </footer>
@@ -939,6 +1920,7 @@ This is amazing! 🚀
                 'install.download': 'Install from Chrome Store',
                 'footer.tagline': 'Super copy functionality for Twitter/X.com with advanced features and beautiful design.',
                 'footer.features': 'Features',
+                'footer.video': 'Video Download',
                 'footer.thread': 'Thread Copy',
                 'footer.formats': 'Multiple Formats',
                 'footer.notion': 'Notion Integration',
@@ -946,6 +1928,7 @@ This is amazing! 🚀
                 'footer.multilang': 'Multi-language',
                 'footer.resources': 'Resources',
                 'footer.installation': 'Installation',
+                'footer.demo': 'Demo',
                 'footer.notionGuide': 'Notion Guide',
                 'footer.support': 'Support',
                 'footer.connect': 'Connect',
@@ -1074,6 +2057,7 @@ This is amazing! 🚀
                 'install.download': '从 Chrome 商店安装',
                 'footer.tagline': 'Twitter/X.com 超级复制功能，具有高级功能和精美设计。',
                 'footer.features': '功能',
+                'footer.video': '视频下载',
                 'footer.thread': '线程复制',
                 'footer.formats': '多种格式',
                 'footer.notion': 'Notion 集成',
@@ -1081,6 +2065,7 @@ This is amazing! 🚀
                 'footer.multilang': '多语言',
                 'footer.resources': '资源',
                 'footer.installation': '安装',
+                'footer.demo': '演示',
                 'footer.notionGuide': 'Notion 教程',
                 'footer.support': '支持',
                 'footer.connect': '联系',
@@ -1095,8 +2080,7 @@ This is amazing! 🚀
             currentLang = lang;
             document.getElementById('currentLang').textContent = lang.toUpperCase();
             document.documentElement.lang = lang;
-            
-            // Update all elements with data-i18n attribute
+
             document.querySelectorAll('[data-i18n]').forEach(element => {
                 const key = element.getAttribute('data-i18n');
                 if (translations[lang] && translations[lang][key]) {
@@ -1105,13 +2089,11 @@ This is amazing! 🚀
             });
         }
 
-        // Language toggle functionality
         document.getElementById('langToggle').addEventListener('click', function() {
             const newLang = currentLang === 'en' ? 'zh' : 'en';
             updateLanguage(newLang);
         });
 
-        // Detect browser language
         function detectBrowserLanguage() {
             const browserLang = navigator.language || navigator.userLanguage;
             if (browserLang.startsWith('zh')) {
@@ -1120,10 +2102,8 @@ This is amazing! 🚀
             return 'en';
         }
 
-        // Initialize language
         updateLanguage(detectBrowserLanguage());
 
-        // Smooth scrolling for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -1137,20 +2117,42 @@ This is amazing! 🚀
             });
         });
 
-        // Add scroll effect to navigation
-        window.addEventListener('scroll', function() {
-            const nav = document.querySelector('nav');
-            if (window.scrollY > 50) {
-                nav.classList.add('shadow-lg');
-            } else {
-                nav.classList.remove('shadow-lg');
-            }
+        const nav = document.getElementById('siteNav');
+        const menuToggle = document.getElementById('menuToggle');
+
+        menuToggle.addEventListener('click', () => {
+            const isOpen = nav.classList.toggle('open');
+            menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         });
 
-        // Mobile menu toggle
-        document.querySelector('.fa-bars').parentElement.addEventListener('click', function() {
-            // Implementation for mobile menu
-            alert('Mobile menu implementation needed');
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                nav.classList.remove('open');
+                menuToggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        const header = document.querySelector('.site-header');
+        window.addEventListener('scroll', () => {
+            header.classList.toggle('scrolled', window.scrollY > 30);
+        });
+
+        const revealElements = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.2 });
+
+        revealElements.forEach(element => {
+            const delay = element.getAttribute('data-delay');
+            if (delay) {
+                element.style.setProperty('--delay', `${delay}ms`);
+            }
+            observer.observe(element);
         });
     </script>
 </body>

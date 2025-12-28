@@ -747,6 +747,14 @@ browser.tabs.create({ url: 'https://x.com' });
           <div class="action-buttons">
             <button id="test-connection" class="secondary-button">${i18nManager.t('notion.settings.test_connection')}</button>
             <button id="view-stats" class="secondary-button">${i18nManager.t('notion.settings.view_stats')}</button>
+            <a
+              href="https://tweet-craft.concitech.org/docs/notion-setup-tutorial"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="secondary-button"
+            >
+              ${i18nManager.t('notion.settings.guide')}
+            </a>
           </div>
         </div>
       </div>
@@ -780,6 +788,11 @@ browser.tabs.create({ url: 'https://x.com' });
               <li>${i18nManager.t('notion.settings.setup_step4')}</li>
               <li>${i18nManager.t('notion.settings.setup_step5')}</li>
               <li>${i18nManager.t('notion.settings.setup_step6')}</li>
+              <li>
+                <a href="https://tweet-craft.concitech.org/docs/notion-setup-tutorial" target="_blank" rel="noopener noreferrer">
+                  ${i18nManager.t('notion.settings.guide')}
+                </a>
+              </li>
             </ol>
           </div>
         </div>
