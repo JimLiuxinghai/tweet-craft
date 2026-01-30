@@ -770,23 +770,22 @@
             border-radius: var(--radius-lg);
             border: 1px dashed rgba(255, 255, 255, 0.3);
             background: rgba(15, 23, 42, 0.6);
-            padding: 32px;
-            text-align: center;
-            min-height: 280px;
-            display: grid;
-            place-items: center;
-            gap: 16px;
+            overflow: hidden;
+            aspect-ratio: 16 / 9;
+            width: 100%;
         }
 
-        .play-ring {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            border: 2px solid rgba(249, 115, 22, 0.8);
-            display: grid;
-            place-items: center;
-            color: #f97316;
-            font-size: 1.6rem;
+        .video-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .video-caption {
+            margin-top: 12px;
+            text-align: center;
+            color: #dbe4ff;
+            font-size: 0.95rem;
         }
 
         .demo-samples {
@@ -1506,11 +1505,15 @@
                     </div>
                     <div class="demo-stage reveal" data-delay="120">
                         <div class="video-frame">
-                            <div class="play-ring">
-                                <i class="fas fa-play"></i>
-                            </div>
-                            <p data-i18n="demo.coming">Demo Video Coming Soon</p>
+                            <iframe
+                                src="https://www.youtube.com/embed/5GFZP5td4yo"
+                                title="Tweet Craft video introduction"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen
+                                loading="lazy"
+                            ></iframe>
                         </div>
+                        <p class="video-caption" data-i18n="demo.video.intro">Watch a quick walkthrough of Tweet Craft in action.</p>
                     </div>
                 </div>
                 <div class="demo-samples">
@@ -1849,7 +1852,7 @@ This is amazing! 🚀
                 'features.privacy.notracking': 'No tracking or analytics',
                 'demo.title': 'See It In Action',
                 'demo.subtitle': 'Watch how Tweet Craft transforms your Twitter experience',
-                'demo.coming': 'Demo Video Coming Soon',
+                'demo.video.intro': 'Watch a quick walkthrough of Tweet Craft in action.',
                 'demo.video.title': 'Video Download',
                 'demo.video.detect': 'Auto-detect videos',
                 'demo.video.button': 'Add download button',
@@ -1986,7 +1989,7 @@ This is amazing! 🚀
                 'features.privacy.notracking': '无跟踪或分析',
                 'demo.title': '实际效果',
                 'demo.subtitle': '观看 Tweet Craft 如何改变您的推特体验',
-                'demo.coming': '演示视频即将推出',
+                'demo.video.intro': '观看 Tweet Craft 的快速演示视频。',
                 'demo.video.title': '视频下载',
                 'demo.video.detect': '自动检测视频',
                 'demo.video.button': '添加下载按钮',
