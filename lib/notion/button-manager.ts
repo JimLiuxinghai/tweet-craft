@@ -438,19 +438,17 @@ export class NotionButtonManager {
         return;
       }
 
-      // 显示分类选择器
-      const selectedCategory = await this.showCategorySelector();
-      if (!selectedCategory) {
-        return; // 用户取消了选择
-      }
-
       // 显示加载状态
       this.setButtonLoading(button, true);
 
       // 自动生成标签
       const autoTags = TweetExtractor.generateTagsFromContent(tweetData.content);
       tweetData.tags = autoTags;
-      tweetData.category = selectedCategory;
+
+      const { TweetClassifier } = await import('../ai/tweet-classifier');
+      const classification = await TweetClassifier.classify(tweetData);
+      tweetData.category = classification.category;
+      console.log(`Tweet classified as ${classification.category} via ${classification.source}`);
 
       // 发送到background script保存
       const result = await this.saveTweetToNotion(tweetData);

@@ -208,9 +208,10 @@ export class TwitterContentScript {
     const foundElements = new Set<HTMLElement>();
     
     // 检查容器本身是否是推文
-    if (this.isTweetElement(container)) {
-      tweets.push(container);
-      foundElements.add(container);
+    const rootTweet = this.normalizeTweetElement(container);
+    if (rootTweet && this.isTweetElement(rootTweet)) {
+      tweets.push(rootTweet);
+      foundElements.add(rootTweet);
     }
     
     // 查找子推文元素
@@ -224,8 +225,10 @@ export class TwitterContentScript {
     for (const selector of tweetSelectors) {
       const elements = container.querySelectorAll(selector);
       for (const element of elements) {
-        if (this.isTweetElement(element as HTMLElement)) {
- tweets.push(element as HTMLElement);
+        const tweetElement = this.normalizeTweetElement(element as HTMLElement);
+        if (tweetElement && !foundElements.has(tweetElement) && this.isTweetElement(tweetElement)) {
+ tweets.push(tweetElement);
+foundElements.add(tweetElement);
         }
       }
     }
@@ -234,11 +237,44 @@ export class TwitterContentScript {
   }
 
   /**
+   * 将宽容器或推文内部子节点归一为真实的推文根节点。
+   * X 首页初始化时 document.body 也包含用户名/正文/操作按钮，不能把它当成推文本体。
+   */
+  private normalizeTweetElement(element: HTMLElement | null): HTMLElement | null {
+    if (!element || element === document.body || element === document.documentElement) {
+      return null;
+    }
+
+    const article = (element.matches(TWITTER_SELECTORS.TWEET_ARTICLE)
+      ? element
+      : closest(element, TWITTER_SELECTORS.TWEET_ARTICLE)) as HTMLElement | null;
+    if (article) {
+      return article;
+    }
+
+    const detailArticle = (element.matches(TWITTER_SELECTORS.TWEET_DETAIL_CONTAINER)
+      ? element
+      : closest(element, TWITTER_SELECTORS.TWEET_DETAIL_CONTAINER)) as HTMLElement | null;
+    if (detailArticle && detailArticle !== document.body && detailArticle !== document.documentElement) {
+      return detailArticle;
+    }
+
+    const dataTweet = (element.matches('[data-testid="tweet"]')
+      ? element
+      : closest(element, '[data-testid="tweet"]')) as HTMLElement | null;
+    if (dataTweet && dataTweet !== document.body && dataTweet !== document.documentElement) {
+      return dataTweet;
+    }
+
+    return null;
+  }
+
+  /**
    * 检查元素是否为推文
    */
   private isTweetElement(element: HTMLElement): boolean {
      // 排除已处理的元素、正在处理的元素和无效元素
-    if (!element || element.classList.contains('tsc-processed') || element.classList.contains('tsc-processing')) {
+    if (!element || element === document.body || element === document.documentElement) {
       return false;
     }
 
@@ -256,8 +292,7 @@ export class TwitterContentScript {
     
     // 检查是否是标准推文容器
     const isStandardTweet = element.matches(TWITTER_SELECTORS.TWEET_CONTAINER) || 
-     element.matches(TWITTER_SELECTORS.TWEET_ARTICLE) ||
-  closest(element, TWITTER_SELECTORS.TWEET_CONTAINER) !== null;
+     element.matches(TWITTER_SELECTORS.TWEET_ARTICLE);
     
     if (isStandardTweet) {
       console.log('Detected tweet element by standard selectors');
@@ -325,9 +360,10 @@ export class TwitterContentScript {
     ];
     
     // 检查容器本身
-    if (this.isTweetElement(container)) {
-      tweets.push(container);
-     foundElements.add(container);
+    const rootTweet = this.normalizeTweetElement(container);
+    if (rootTweet && this.isTweetElement(rootTweet)) {
+      tweets.push(rootTweet);
+     foundElements.add(rootTweet);
     }
     
     // 查找子元素
@@ -335,8 +371,8 @@ export class TwitterContentScript {
       try {
         const elements = container.querySelectorAll(selector);
      for (const element of elements) {
-          const tweetElement = element as HTMLElement;
-        if (!foundElements.has(tweetElement) && this.isTweetElement(tweetElement)) {
+          const tweetElement = this.normalizeTweetElement(element as HTMLElement);
+        if (tweetElement && !foundElements.has(tweetElement) && this.isTweetElement(tweetElement)) {
  tweets.push(tweetElement);
 foundElements.add(tweetElement);
           }
@@ -574,6 +610,12 @@ return null;
    * 立即处理单个推文元素 - 无重试机制的快速版本
    */
   private async processTweetElementImmediate(element: HTMLElement): Promise<void> {
+    const normalizedElement = this.normalizeTweetElement(element);
+    if (!normalizedElement) {
+      return;
+    }
+    element = normalizedElement;
+
     // 检查是否已经被处理过
     if (element.classList.contains('tsc-processed') || element.classList.contains('tsc-processing')) {
       return;
@@ -635,6 +677,13 @@ return null;
    * 处理单个推文元素
    */
   private async processTweetElement(element: HTMLElement): Promise<void> {
+    const normalizedElement = this.normalizeTweetElement(element);
+    if (!normalizedElement) {
+      console.log('Skipping non-tweet element:', element);
+      return;
+    }
+    element = normalizedElement;
+
     console.log('Processing tweet element:', element);
     
        // 首先检查元素是否已经被处理过
@@ -956,6 +1005,11 @@ try {
         TwitterActionButtons.setButtonSuccess(button);
         return;
       }
+
+      const { TweetClassifier } = await import('../ai/tweet-classifier');
+      const classification = await TweetClassifier.classify(tweetData);
+      tweetData.category = classification.category;
+      console.log(`Tweet classified as ${classification.category} via ${classification.source}`);
 
       // 发送到background script保存
       const result = await browser.runtime.sendMessage({
@@ -2100,48 +2154,66 @@ font-weight: 600;
    */
   private cleanupDuplicateButtons(): void {
     try {
-      console.log('Starting cleanup of duplicate buttons');
+      console.log('Starting cleanup of existing action buttons');
+      this.processedTweets.clear();
       
-     // 找到所有复制按钮
-      const allButtons = document.querySelectorAll('.tsc-copy-button');
-      console.log(`Found ${allButtons.length} copy buttons`);
+     // 初始化时移除旧按钮，避免旧事件闭包继续引用错误的推文元素。
+      const allButtons = document.querySelectorAll(
+        '.tsc-copy-button, .tsc-screenshot-button, .tsc-video-download-button, .tsc-notion-button'
+      );
+      console.log(`Found ${allButtons.length} existing action buttons`);
       
-      const processedContainers = new Set<Element>();
    let removedCount = 0;
   
       allButtons.forEach((button, index) => {
-        const container = button.closest('article') || button.closest('[role="group"]') || button.closest('[data-testid="tweet"]');
-     
-        if (container) {
-          if (processedContainers.has(container)) {
-  // 这是一个重复的按钮，删除它
-            console.log(`Removing duplicate button ${index}`);
-button.remove();
-       removedCount++;
-   } else {
-         processedContainers.add(container);
-          }
+        const wrapper = button.parentElement;
+        if (wrapper && wrapper.children.length === 1 && wrapper.classList.contains('css-175oi2r')) {
+          console.log(`Removing action button wrapper ${index}`);
+          wrapper.remove();
         } else {
-      // 如果找不到容器，这可能是一个孤立的按钮，也删除它
-          console.log(`Removing orphaned button ${index}`);
-    button.remove();
-          removedCount++;
- }
+          console.log(`Removing action button ${index}`);
+          button.remove();
+        }
+        removedCount++;
       });
       
      // 清理嵌套在其他复制按钮内的按钮
-  const nestedButtons = document.querySelectorAll('.tsc-copy-button .tsc-copy-button');
+  const nestedButtons = document.querySelectorAll('.tsc-action-button .tsc-action-button');
       nestedButtons.forEach((nestedButton, index) => {
- console.log(`Removing nested button ${index}`);
+ console.log(`Removing nested action button ${index}`);
         nestedButton.remove();
      removedCount++;
       });
+
+      this.resetTweetProcessingState();
       
-      console.log(`Cleanup complete. Removed ${removedCount} duplicate/nested buttons`);
+      console.log(`Cleanup complete. Removed ${removedCount} existing/nested buttons`);
     
     } catch (error) {
       console.error('Error during button cleanup:', error);
     }
+  }
+
+  /**
+   * 清理旧内容脚本留下的处理标记。
+   * 扩展重载后页面 DOM 可能保留 class，但事件闭包已经不是当前脚本实例。
+   */
+  private resetTweetProcessingState(): void {
+    const candidates = document.querySelectorAll(
+      'article[data-testid="tweet"], [data-testid="tweet"], article[role="article"]'
+    );
+    const resetTweets = new Set<HTMLElement>();
+
+    candidates.forEach(candidate => {
+      const tweetElement = this.normalizeTweetElement(candidate as HTMLElement);
+      if (tweetElement) {
+        resetTweets.add(tweetElement);
+      }
+    });
+
+    resetTweets.forEach(tweetElement => {
+      tweetElement.classList.remove('tsc-processed', 'tsc-processing');
+    });
   }
 
   /**

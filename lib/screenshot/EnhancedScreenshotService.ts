@@ -4,6 +4,7 @@ import { FormatOptions } from '../types';
 import { getSettings } from '../utils/storage';
 import { i18nManager } from '../i18n';
 import { getGradientPresets, getGradientByName, getRandomGradient, type GradientPreset } from './gradient-presets';
+import { createSnapdomSafeOptions } from './snapdom-safe-options';
 
 /**
  * 增强的截图选项接口，集成了复制功能的选项
@@ -142,11 +143,44 @@ top: -9999px;
 
     wrapper.appendChild(clonedElement);
     document.body.appendChild(wrapper);
+    this.normalizeCloneTextColorsForLightCard(clonedElement);
 
     // 等待图片加载
     await this.waitForImagesEnhanced(wrapper);
 
  return wrapper;
+  }
+
+  /**
+   * X 暗色主题会给文本写入浅色 computed color。
+   * 截图卡片被强制设为白底时，需要把近白灰文本转成 light theme 文本色。
+   */
+  private normalizeCloneTextColorsForLightCard(element: HTMLElement): void {
+    const elements = [element, ...Array.from(element.querySelectorAll('*'))] as HTMLElement[];
+
+    for (const node of elements) {
+      const color = getComputedStyle(node).color;
+      if (this.shouldUseLightThemeTextColor(color)) {
+        node.style.setProperty('color', '#0f1419', 'important');
+        node.style.setProperty('fill', '#0f1419', 'important');
+        node.style.setProperty('stroke', '#0f1419', 'important');
+      }
+    }
+  }
+
+  private shouldUseLightThemeTextColor(color: string): boolean {
+    const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([.\d]+))?\)/);
+    if (!match) return false;
+
+    const red = Number(match[1]);
+    const green = Number(match[2]);
+    const blue = Number(match[3]);
+    const alpha = match[4] === undefined ? 1 : Number(match[4]);
+    const maxChannel = Math.max(red, green, blue);
+    const minChannel = Math.min(red, green, blue);
+    const luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+
+    return alpha > 0.5 && luminance > 170 && maxChannel - minChannel < 32;
   }
 
   /**
@@ -198,6 +232,7 @@ backgroundColor: options.backgroundColor || settings.screenshotOptions?.backgrou
     const snapdom = await this.loadSnapdom();
     
     const snap = await snapdom(element, {
+      ...createSnapdomSafeOptions(),
       width: options.width,
     height: options.height,
       scale: options.scale || 2,

@@ -1,6 +1,7 @@
 // 高性能截图服务 - 使用snapdom实现一键截图功能
 import { TweetData, ThreadData } from '../types';
 import { i18nManager } from '../i18n';
+import { createSnapdomSafeOptions } from './snapdom-safe-options';
 
 /**
  * 截图选项接口
@@ -100,9 +101,10 @@ export class ScreenshotService {
         element.classList.add(`theme-${mergedOptions.theme}`);
       }
 
-    // 2. 动态加载并使用 snapdom 生成截图
+      // 2. 动态加载并使用 snapdom 生成截图
       const snapdom = await this.loadSnapdom();
       const snap = await snapdom(element, {
+        ...createSnapdomSafeOptions(),
         width: mergedOptions.width,
         height: mergedOptions.height,
         scale: mergedOptions.scale || 2,

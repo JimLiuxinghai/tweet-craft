@@ -1,6 +1,7 @@
 // 高性能截图服务 - 使用snapdom实现一键截图功能
 import { TweetData, ThreadData } from '../types';
 import { i18nManager } from '../i18n';
+import { createSnapdomSafeOptions } from './snapdom-safe-options';
 // import { createError, ErrorCategory } from '../utils/errorManager';
 
 /**
@@ -95,6 +96,7 @@ export class ScreenshotManager {
       // 动态加载并生成截图
       const snapdom = await this.loadSnapdom();
   const snap = await snapdom(processedElement, {
+        ...createSnapdomSafeOptions(),
         scale: mergedOptions.scale || 2,
         width: mergedOptions.width,
         height: mergedOptions.height,
@@ -146,6 +148,7 @@ export class ScreenshotManager {
    // 动态加载并生成截图
       const snapdom = await this.loadSnapdom();
       const snap = await snapdom(threadContainer, {
+        ...createSnapdomSafeOptions(),
         scale: mergedOptions.scale || 2,
      width: mergedOptions.width,
         backgroundColor: mergedOptions.backgroundColor || '#ffffff',
@@ -212,6 +215,7 @@ export class ScreenshotManager {
 // 动态加载并生成截图
       const snapdom = await this.loadSnapdom();
       const snap = await snapdom(tempContainer, {
+        ...createSnapdomSafeOptions(),
         scale: mergedOptions.scale || 2,
         width: mergedOptions.width,
         height: mergedOptions.height,
