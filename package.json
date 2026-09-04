@@ -12,6 +12,7 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
+    "check:webmcp": "node scripts/check-webmcp.mjs",
     "postinstall": "wxt prepare",
     "test": "echo 'Open tests/performance-runner.html in your browser to run performance tests'",
     "test:validate": "echo 'Open tests/validate-runner.html in your browser to validate test framework'",
